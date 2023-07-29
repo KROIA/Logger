@@ -1,10 +1,10 @@
 #pragma once
 
-#include "Logger.h"
+#include "AbstractLogger.h"
 
 namespace Log
 {
-	class LOGGER_EXPORT ConsoleLogger : public Logger
+	class LOGGER_EXPORT ConsoleLogger : public AbstractLogger
 	{
 	public:
 		ConsoleLogger();

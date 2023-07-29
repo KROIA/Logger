@@ -5,12 +5,12 @@
 namespace Log
 {
 	ConsoleLogger::ConsoleLogger()
-		: Logger()
+		: AbstractLogger()
 	{
 
 	}
 	ConsoleLogger::ConsoleLogger(const ConsoleLogger& other)
-		: Logger(other)
+		: AbstractLogger(other)
 	{
 
 	}
