@@ -2,31 +2,31 @@
 
 #include "Logger_base.h"
 #include "LogMessage.h"
+#include "LoggerInterface.h"
 
 namespace Log
 {
-	class LOGGER_EXPORT AbstractLogger
+	class LOGGER_EXPORT AbstractLogger: public LoggerInterface
 	{
 	public:
 		AbstractLogger();
 		AbstractLogger(const AbstractLogger& other);
 
-		~AbstractLogger();
+		
+		void log(const Message& msg) override;
 
-		void log(const Message& msg);
+		void log(const std::string &msg) override;
+		void log(const std::string& msg, Level level) override;
+		void log(const std::string& msg, Level level, const Color& col) override;
 
-		void log(const std::string &msg);
-		void log(const std::string& msg, Level level);
-		void log(const std::string& msg, Level level, const Color& col);
+		void log(const char* msg) override;
+		void log(const char* msg, Level level) override;
+		void log(const char* msg, Level level, const Color& col) override;
 
-		void log(const char* msg);
-		void log(const char* msg, Level level);
-		void log(const char* msg, Level level, const Color& col);
-
-		void setTabCount(unsigned int tabCount);
-		void tabIn();
-		void tabOut();
-		unsigned int getTabCount() const;
+		void setTabCount(unsigned int tabCount) override;
+		void tabIn() override;
+		void tabOut() override;
+		unsigned int getTabCount() const override;
 
 	protected:
 		virtual void logInternal(const Message& msg) = 0;

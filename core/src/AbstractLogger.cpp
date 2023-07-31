@@ -13,11 +13,6 @@ namespace Log
 
 	}
 
-	AbstractLogger::~AbstractLogger()
-	{
-
-	}
-
 	void AbstractLogger::log(const Message& msg)
 	{
 		logInternal(msg);
