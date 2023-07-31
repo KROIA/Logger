@@ -14,6 +14,9 @@ namespace Log
 
 		virtual ~AbstractLogger();
 
+		void setName(const std::string& name);
+		const std::string& getName() const;
+
 		void log(const Message& msg) override;
 
 		void log(const std::string &msg) override;

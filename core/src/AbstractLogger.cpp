@@ -20,6 +20,15 @@ namespace Log
 
 	}
 
+	void AbstractLogger::setName(const std::string& name)
+	{
+		m_name = name;
+	}
+	const std::string& AbstractLogger::getName() const
+	{
+		return m_name;
+	}
+
 	void AbstractLogger::log(const Message& msg)
 	{
 		logInternal(msg);
