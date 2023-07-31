@@ -5,7 +5,7 @@
 
 namespace Log
 {
-	class LOGGER_EXPORT LoggerInterface
+	class LoggerInterface
 	{
 	public:
 		virtual void log(const Message& msg) = 0;

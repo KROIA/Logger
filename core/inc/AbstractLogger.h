@@ -12,7 +12,8 @@ namespace Log
 		AbstractLogger(const std::string &name = "");
 		AbstractLogger(const AbstractLogger& other);
 
-		
+		virtual ~AbstractLogger();
+
 		void log(const Message& msg) override;
 
 		void log(const std::string &msg) override;
