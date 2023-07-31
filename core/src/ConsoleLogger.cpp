@@ -47,7 +47,7 @@ namespace Log
 		int color = msg.getColor().getConsoleValue();
 		cout << msg.getDateTime().toString() << "  ";
 		SetConsoleTextAttribute(h, color);
-		cout << std::string(m_tabCount, ' ') << type << msg.getText() << "\n";
+		cout << std::string(m_tabCount, ' ') << m_name << ": " << type << msg.getText() << "\n";
 		SetConsoleTextAttribute(h, wOldColorAttrs);
 	}
 }

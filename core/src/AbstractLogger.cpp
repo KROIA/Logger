@@ -2,8 +2,9 @@
 
 namespace Log
 {
-	AbstractLogger::AbstractLogger()
+	AbstractLogger::AbstractLogger(const std::string& name)
 		: m_tabCount(0)
+		, m_name(name)
 	{
 
 	}

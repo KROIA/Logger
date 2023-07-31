@@ -9,7 +9,7 @@ namespace Log
 	class LOGGER_EXPORT AbstractLogger: public LoggerInterface
 	{
 	public:
-		AbstractLogger();
+		AbstractLogger(const std::string &name = "");
 		AbstractLogger(const AbstractLogger& other);
 
 		
@@ -32,6 +32,7 @@ namespace Log
 		virtual void logInternal(const Message& msg) = 0;
 
 		unsigned int m_tabCount;
+		std::string m_name;
 	private:
 	};
 }
