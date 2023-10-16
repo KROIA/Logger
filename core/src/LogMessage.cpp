@@ -3,51 +3,67 @@
 namespace Log
 {
 
+	LevelColors Message::s_levelColors = {
+		Color::cyan,		// trace,
+		Color::magenta,		// debug,
+		Color::white,		// info,
+		Color::yellow,		// warning,
+		Color::red,			// error,
+		Color::green		// custom
+	};
+
+
+	
+
 	Message::Message(const std::string& msg)
 		: m_message(msg)
 		, m_level(Level::info)
-		, m_color(Color::white)
-		, m_autoSetColor(true)
+		, m_customColor(Color::white)
+		, m_useCustomColor(false)
 	{
-		m_color = getLevelColor(m_level);
+		//m_color = getLevelColor(m_level);
 	}
 	Message::Message(const std::string& msg, Level level)
 		: m_message(msg)
 		, m_level(level)
-		, m_color(Color::white)
-		, m_autoSetColor(true)
+		, m_customColor(Color::white)
+		, m_useCustomColor(false)
 	{
-		m_color = getLevelColor(m_level);
+		//m_color = getLevelColor(m_level);
 	}
 	Message::Message(const std::string& msg, Level level, const Color& col)
 		: m_message(msg)
 		, m_level(level)
-		, m_color(col)
-		, m_autoSetColor(false)
+		, m_customColor(col)
+		, m_useCustomColor(true)
 	{
 
 	}
 	Message::Message(const char* msg)
 		: m_message(msg)
 		, m_level(Level::info)
-		, m_color(Color::white)
-		, m_autoSetColor(true)
+		, m_customColor(Color::white)
+		, m_useCustomColor(false)
+		//, m_color(Color::white)
+		//, m_autoSetColor(true)
 	{
-		m_color = getLevelColor(m_level);
+		//m_color = getLevelColor(m_level);
 	}
 	Message::Message(const char* msg, Level level)
 		: m_message(msg)
 		, m_level(level)
-		, m_color(Color::white)
-		, m_autoSetColor(true)
+		, m_customColor(Color::white)
+		, m_useCustomColor(false)
+		//, m_color(Color::white)
+		//, m_autoSetColor(true)
 	{
-		m_color = getLevelColor(m_level);
+		//m_color = getLevelColor(m_level);
 	}
 	Message::Message(const char* msg, Level level, const Color& col)
 		: m_message(msg)
 		, m_level(level)
-		, m_color(col)
-		, m_autoSetColor(false)
+		, m_customColor(col)
+		, m_useCustomColor(true)
 	{
 
 	}
@@ -55,8 +71,8 @@ namespace Log
 	Message::Message(const Message& other)
 		: m_message(other.m_message)
 		, m_level(other.m_level)
-		, m_color(other.m_color)
-		, m_autoSetColor(other.m_autoSetColor)
+		, m_customColor(other.m_customColor)
+		, m_useCustomColor(other.m_useCustomColor)
 	{
 
 	}
@@ -69,14 +85,14 @@ namespace Log
 	Message& Message::operator=(const Message& other)
 	{
 		m_message = other.m_message;
-		m_color = other.m_color;
+		//m_color = other.m_color;
 		m_level = other.m_level;
-		m_autoSetColor = other.m_autoSetColor;
+		//m_autoSetColor = other.m_autoSetColor;
 		return *this;
 	}
 	Message Message::operator+(const Message& other) const
 	{
-		return Message(m_message + other.m_message, m_level, m_color);
+		return Message(m_message + other.m_message, m_level/*, m_color*/);
 	}
 	Message& Message::operator+=(const Message& other)
 	{
@@ -88,7 +104,9 @@ namespace Log
 	{
 		if (m_level != other.m_level)
 			return false;
-		if (m_color != other.m_color)
+		if (m_useCustomColor != other.m_useCustomColor)
+			return false;
+		if (m_customColor != other.m_customColor)
 			return false;
 		if (m_message.size() != other.m_message.size())
 			return false;
@@ -100,7 +118,9 @@ namespace Log
 	{
 		if (m_level != other.m_level)
 			return true;
-		if (m_color != other.m_color)
+		if (m_useCustomColor != other.m_useCustomColor)
+			return true;
+		if (m_customColor != other.m_customColor)
 			return true;
 		if (m_message.size() != other.m_message.size())
 			return true;
@@ -124,18 +144,33 @@ namespace Log
 
 	void Message::setColor(const Color& color)
 	{
-		m_color = color;
+		m_customColor = color;
 	}
 	const Color& Message::getColor() const
 	{
-		return m_color;
+		if (m_level != Level::custom)
+			return getLevelColor(m_level);
+		return m_customColor;
 	}
 
 	void Message::setLevel(Level level)
 	{
 		m_level = level;
-		if (m_autoSetColor)
-			m_color = getLevelColor(m_level);
+		if (m_level != Level::custom)
+		{
+			m_useCustomColor = false;
+			m_customColor = Color::white;
+		}
+		else
+		{
+			if (!m_useCustomColor)
+			{
+				m_useCustomColor = true;
+				m_customColor = getLevelColor(m_level);
+			}
+		}
+		//if (m_autoSetColor)
+			//m_color = getLevelColor(m_level);
 	}
 	Level Message::getLevel() const
 	{
@@ -150,7 +185,29 @@ namespace Log
 		return m_dateTime;
 	}
 
-	void Message::autoSetColor(bool enable)
+	const Color& Message::getLevelColor(Level l)
+	{
+		switch (l)
+		{
+			case Level::trace:    return s_levelColors.trace;
+			case Level::debug:    return s_levelColors.debug;
+			case Level::info:     return s_levelColors.info;
+			case Level::warning:  return s_levelColors.warning;
+			case Level::error:    return s_levelColors.error;
+			case Level::custom:   return s_levelColors.custom;
+		}
+		return Color::white;
+	}
+	const LevelColors& Message::getLevelColors()
+	{
+		return s_levelColors;
+	}
+	void Message::setLevelColors(const LevelColors& colors)
+	{
+		s_levelColors = colors;
+	}
+
+	/*void Message::autoSetColor(bool enable)
 	{
 		m_autoSetColor = enable;
 		if(m_autoSetColor)
@@ -167,5 +224,5 @@ namespace Log
 			case Level::error:   return Color::red;
 		}
 		return Color::white;
-	}
+	}*/
 }

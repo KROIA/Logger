@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Logger_base.h"
-
+#include "LogColor.h"
 
 namespace Log
 {
@@ -11,6 +11,19 @@ namespace Log
 		debug,
 		info,
 		warning,
-		error
+		error,
+		custom
 	};
+
+	struct LevelColors
+	{
+		Color trace;
+		Color debug;
+		Color info;
+		Color warning;
+		Color error;
+		Color custom;
+	};
+
+
 }

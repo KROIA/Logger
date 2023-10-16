@@ -77,4 +77,17 @@ namespace Log
 	{
 		return m_tabCount;
 	}
+
+	const std::string AbstractLogger::getLevelStr(Level l)
+	{
+		switch (l)
+		{
+			case Level::trace: return " Trace: ";
+			case Level::debug: return " Debug: ";
+			case Level::info: return " Info: ";
+			case Level::warning: return " Warning: ";
+			case Level::error: return " Error: ";
+		}
+		return "Unknown debug level: "+std::to_string(l);
+	}
 }

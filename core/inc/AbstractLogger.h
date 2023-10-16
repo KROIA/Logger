@@ -32,11 +32,15 @@ namespace Log
 		void tabOut() override;
 		unsigned int getTabCount() const override;
 
+		const std::string getLevelStr(Level l);
+
 	protected:
 		virtual void logInternal(const Message& msg) = 0;
 
 		unsigned int m_tabCount;
 		std::string m_name;
 	private:
+
+		 
 	};
 }

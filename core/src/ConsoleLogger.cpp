@@ -24,15 +24,7 @@ namespace Log
 	{
 		using std::cout;
 
-		std::string type;
-		switch (msg.getLevel())
-		{
-			case Level::trace: type = " Trace: "; break;
-			case Level::debug: type = " Debug: "; break;
-			case Level::info: type  = " Info: "; break;
-			case Level::warning: type  = " Warning: "; break;
-			case Level::error: type  = " Error: "; break;
-		}
+		std::string type = getLevelStr(msg.getLevel());
 
 		HANDLE h = GetStdHandle(STD_OUTPUT_HANDLE);
 		WORD wOldColorAttrs;

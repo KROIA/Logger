@@ -43,17 +43,24 @@ namespace Log
 		void updateTimestamp();
 		const DateTime& getDateTime() const;
 
-		void autoSetColor(bool enable);
-		static Color getLevelColor(Level level);
+		//void autoSetColor(bool enable);
+		//static Color getLevelColor(Level level);
+
+
+		static const Color& getLevelColor(Level l);
+		static const LevelColors& getLevelColors();
+		static void setLevelColors(const LevelColors& colors);
 
 	protected:
 		std::string m_message;
 		Level m_level;
-		Color m_color;
-		bool m_autoSetColor;
+		Color m_customColor;
+		bool m_useCustomColor;
+		//bool m_autoSetColor;
 		DateTime m_dateTime;
 		
 	private:
-		
+
+		static LevelColors s_levelColors;
 	};
 }
