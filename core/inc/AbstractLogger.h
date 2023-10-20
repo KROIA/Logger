@@ -34,11 +34,15 @@ namespace Log
 
 		const std::string getLevelStr(Level l);
 
+		void setEnabled(bool enable);
+		bool isEnabled() const;
 	protected:
 		virtual void logInternal(const Message& msg) = 0;
 
 		unsigned int m_tabCount;
 		std::string m_name;
+
+		bool m_enable;
 	private:
 
 		 

@@ -1,4 +1,5 @@
 #include "LogColor.h"
+#include "LogMessage.h"
 
 namespace Log
 {
@@ -77,14 +78,16 @@ The different color codes are
 	const Color Color::Console::Background::lightRed(255, 0xCC, 0xCB, 0xC0);
 	const Color Color::Console::Background::lightMagenta(255, 0x77, 255, 0xD0);
 
-	Color::Color()
-		: m_r(255)
-		, m_g(255)
-		, m_b(255)
-		, m_consoleValue(15)
-	{
+	LevelColors Message::s_levelColors{
+		Color::cyan,		// trace,
+		Color::magenta,		// debug,
+		Color::white,		// info,
+		Color::yellow,		// warning,
+		Color::red,			// error,
+		Color::green		// custom
+	};
 
-	}
+
 	Color::Color(uint8_t r, uint8_t g, uint8_t b)
 		: m_r(r)
 		, m_g(g)

@@ -61,6 +61,6 @@ namespace Log
 		
 	private:
 
-		static LevelColors s_levelColors;
+		static LevelColors s_levelColors; // Initialized in LogColor.cpp
 	};
 }

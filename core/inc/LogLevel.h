@@ -15,7 +15,7 @@ namespace Log
 		custom
 	};
 
-	struct LevelColors
+	struct LOGGER_EXPORT LevelColors
 	{
 		Color trace;
 		Color debug;

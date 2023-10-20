@@ -3,14 +3,7 @@
 namespace Log
 {
 
-	LevelColors Message::s_levelColors = {
-		Color::cyan,		// trace,
-		Color::magenta,		// debug,
-		Color::white,		// info,
-		Color::yellow,		// warning,
-		Color::red,			// error,
-		Color::green		// custom
-	};
+	
 
 
 	
