@@ -2,7 +2,7 @@
 
 int main(void)
 {
-	Log::ContextLogger logger;
+	Log::ConsoleLogger logger;
 
 	logger.log("Test");
 	logger.log("Warning msg", Log::Level::warning);

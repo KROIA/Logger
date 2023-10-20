@@ -8,6 +8,8 @@ namespace Log
 	class LoggerInterface
 	{
 	public:
+		virtual ~LoggerInterface() {}
+
 		virtual void log(const Message& msg) = 0;
 		 
 		virtual void log(const std::string& msg) = 0;
