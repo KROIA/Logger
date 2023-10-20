@@ -12,7 +12,7 @@ namespace Log
 		AbstractLogger(const std::string &name = "");
 		AbstractLogger(const AbstractLogger& other);
 
-		virtual ~AbstractLogger();
+		~AbstractLogger();
 
 		void setName(const std::string& name);
 		const std::string& getName() const;

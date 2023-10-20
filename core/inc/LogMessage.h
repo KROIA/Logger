@@ -5,6 +5,7 @@
 #include "LogLevel.h"
 #include "DateTime.h"
 #include <string>
+#include <vector>
 
 namespace Log
 {
@@ -56,6 +57,7 @@ namespace Log
 		Level m_level;
 		Color m_customColor;
 		bool m_useCustomColor;
+
 		//bool m_autoSetColor;
 		DateTime m_dateTime;
 		
@@ -63,4 +65,10 @@ namespace Log
 
 		static LevelColors s_levelColors; // Initialized in LogColor.cpp
 	};
+
+	/*struct LOGGER_EXPORT NastedMessage
+	{
+		Message message;
+		std::vector<NastedMessage> childMessages;
+	};*/
 }
