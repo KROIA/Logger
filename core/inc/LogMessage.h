@@ -34,15 +34,20 @@ namespace Log
 		void setText(const std::string& text);
 		void setText(const char* text);
 		const std::string& getText() const;
+		
 
 		void setColor(const Color& color);
 		const Color& getColor() const;
 
 		void setLevel(Level level);
 		Level getLevel() const;
+		std::string getLevelString() const;
 
 		void updateTimestamp();
 		const DateTime& getDateTime() const;
+
+		void setTabCount(unsigned int count);
+		unsigned int getTabCount() const;
 
 		//void autoSetColor(bool enable);
 		//static Color getLevelColor(Level level);
@@ -57,6 +62,7 @@ namespace Log
 		Level m_level;
 		Color m_customColor;
 		bool m_useCustomColor;
+		unsigned int m_tabCount;
 
 		//bool m_autoSetColor;
 		DateTime m_dateTime;

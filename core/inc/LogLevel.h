@@ -2,6 +2,7 @@
 
 #include "Logger_base.h"
 #include "LogColor.h"
+#include <string>
 
 namespace Log
 {
@@ -24,6 +25,19 @@ namespace Log
 		Color error;
 		Color custom;
 	};
+
+	inline std::string getLevelStr(Level l)
+	{
+		switch (l)
+		{
+		case Level::trace: return " Trace: ";
+		case Level::debug: return " Debug: ";
+		case Level::info: return " Info: ";
+		case Level::warning: return " Warning: ";
+		case Level::error: return " Error: ";
+		}
+		return "Unknown debug level: " + std::to_string(l);
+	}
 
 
 }

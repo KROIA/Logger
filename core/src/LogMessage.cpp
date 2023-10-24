@@ -13,6 +13,7 @@ namespace Log
 		, m_level(Level::info)
 		, m_customColor(Color::white)
 		, m_useCustomColor(false)
+		, m_tabCount(0)
 	{
 		//m_color = getLevelColor(m_level);
 	}
@@ -21,6 +22,7 @@ namespace Log
 		, m_level(level)
 		, m_customColor(Color::white)
 		, m_useCustomColor(false)
+		, m_tabCount(0)
 	{
 		//m_color = getLevelColor(m_level);
 	}
@@ -29,6 +31,7 @@ namespace Log
 		, m_level(level)
 		, m_customColor(col)
 		, m_useCustomColor(true)
+		, m_tabCount(0)
 	{
 
 	}
@@ -37,6 +40,7 @@ namespace Log
 		, m_level(Level::info)
 		, m_customColor(Color::white)
 		, m_useCustomColor(false)
+		, m_tabCount(0)
 		//, m_color(Color::white)
 		//, m_autoSetColor(true)
 	{
@@ -47,6 +51,7 @@ namespace Log
 		, m_level(level)
 		, m_customColor(Color::white)
 		, m_useCustomColor(false)
+		, m_tabCount(0)
 		//, m_color(Color::white)
 		//, m_autoSetColor(true)
 	{
@@ -57,6 +62,7 @@ namespace Log
 		, m_level(level)
 		, m_customColor(col)
 		, m_useCustomColor(true)
+		, m_tabCount(0)
 	{
 
 	}
@@ -66,6 +72,7 @@ namespace Log
 		, m_level(other.m_level)
 		, m_customColor(other.m_customColor)
 		, m_useCustomColor(other.m_useCustomColor)
+		, m_tabCount(other.m_tabCount)
 	{
 
 	}
@@ -169,6 +176,10 @@ namespace Log
 	{
 		return m_level;
 	}
+	std::string Message::getLevelString() const
+	{
+		return getLevelStr(m_level);
+	}
 	void Message::updateTimestamp()
 	{
 		m_dateTime.update();
@@ -176,6 +187,15 @@ namespace Log
 	const DateTime& Message::getDateTime() const
 	{
 		return m_dateTime;
+	}
+
+	void Message::setTabCount(unsigned int count)
+	{
+		m_tabCount = count;
+	}
+	unsigned int Message::getTabCount() const
+	{
+		return m_tabCount;
 	}
 
 	const Color& Message::getLevelColor(Level l)

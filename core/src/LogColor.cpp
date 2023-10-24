@@ -89,13 +89,6 @@ The different color codes are
 		Color::green		// custom
 	};
 
-	Color::Color()
-		: m_r(255)
-		, m_g(255)
-		, m_b(255)
-		, m_consoleValue(15)
-	{
-
 
 	Color::Color(uint8_t r, uint8_t g, uint8_t b)
 		: m_r(r)

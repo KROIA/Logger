@@ -32,8 +32,6 @@ namespace Log
 		void tabOut() override;
 		unsigned int getTabCount() const override;
 
-		const std::string getLevelStr(Level l);
-
 		void setEnabled(bool enable);
 		bool isEnabled() const;
 	protected:

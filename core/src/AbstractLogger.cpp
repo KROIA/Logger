@@ -40,33 +40,45 @@ namespace Log
 	void AbstractLogger::log(const std::string& msg)
 	{
 		if (!m_enable) return;
-		logInternal(Message(msg));
+		Message m(msg);
+		m.setTabCount(m_tabCount);
+		logInternal(m);
 	}
 	void AbstractLogger::log(const std::string& msg, Level level)
 	{
 		if (!m_enable) return;
-		logInternal(Message(msg, level));
+		Message m(msg, level);
+		m.setTabCount(m_tabCount);
+		logInternal(m);
 	}
 	void AbstractLogger::log(const std::string& msg, Level level, const Color& col)
 	{
 		if (!m_enable) return;
-		logInternal(Message(msg, level, col));
+		Message m(msg, level, col);
+		m.setTabCount(m_tabCount);
+		logInternal(m);
 	}
 
 	void AbstractLogger::log(const char* msg)
 	{
 		if (!m_enable) return;
-		logInternal(Message(msg));
+		Message m(msg);
+		m.setTabCount(m_tabCount);
+		logInternal(m);
 	}
 	void AbstractLogger::log(const char* msg, Level level)
 	{
 		if (!m_enable) return;
-		logInternal(Message(msg, level));
+		Message m(msg, level);
+		m.setTabCount(m_tabCount);
+		logInternal(m);
 	}
 	void AbstractLogger::log(const char* msg, Level level, const Color& col)
 	{
 		if (!m_enable) return;
-		logInternal(Message(msg, level, col));
+		Message m(msg, level, col);
+		m.setTabCount(m_tabCount);
+		logInternal(m);
 	}
 
 	void AbstractLogger::setTabCount(unsigned int tabCount)
@@ -90,18 +102,6 @@ namespace Log
 		return m_tabCount;
 	}
 
-	const std::string AbstractLogger::getLevelStr(Level l)
-	{
-		switch (l)
-		{
-			case Level::trace: return " Trace: ";
-			case Level::debug: return " Debug: ";
-			case Level::info: return " Info: ";
-			case Level::warning: return " Warning: ";
-			case Level::error: return " Error: ";
-		}
-		return "Unknown debug level: "+std::to_string(l);
-	}
 	void AbstractLogger::setEnabled(bool enable)
 	{
 		m_enable = enable;
