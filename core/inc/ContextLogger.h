@@ -10,7 +10,7 @@ namespace Log
 	class LOGGER_EXPORT ContextLogger : public AbstractLogger
 	{
 	public:
-		typedef unsigned int ContextID;
+	    typedef unsigned int ContextID;
 
 		struct LOGGER_EXPORT ContextMessage
 		{
@@ -45,7 +45,7 @@ namespace Log
 		void logInternal(const Message& msg) override;
 
 		std::vector<ContextMessage*> m_messages;
-
+		//std::vector<ContextLogger*> m_childs;
 		
 		ContextMessage* m_currentContext;
 		unsigned int m_currentContextID;
