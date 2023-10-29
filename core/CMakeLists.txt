@@ -46,11 +46,12 @@ endif()
 
 # External dependencies
 include(FetchContent)
+set(FETCHCONTENT_BASE_DIR "${CMAKE_SOURCE_DIR}/dependencies")
 
 #  EasyProfiler
 set(EASY_GIT_REPO  https://github.com/yse/easy_profiler.git)
 set(EASY_GIT_TAG   v2.1.0)
-
+set(BUILD_SHARED_LIBS OFF)
 set(EASY_PROFILER_NO_SAMPLES True)
 FetchContent_Declare(
  EASY_PROFILER
@@ -60,10 +61,10 @@ FetchContent_Declare(
 message("Download dependency: ${EASY_GIT_REPO}")
 
 FetchContent_MakeAvailable(EASY_PROFILER)
+#set(EASY_PROFILER_NO_GUI False)
 set_target_properties(easy_profiler PROPERTIES CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/${RELATIVE_BUILD_FOLDER}")
 set_target_properties(easy_profiler PROPERTIES CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/${RELATIVE_BUILD_FOLDER}")
 set_target_properties(easy_profiler PROPERTIES CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/${RELATIVE_BUILD_FOLDER}")
-target_compile_definitions(easy_profiler PRIVATE  EASY_PROFILER_STATIC)
 set_target_properties(easy_profiler PROPERTIES DEBUG_POSTFIX "-d")
 
 # End external dependencies
@@ -88,6 +89,8 @@ message("Create library with files:")
     message("  File: " ${file})
  ENDFOREACH()
 
+
+
  set(Logger_dependencies 
     Qt5::Widgets)
 
@@ -99,6 +102,7 @@ target_compile_definitions(Logger_shared PRIVATE  LOGGER_LIB)
 target_compile_definitions(Logger_static PRIVATE  BUILD_STATIC LOGGER_LIB)
 target_compile_definitions(Logger_static_profile PRIVATE  BUILD_STATIC LOGGER_PROFILING LOGGER_LIB)
 
+set_target_properties(easy_profiler PROPERTIES DEBUG_POSTFIX "-d")
 set_target_properties(Logger_shared PROPERTIES LINKER_LANGUAGE CXX  OUTPUT_NAME "${Logger_filename}" DEBUG_POSTFIX "-d")
 set_target_properties(Logger_static PROPERTIES LINKER_LANGUAGE CXX  OUTPUT_NAME "${Logger_filename}-s" DEBUG_POSTFIX "-d")
 set_target_properties(Logger_static_profile PROPERTIES LINKER_LANGUAGE CXX  OUTPUT_NAME "${Logger_filename}-s-p" DEBUG_POSTFIX "-d")
@@ -110,15 +114,15 @@ target_link_libraries(Logger_static_profile ${Logger_dependencies} easy_profiler
 
 
 target_include_directories(Logger_shared PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${Logger_Include}>
 	# $<INSTALL_INTERFACE:inc>  # <prefix>/inc 
 )
 target_include_directories(Logger_static PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${Logger_Include}>
 	# $<INSTALL_INTERFACE:inc>  # <prefix>/inc 
 )
 target_include_directories(Logger_static_profile PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${Logger_Include}>
 	# $<INSTALL_INTERFACE:inc>  # <prefix>/inc 
 )
 # Define the install path

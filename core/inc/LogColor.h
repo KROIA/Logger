@@ -54,10 +54,10 @@ namespace Log
 
 		static const Color orange;
 
-		static class Console
+		class Console
 		{
 		public:
-			static class Foreground
+			class Foreground
 			{
 				static const Color red;
 				static const Color green;
@@ -76,7 +76,7 @@ namespace Log
 				static const Color lightRed;
 				static const Color lightMagenta;
 			};
-			static class Background
+			class Background
 			{
 				static const Color red;
 				static const Color green;

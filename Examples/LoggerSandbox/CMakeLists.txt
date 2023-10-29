@@ -4,6 +4,10 @@ string(REPLACE " " "_" ProjectId ${PROJECT_NAME})
 project(${PROJECT_NAME})
 
 
+if(LOGGER_PROFILING)
+    set(PROJECT_NAME ${PROJECT_NAME}_profile)
+endif()
+
 # Macro to search for files with given file ending.
 # call:
 #   FILE_DIRECTORIES(H_FILES *.h)
@@ -28,16 +32,30 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 # Get all source files
 FILE_DIRECTORIES(H_FILES *.h)
 FILE_DIRECTORIES(CPP_FILES *.cpp)
+FILE_DIRECTORIES(UI_FILES *.ui)
 
+if(UI_FILES)
+	include(${QT_LOCATOR_CMAKE})
+	find_package(Qt5Widgets REQUIRED)
+	qt5_wrap_ui(UIS_HDRS ${UI_FILES})
+	qt_wrap_cpp(SRC_HDRS ${H_FILES})
+endif()
 
 set(Files 
 	${H_FILES}
-	${CPP_FILES})
+	${CPP_FILES}
+	${UIS_HDRS}
+	${SRC_HDRS})
 
 add_executable(${PROJECT_NAME} ${Files})
 
 
-target_link_libraries(${PROJECT_NAME} Logger_static)
+
+if(LOGGER_PROFILING)
+    target_link_libraries(${PROJECT_NAME} Logger_static_profile)
+else()
+    target_link_libraries(${PROJECT_NAME} Logger_static)
+endif()
 target_compile_definitions(${PROJECT_NAME} PUBLIC BUILD_STATIC)
 
 

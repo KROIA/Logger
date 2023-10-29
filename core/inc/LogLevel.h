@@ -30,11 +30,11 @@ namespace Log
 	{
 		switch (l)
 		{
-		case Level::trace: return " Trace: ";
-		case Level::debug: return " Debug: ";
-		case Level::info: return " Info: ";
+		case Level::trace:   return " Trace:   ";
+		case Level::debug:   return " Debug:   ";
+		case Level::info:    return " Info:    ";
 		case Level::warning: return " Warning: ";
-		case Level::error: return " Error: ";
+		case Level::error:   return " Error:   ";
 		}
 		return "Unknown debug level: " + std::to_string(l);
 	}

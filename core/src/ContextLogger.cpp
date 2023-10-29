@@ -5,149 +5,96 @@ namespace Log
 {
 	ContextLogger::ContextLogger(const std::string& name)
 		: AbstractLogger(name)
-		, m_currentContext(nullptr)
-		, m_currentContextID(0)
 	{
 
 	}
 	ContextLogger::ContextLogger(const ContextLogger& other)
 		: AbstractLogger(other)
-		, m_currentContext(nullptr)
-		, m_currentContextID(other.m_currentContextID)
 	{
 		m_messages.reserve(other.m_messages.size());
-		for (size_t i=0; i<other.m_messages.size(); ++i)
+		for (size_t i = 0; i < other.m_messages.size(); ++i)
 		{
-			m_messages.push_back(new ContextMessage(*other.m_messages[i]));
+			m_messages.push_back(other.m_messages[i]);
 		}
-		switchContext(m_currentContextID);
+
+		m_childs.reserve(other.m_childs.size());
+		for (size_t i=0; i<other.m_childs.size(); ++i)
+		{
+			m_childs.push_back(new ContextLogger(*other.m_childs[i]));
+		}
 	}
 
 	ContextLogger::~ContextLogger()
 	{
+		destroyChilds();
 		clear();
 	}
 
-	ContextLogger::ContextID ContextLogger::createContext(const Message& contextMsg)
+	ContextLogger* ContextLogger::createContext(const std::string& name)
 	{
-		ContextMessage* c = new ContextMessage{ (ContextID)m_messages.size(), contextMsg };
-		c->contextInfo.setTabCount(m_tabCount);
-		m_messages.push_back(c);
-		return c->contextID;
-	}
-	bool ContextLogger::switchContext(ContextID contextID)
-	{
-		for (ContextMessage* m : m_messages)
-		{
-			if (m->contextID == contextID)
-			{
-				m_currentContextID = contextID;
-				m_currentContext = m;
-				return true;
-			}
-		}
-		return false;
-	}
-	ContextLogger::ContextID ContextLogger::getCurrentContextID() const
-	{
-		return m_currentContextID;
-	}
-	size_t ContextLogger::getContextCount() const
-	{
-		return m_messages.size();
+		ContextLogger* context = new ContextLogger(name);
+		m_childs.push_back(context);
+		return context;
 	}
 
-	const ContextLogger::ContextMessage& ContextLogger::getContextMessage(ContextID contextID) const
-	{
-		for (ContextMessage* m : m_messages)
-		{
-			if (m->contextID == contextID)
-			{
-				return *m;
-			}
-		}
-		static const ContextLogger::ContextMessage dummy{ 0, Message("dummy") };
-		return dummy;
-	}
-	std::vector<ContextLogger::ContextMessage> ContextLogger::getContextMessages() const
-	{
-		std::vector<ContextMessage> msgs;
-		msgs.reserve(m_messages.size());
-		for (ContextMessage* m : m_messages)
-		{
-			msgs.push_back(*m);
-		}
-		return msgs;
-	}
 
 	void ContextLogger::clear()
-	{
-		m_currentContextID = 0;
-		m_currentContext = nullptr;
-		for (ContextMessage* m : m_messages)
-			delete m;
+	{		
 		m_messages.clear();
+		for (ContextLogger* c : m_childs)
+			c->clear();
+	}
+	void ContextLogger::destroyChilds()
+	{
+		for (ContextLogger* c : m_childs)
+			delete c;
+		m_childs.clear();
 	}
 
 
 	void ContextLogger::logInternal(const Message& msg)
 	{
-		if (!m_currentContext)
-		{
-			unsigned int def = createContext(Log::Message(m_name + " default context"));
-			switchContext(def);
-		}
-		m_currentContext->messages.push_back(msg);
+		m_messages.push_back(msg);
 	}
 
 
-	std::ostream& operator<<(std::ostream& os, const ContextLogger::ContextMessage& msg)
-	{
-		os << msg.contextInfo.getDateTime().toString() + " " + msg.contextInfo.getLevelString() + " " + msg.contextInfo.getText() + "\n";
-		for (const Message& m : msg.messages)
-		{
-			std::string timeDate = m.getDateTime().toString();
-			std::string level = m.getLevelString();
-			std::string text = m.getText();
-
-			os << " " + timeDate + " " + level + " " + text + "\n";
-		}
-		return os;
-	}
-	void ContextLogger::ContextMessage::toStringVector(std::vector<std::string>& list) const
-	{
-		std::string timeDate = contextInfo.getDateTime().toString();
-		std::string level = contextInfo.getLevelString();
-		std::string text = contextInfo.getText();
-
-		list.push_back(timeDate + std::string(contextInfo.getTabCount(), ' ') + level + text);
-		for (const Message& m : messages)
-		{
-			std::string timeDate = m.getDateTime().toString();
-			std::string level = m.getLevelString();
-			std::string text = m.getText();
-
-			list.push_back(timeDate + std::string(m.getTabCount() + 1, ' ') + level + text);
-		}
-	}
-
-	std::ostream& operator<<(std::ostream& os, const ContextLogger& context)
+	std::ostream& operator<<(std::ostream& os, const ContextLogger& msg)
 	{
 		std::vector<std::string> lines;
-		context.toStringVector(lines);
-		for (const std::string& l : lines)
-			os << l << "\n";
+		msg.toStringVector(lines);
+		for (size_t i = 0; i < lines.size(); ++i)
+			os << lines[i] << "\n";
+
 		return os;
 	}
+
 	void ContextLogger::toStringVector(std::vector<std::string>& list) const
 	{
-		
-		list.push_back("Context: " + m_name);
+		toStringVector(0, list);
+	}
 
-		for (ContextMessage* m : m_messages)
+	void ContextLogger::toStringVector(size_t depth, std::vector<std::string>& list) const
+	{
+		std::string depthStr(depth, ' ');
+
+		std::string title = m_creationsTime.toString() + depthStr +
+			"Context: " + m_name +
+			" Msgs: " + std::to_string(m_messages.size()) +
+			" Childs: " + std::to_string(m_childs.size());
+		list.push_back(title);
+		for (const Message& m : m_messages)
+		{
+			std::string msgString = m.getDateTime().toString() + " " +
+				getLevelStr(m.getLevel()) +
+				depthStr +
+				std::string(m.getTabCount(), ' ') +
+				m.getText();
+		}
+
+		for (const ContextLogger* m : m_childs)
 		{
 			std::vector<std::string> tmp;
-			m->toStringVector(tmp);
+			m->toStringVector(depth + 1 ,tmp);
 
 			list.insert(list.end(), tmp.begin(), tmp.end());
 		}

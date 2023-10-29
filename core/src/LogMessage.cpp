@@ -198,6 +198,14 @@ namespace Log
 		return m_tabCount;
 	}
 
+	std::string Message::toString() const
+	{
+		return m_dateTime.toString() + " " +
+			getLevelStr(m_level) +
+			std::string(m_tabCount, ' ') +
+			m_message;
+	}
+
 	const Color& Message::getLevelColor(Level l)
 	{
 		switch (l)

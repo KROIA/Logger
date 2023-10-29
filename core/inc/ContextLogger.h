@@ -10,17 +10,6 @@ namespace Log
 	class LOGGER_EXPORT ContextLogger : public AbstractLogger
 	{
 	public:
-	    typedef unsigned int ContextID;
-
-		struct LOGGER_EXPORT ContextMessage
-		{
-			ContextID contextID;
-			Message contextInfo;
-			std::vector<Message> messages;
-
-			void toStringVector(std::vector<std::string>& list) const;
-			friend std::ostream& operator<<(std::ostream& os, const ContextMessage& msg);
-		};
 		
 
 		ContextLogger(const std::string& name = "");
@@ -28,26 +17,23 @@ namespace Log
 
 		~ContextLogger();
 
-		ContextID createContext(const Message& contextMsg);
-		bool switchContext(ContextID contextID);
-		ContextID getCurrentContextID() const;
-		size_t getContextCount() const;
+		ContextLogger* createContext(const std::string& name);
 
-		const ContextMessage& getContextMessage(ContextID contextID) const;
-		std::vector<ContextMessage> getContextMessages() const;
 
 		void clear();
+		void destroyChilds();
 
 		void toStringVector(std::vector<std::string>& list) const;
 		friend std::ostream& operator<<(std::ostream& os, const ContextLogger& msg);
 
+
 	private:
+		void toStringVector(size_t depth, std::vector<std::string>& list) const;
 		void logInternal(const Message& msg) override;
 
-		std::vector<ContextMessage*> m_messages;
-		//std::vector<ContextLogger*> m_childs;
+		DateTime m_creationsTime;
+		std::vector<Message> m_messages;
+		std::vector<ContextLogger*> m_childs;
 		
-		ContextMessage* m_currentContext;
-		unsigned int m_currentContextID;
 	};
 }

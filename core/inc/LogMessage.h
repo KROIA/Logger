@@ -52,10 +52,13 @@ namespace Log
 		//void autoSetColor(bool enable);
 		//static Color getLevelColor(Level level);
 
+		std::string toString() const;
 
 		static const Color& getLevelColor(Level l);
 		static const LevelColors& getLevelColors();
 		static void setLevelColors(const LevelColors& colors);
+
+
 
 	protected:
 		std::string m_message;
