@@ -27,7 +27,7 @@ ENDMACRO()
 # QT settings
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
-set(CMAKE_AUTOUIC ON)
+#set(CMAKE_AUTOUIC ON)
 
 include(../QtLocator.cmake)
 message("Search for QT5 finished")
@@ -69,20 +69,25 @@ set_target_properties(easy_profiler PROPERTIES DEBUG_POSTFIX "-d")
 
 # End external dependencies
 
+include_directories(inc)
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 FILE_DIRECTORIES(H_FILES *.h)
 FILE_DIRECTORIES(CPP_FILES *.cpp)
-qt5_wrap_cpp(CPP_MOC_FILES ${H_FILES})
+FILE_DIRECTORIES(UI_FILES *.ui)
 
+qt5_wrap_cpp(CPP_MOC_FILES ${H_FILES})
+qt5_wrap_ui(UIS_HDRS ${UI_FILES})
 
 
 set(SOURCES
 	${CPP_MOC_FILES}
     ${CPP_FILES}
+    ${UIS_HDRS}
     ${H_FILES}
 )
 
-
+message("CMAKE_CURRENT_BINARY_DIR = " ${CMAKE_CURRENT_BINARY_DIR})
 
 message("Create library with files:")
  FOREACH(file ${SOURCES})
@@ -115,14 +120,17 @@ target_link_libraries(Logger_static_profile ${Logger_dependencies} easy_profiler
 
 target_include_directories(Logger_shared PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${Logger_Include}>
+    ${CMAKE_CURRENT_BINARY_DIR}
 	# $<INSTALL_INTERFACE:inc>  # <prefix>/inc 
 )
 target_include_directories(Logger_static PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${Logger_Include}>
+    ${CMAKE_CURRENT_BINARY_DIR}
 	# $<INSTALL_INTERFACE:inc>  # <prefix>/inc 
 )
 target_include_directories(Logger_static_profile PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${Logger_Include}>
+    ${CMAKE_CURRENT_BINARY_DIR}
 	# $<INSTALL_INTERFACE:inc>  # <prefix>/inc 
 )
 # Define the install path

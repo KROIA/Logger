@@ -34,12 +34,12 @@ FILE_DIRECTORIES(H_FILES *.h)
 FILE_DIRECTORIES(CPP_FILES *.cpp)
 FILE_DIRECTORIES(UI_FILES *.ui)
 
-if(UI_FILES)
+
 	include(${QT_LOCATOR_CMAKE})
 	find_package(Qt5Widgets REQUIRED)
 	qt5_wrap_ui(UIS_HDRS ${UI_FILES})
 	qt_wrap_cpp(SRC_HDRS ${H_FILES})
-endif()
+
 
 set(Files 
 	${H_FILES}
@@ -60,3 +60,18 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC BUILD_STATIC)
 
 
 install(TARGETS ${PROJECT_NAME} DESTINATION "${CMAKE_INSTALL_PREFIX}/bin")
+if(WIN32)
+    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND "${QT_PATH}/bin/windeployqt.exe"
+            --no-compiler-runtime
+            --no-translations
+            --no-system-d3d-compiler
+            --no-opengl-sw
+            --no-angle
+            --no-webkit2
+            --dir "${CMAKE_INSTALL_PREFIX}/bin"
+            --pdb
+            "$<TARGET_FILE:${PROJECT_NAME}>"
+		COMMENT "Running windeployqt..." "${QT_PATH}/bin/windeployqt.exe" "${CMAKE_INSTALL_PREFIX}/bin"
+    )
+endif()

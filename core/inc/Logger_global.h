@@ -6,6 +6,7 @@
 #define LOGGER_VERSION_MINOR 0
 #define LOGGER_VERSION_PATCH 0
 
+#define LOGGER_QT
 
 #ifdef BUILD_STATIC
 #define LOGGER_STATIC

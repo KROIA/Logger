@@ -1,8 +1,12 @@
 #include "Logger.h"
 #include <iostream>
 
-int main(void)
+#include<QTreeWidget>
+#include<QApplication>
+
+int main(int argc, char* argv[])
 {
+	QApplication app(argc, argv);
 	Log::ContextLogger logger("TestLogger");
 
 	Log::ContextLogger* id1 = logger.createContext("TestContext");
@@ -36,10 +40,19 @@ int main(void)
 	id1->log("Log context 1");
 
 
+	QTreeWidget* widget = new QTreeWidget();
+	widget->setColumnCount(3);
+
+	for (Log::ContextLogger* l : Log::ContextLogger::getAllLogger())
+	{
+		widget->addTopLevelItem(l->getTreeWidgetItem());
+	}
+	widget->show();
+
 	std::cout << logger;
 
 	std::cout << "end\n";
-
+	app.exec();
 	getchar();
 	return 0;
 }

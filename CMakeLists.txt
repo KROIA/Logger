@@ -1,7 +1,7 @@
 ﻿cmake_minimum_required(VERSION 3.15)
 
 project(Logger)
-set(PARALLEL_BUILD ON)
+set(PARALLEL_BUILD OFF)
 #
 # -----------------------------------------
 #
