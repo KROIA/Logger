@@ -107,7 +107,6 @@ target_compile_definitions(Logger_shared PRIVATE  LOGGER_LIB)
 target_compile_definitions(Logger_static PRIVATE  BUILD_STATIC LOGGER_LIB)
 target_compile_definitions(Logger_static_profile PRIVATE  BUILD_STATIC LOGGER_PROFILING LOGGER_LIB)
 
-set_target_properties(easy_profiler PROPERTIES DEBUG_POSTFIX "-d")
 set_target_properties(Logger_shared PROPERTIES LINKER_LANGUAGE CXX  OUTPUT_NAME "${Logger_filename}" DEBUG_POSTFIX "-d")
 set_target_properties(Logger_static PROPERTIES LINKER_LANGUAGE CXX  OUTPUT_NAME "${Logger_filename}-s" DEBUG_POSTFIX "-d")
 set_target_properties(Logger_static_profile PROPERTIES LINKER_LANGUAGE CXX  OUTPUT_NAME "${Logger_filename}-s-p" DEBUG_POSTFIX "-d")
