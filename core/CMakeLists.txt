@@ -47,7 +47,6 @@ endif()
 # QT settings
 if(QT_ENABLE)
     include(${QT_LOCATOR_CMAKE})
-    find_package(Qt5Widgets REQUIRED)
 
     set(CMAKE_AUTOMOC ON)
     set(CMAKE_AUTORCC ON)
