@@ -1,4 +1,5 @@
 #include "ContextLogger.h"
+#include <sstream>
 #ifdef LOGGER_QT
 	#include "QT/QContextLoggerTree.h"
 #endif
@@ -15,9 +16,6 @@ namespace Log
 
 
 	ContextLogger::ContextLogger(const std::string& name, ContextLogger* parent) :
-//#ifdef LOGGER_QT
-//		QObject(parent), 
-//#endif
 		  AbstractLogger(name)
 		, m_parent(parent)
 		, m_rootParent(parent ? parent->m_rootParent : this)
@@ -26,25 +24,12 @@ namespace Log
 		, onNewMessage("onNewMessage")
 		, onClear("onClear")
 		, onDelete("onDelete")
-
-//#ifdef LOGGER_QT
-	//	, m_subscribedUITree(nullptr)
-//#endif
 	{
 		if (!m_parent)
-		{
 			s_allRootLoggers.push_back(this);
-		}
-		else
-		{
-			//subscribeToUI(m_parent->m_subscribedUITree);
-		}	
 	}
 
 	ContextLogger::ContextLogger(const std::string& name):
-//#ifdef LOGGER_QT
-//		QObject(nullptr),
-//#endif
 		  AbstractLogger(name)
 		, m_parent(nullptr)
 		, m_rootParent(this)
@@ -53,16 +38,10 @@ namespace Log
 		, onNewMessage("onNewMessage")
 		, onClear("onClear")
 		, onDelete("onDelete")
-//#ifdef LOGGER_QT
-	//	, m_subscribedUITree(nullptr)
-//#endif
 	{
 		s_allRootLoggers.push_back(this);
 	}
 	ContextLogger::ContextLogger(const ContextLogger& other):
-//#ifdef LOGGER_QT
-//		QObject(nullptr),
-//#endif
 		  AbstractLogger(other)
 		, m_parent(nullptr)
 		, m_rootParent(this)
@@ -72,9 +51,6 @@ namespace Log
 		, onNewMessage("onNewMessage")
 		, onClear("onClear")
 		, onDelete("onDelete")
-//#ifdef LOGGER_QT
-	//	, m_subscribedUITree(nullptr)
-//#endif
 	{
 		m_messages.reserve(other.m_messages.size());
 		for (size_t i = 0; i < other.m_messages.size(); ++i)
@@ -90,12 +66,7 @@ namespace Log
 	}
 
 	ContextLogger::~ContextLogger()
-	{
-		// onNewContext.disconnectAll();
-		// onNewMessage.disconnectAll();
-		// onDestroyContext.disconnectAll();
-		// onClear.disconnectAll();
-		
+	{		
 		destroyAllContext();
 		clear();
 		if (!m_parent)
@@ -132,19 +103,7 @@ namespace Log
 	{
 		ContextLogger* context = new ContextLogger(name, this);
 		m_childs.push_back(context);
-#ifdef LOGGER_QT
-		//emit onNewContext(this, context);
 		emitRecursive_onNewContext(*this, *context);
-		//if (m_subscribedUITree)
-		//	m_subscribedUITree->onNewContext(*this, *context);
-#endif
-/*#ifdef LOGGER_QT
-		if (m_treeWidget)
-		{
-			m_treeWidget->updateData(*this);
-			//m_treeWidget->addChild(context->getTreeWidgetItem());
-		}
-#endif*/
 		return context;
 	}
 
@@ -152,12 +111,7 @@ namespace Log
 	void ContextLogger::clear()
 	{		
 		m_messages.clear();
-#ifdef LOGGER_QT
 		emitRecursive_onClear(*this);
-		//emit onClear();
-		//if (m_subscribedUITree)
-		//	m_subscribedUITree->onClear(*this);
-#endif
 		for (ContextLogger* c : m_childs)
 			c->clear();
 	}
@@ -166,12 +120,7 @@ namespace Log
 		for (size_t i=0; i< m_childs.size(); ++i)
 		{
 			m_childs[i]->destroyAllContext();
-#ifdef LOGGER_QT
 			emitRecursive_onDestroyContext(*m_childs[i]);
-			//emit onDestroyContext(c);
-			//if (m_subscribedUITree)
-			//	m_subscribedUITree->onDestroyContext(*c);
-#endif
 			delete m_childs[i];
 		}
 			
@@ -184,12 +133,7 @@ namespace Log
 			return;
 		m_childs.erase(it);
 		child->destroyAllContext();
-#ifdef LOGGER_QT
 		emitRecursive_onDestroyContext(*child);
-		//emit onDestroyContext(child);
-		//if (m_subscribedUITree)
-		//	m_subscribedUITree->onDestroyContext(*child);
-#endif
 		delete child;
 	}
 
@@ -197,12 +141,7 @@ namespace Log
 	void ContextLogger::logInternal(const Message& msg)
 	{
 		m_messages.push_back(msg);
-#ifdef LOGGER_QT
 		emitRecursive_onNewMessage(*this, msg);
-		//emit onNewMessage(this, msg);
-		//if(m_subscribedUITree)
-		//   m_subscribedUITree->onNewMessage(*this, msg);
-#endif
 	}
 
 
@@ -228,29 +167,7 @@ namespace Log
 	{
 		return m_childs;
 	}
-/*#ifdef LOGGER_QT
-	void ContextLogger::subscribeToUI(QContextLoggerTree* tree) const
-	{
-		if (m_subscribedUITree == tree)
-			return;
-		subscribeToUI_internal(tree);
-		if (m_subscribedUITree)
-			m_subscribedUITree->onNewSubscribed(*m_rootParent);
-		else
-			m_subscribedUITree->onUnsubscribed(*m_rootParent);
-		
-	}
-	void ContextLogger::unsubscribeFromUI() const
-	{
-		subscribeToUI(nullptr);
-	}
-	void ContextLogger::subscribeToUI_internal(QContextLoggerTree* tree) const
-	{
-		m_subscribedUITree = tree;
-		for(size_t i=0; i<m_childs.size(); ++i)
-			m_childs[i]->subscribeToUI_internal(tree);
-	}
-#endif*/
+
 	void ContextLogger::toStringVector(std::vector<std::string>& list) const
 	{
 		toStringVector(0, list);
@@ -285,38 +202,7 @@ namespace Log
 	}
 
 
-/*#ifdef LOGGER_QT
-	QContextLoggerTreeWidgetItem* ContextLogger::getTreeWidgetItem() 
-	{
-		if (!m_treeWidget)
-		{
-			m_treeWidget = new QContextLoggerTreeWidgetItem();
-			for (size_t i = 0; i < m_childs.size(); ++i)
-			{
 
-				m_treeWidget->addChild(m_childs[i]->getTreeWidgetItem());
-			}
-			updateTreeWidgetItem();
-		}
-		return m_treeWidget;
-	}
-
-	void ContextLogger::updateTreeWidgetItem()
-	{
-		m_treeWidget->updateData(*this);
-		for (size_t i = 0; i < m_childs.size(); ++i)
-		{
-			m_childs[i]->updateTreeWidgetItem();
-		}
-	}
-#endif*/
-
-#ifdef LOGGER_QT
-	void ContextLogger::updateUI()
-	{
-
-	}
-#endif
 
 	void ContextLogger::emitRecursive_onNewContext(const ContextLogger& parent, const ContextLogger& newContext)
 	{

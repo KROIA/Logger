@@ -8,11 +8,7 @@ namespace Log
 	QContextLoggerTree::QContextLoggerTree(QTreeWidget* parent)
 		: QWidget(parent)
 		, m_treeWidget(parent)
-
-		//, m_treeItem(nullptr)
-	//	: QTreeWidgetItem()
 	{
-		//m_treeItem = new QTreeWidgetItem(m_treeWidget);
 		m_updateTimer.setInterval(100);
 		connect(&m_updateTimer, &QTimer::timeout, this, &QContextLoggerTree::onUpdateTimer);
 		m_updateTimer.start();
@@ -26,32 +22,12 @@ namespace Log
 		}
 		m_treeWidget->setHeaderLabels(headerLables);
 	}
-	/*QContextLoggerTree::QContextLoggerTree(QTreeWidget* treeview)
-	//	: QTreeWidgetItem(treeview)
-		//, m_logger(logger)
-	{
-
-	}
-	QContextLoggerTree::QContextLoggerTree(QTreeWidgetItem* parent)
-	//	: QTreeWidgetItem(parent)
-		//, m_logger(logger)
-	{
-
-	}*/
 
 	QContextLoggerTree::~QContextLoggerTree()
 	{
 
 	}
 
-
-	/*QTreeWidgetItem* QContextLoggerTree::clone() const
-	{
-		QContextLoggerTree *c = new QContextLoggerTree(this->parent());
-
-		return c;
-	}
-	*/
 
 	const QString& QContextLoggerTree::getHeaderName(HeaderPos pos) const
 	{
@@ -83,11 +59,6 @@ namespace Log
 		logger.connect_onDestroyContext_slot(this, &QContextLoggerTree::onDestroyContext);
 		logger.connect_onDelete_slot(this, &QContextLoggerTree::onContextDelete);
 
-		//connect(&logger, &ContextLogger::onNewContext, this , &QContextLoggerTree::onNewContext);
-		//connect(&logger, &ContextLogger::onNewMessage, this, &QContextLoggerTree::onNewMessage);
-		//connect(&logger, &ContextLogger::onClear, this, &QContextLoggerTree::onClear);
-		//connect(&logger, &ContextLogger::onDestroyContext, this, &QContextLoggerTree::onDestroyContext);
-
 		onNewSubscribed(logger);
 	}
 	void QContextLoggerTree::detachLogger(ContextLogger& logger)
@@ -98,17 +69,8 @@ namespace Log
 		logger.disconnect_onDestroyContext_slot(this, &QContextLoggerTree::onDestroyContext);
 		logger.disconnect_onDelete_slot(this, &QContextLoggerTree::onContextDelete);
 
-		//disconnect(&logger, &ContextLogger::onNewContext, this, &QContextLoggerTree::onNewContext);
-		//disconnect(&logger, &ContextLogger::onNewMessage, this, &QContextLoggerTree::onNewMessage);
-		//disconnect(&logger, &ContextLogger::onClear, this, &QContextLoggerTree::onClear);
-		//disconnect(&logger, &ContextLogger::onDestroyContext, this, &QContextLoggerTree::onDestroyContext);
-
 		onUnsubscribed(logger);
 	}
-	/*void QContextLoggerTree::updateData(const ContextLogger& logger)
-	{
-
-	}*/
 	void QContextLoggerTree::onNewSubscribed(const ContextLogger& logger)
 	{
 		auto& it = m_msgItems.find(&logger);
@@ -227,16 +189,11 @@ namespace Log
 		TreeData& treeData = it->second;
 
 		QTreeWidgetItem* line = new QTreeWidgetItem(treeData.thisMessagesRoot);
-		//line->setData((int)HeaderPos::contextName2, Qt::DisplayRole, logger.getName().c_str());
 		line->setData((int)HeaderPos::timestamp, Qt::DisplayRole, m.getDateTime().toString().c_str());
 		line->setData((int)HeaderPos::message, Qt::DisplayRole, m.getText().c_str());
 
-		//m.getLevel
-		// Set icon
 		line->setIcon((int)HeaderPos::contextName, getIcon(m.getLevel()));
 		line->setBackgroundColor((int)HeaderPos::message, m.getColor().toQColor());
-		//if(m.getLevel() == Level::error)
-		//	line->setHidden(true);
 
 		treeData.msgItems.push_back(line);
 		treeData.thisMessagesRoot->addChild(line);
@@ -264,14 +221,8 @@ namespace Log
 			return;
 		TreeData treeData = it->second;
 		
-		
-		qDebug() << "Destroy " << (size_t)treeData.logger;
 		delete treeData.childRoot;
 		m_msgItems.erase(it);
-		//delete treeData.thisMessagesRoot;
-		
-		//for (size_t i = 0; i < treeData.msgItems.size(); ++i)
-		//	delete treeData.msgItems[i];
 	}
 	void QContextLoggerTree::onContextDelete(ContextLogger& loggerToDestroy)
 	{

@@ -10,7 +10,7 @@
 
 namespace Log
 {
-	class LOGGER_EXPORT QContextLoggerTree: public QWidget// : public QTreeWidgetItem
+	class LOGGER_EXPORT QContextLoggerTree: public QWidget
 	{
 		Q_OBJECT
 	public:
@@ -18,24 +18,12 @@ namespace Log
 		{
 			contextName,
 			timestamp,
-			
-			//contextName2 = 1,
-			
 			message,
 
 			__count
 		};
 		QContextLoggerTree(QTreeWidget *parent = nullptr);
-		//QContextLoggerTreeWidgetItem(QTreeWidget* treeview/*, ContextLogger* logger*/ );
-		//QContextLoggerTreeWidgetItem(QTreeWidgetItem* parent/*, ContextLogger* logger*/);
-
 		~QContextLoggerTree();
-
-	//	QTreeWidgetItem* clone() const override;
-
-		//static const QIcon & getIcon(Level logLevel);
-
-		//void updateData(const ContextLogger& logger);
 
 		const QString &getHeaderName(HeaderPos pos) const;
 		unsigned int getHeaderWidth(HeaderPos pos) const;
@@ -68,8 +56,6 @@ namespace Log
 			const ContextLogger* logger = nullptr;
 			QTreeWidgetItem* thisMessagesRoot = nullptr;
 			std::vector<QTreeWidgetItem*> msgItems;
-
-			//std::vector<TreeData> childItems;
 		};
 
 
@@ -83,7 +69,6 @@ namespace Log
 		
 
 		QTimer m_updateTimer;
-		//QTreeWidgetItem* m_treeItem;
 	};
 }
 #endif

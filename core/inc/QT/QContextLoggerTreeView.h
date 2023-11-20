@@ -22,8 +22,6 @@ namespace Log
         QContextLoggerTreeView(QWidget* parent = nullptr);
         ~QContextLoggerTreeView();
 
-        //void updateView();
-
         void connectLogger(ContextLogger &logger);
         void disconnectLogger(ContextLogger &logger);
 
@@ -38,7 +36,5 @@ namespace Log
 
         QTimer m_updateTimer;
     };
-
-
 }
 #endif

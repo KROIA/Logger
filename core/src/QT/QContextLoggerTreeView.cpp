@@ -35,12 +35,6 @@ namespace Log
 		m_updateTimer.setInterval(100);
 		connect(&m_updateTimer, &QTimer::timeout, this, &QContextLoggerTreeView::onUpdateTimer);
 		m_updateTimer.start();
-
-		//logger.subscribeToUI(m_treeItem);
-		//updateView();
-		
-
-		
 	}
 	QContextLoggerTreeView::~QContextLoggerTreeView()
 	{
@@ -59,19 +53,5 @@ namespace Log
 	{
 		
 	}
-
-	//void QContextLoggerTreeView::updateView()
-	//{
-		//ui->treeView->model()->
-		/*for (Log::ContextLogger* l : Log::ContextLogger::getAllLogger())
-		{
-			Log::QContextLoggerTree* item = new Log::QContextLoggerTree(m_treeWidget);
-			item->updateData(*l);
-			//widget->addTopLevelItem(l->getTreeWidgetItem());
-		}*/
-		//m_treeWidget->clear();
-		
-		//m_treeItem->updateData(m_logger);
-	//}
 }
 #endif
