@@ -4,6 +4,10 @@
 #include "LogColor.h"
 #include <string>
 
+#ifdef LOGGER_QT
+#include <QIcon>
+#endif
+
 namespace Log
 {
 	enum Level
@@ -26,18 +30,11 @@ namespace Log
 		Color custom;
 	};
 
-	inline std::string getLevelStr(Level l)
-	{
-		switch (l)
-		{
-		case Level::trace:   return " Trace:   ";
-		case Level::debug:   return " Debug:   ";
-		case Level::info:    return " Info:    ";
-		case Level::warning: return " Warning: ";
-		case Level::error:   return " Error:   ";
-		}
-		return "Unknown debug level: " + std::to_string(l);
-	}
+	extern const std::string& getLevelStr(Level l);
+
+#ifdef LOGGER_QT
+	extern const QIcon& getIcon(Level logLevel);
+#endif
 
 
 }

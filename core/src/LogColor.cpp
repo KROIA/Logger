@@ -231,6 +231,13 @@ The different color codes are
 		return m_b;
 	}
 
+#ifdef LOGGER_QT
+	QColor Color::toQColor() const
+	{
+		return QColor(m_r, m_g, m_b);
+	}
+#endif
+
 
 	Color Color::lerp(const Color& c1, const Color& c2, float x)
 	{

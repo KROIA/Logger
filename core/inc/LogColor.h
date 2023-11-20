@@ -2,6 +2,9 @@
 
 #include "Logger_base.h"
 
+#ifdef LOGGER_QT
+#include <QColor>
+#endif
 
 namespace Log
 {
@@ -32,6 +35,10 @@ namespace Log
 		uint8_t getRed() const;
 		uint8_t getGreen() const;
 		uint8_t getBlue() const;
+
+#ifdef LOGGER_QT
+		QColor toQColor() const;
+#endif
 
 		static Color lerp(const Color& c1, const Color& c2, float x);
 

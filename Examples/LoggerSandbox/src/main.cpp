@@ -1,13 +1,17 @@
 #include "Logger.h"
+#include "Context1Object.h"
+#include "Context2Object.h"
 #include <iostream>
 
 #include<QTreeWidget>
 #include<QApplication>
+#include <QIcon>
 
 int main(int argc, char* argv[])
 {
 	QApplication app(argc, argv);
-	Log::ContextLogger logger("TestLogger");
+	
+	/*Log::ContextLogger logger("TestLogger");
 
 	Log::ContextLogger* id1 = logger.createContext("TestContext");
 	id1->log("Test");
@@ -38,20 +42,38 @@ int main(int argc, char* argv[])
 	id3->log("Error msg2", Log::Level::error);
 	id1->setTabCount(0);
 	id1->log("Log context 1");
+	*/
 
-
-	QTreeWidget* widget = new QTreeWidget();
+	/*QTreeWidget* widget = new QTreeWidget();
 	widget->setColumnCount(3);
 
 	for (Log::ContextLogger* l : Log::ContextLogger::getAllLogger())
 	{
-		widget->addTopLevelItem(l->getTreeWidgetItem());
+		Log::QContextLoggerTreeWidgetItem *item = new Log::QContextLoggerTreeWidgetItem(widget);
+		item->updateData(*l);
+		//widget->addTopLevelItem(l->getTreeWidgetItem());
 	}
-	widget->show();
+	widget->show();*/
 
-	std::cout << logger;
+	//Log::QContextLoggerTreeView * loggerView = new Log::QContextLoggerTreeView();
+	//loggerView->updateView();
+	//loggerView->show();
 
-	std::cout << "end\n";
+	//std::cout << logger;
+
+	//std::cout << "end\n";
+	Log::ContextLogger logger1("TestLogger1");
+	Log::ContextLogger logger2("TestLogger2");
+	Log::QContextLoggerTreeView* view = new Log::QContextLoggerTreeView();
+	view->show();
+	Context1Object obj1(logger1);
+	Context2Object obj2(logger2);
+
+	view->connectLogger(logger1);
+	view->connectLogger(logger2);
+
+	
+
 	app.exec();
 	getchar();
 	return 0;
