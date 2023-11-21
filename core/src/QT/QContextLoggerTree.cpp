@@ -226,6 +226,7 @@ namespace Log
 	}
 	void QContextLoggerTree::onContextDelete(ContextLogger& loggerToDestroy)
 	{
+		onDestroyContext(loggerToDestroy);
 		detachLogger(loggerToDestroy);
 	}
 	void QContextLoggerTree::onUpdateTimer()
