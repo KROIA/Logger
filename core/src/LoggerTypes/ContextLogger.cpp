@@ -5,11 +5,8 @@ namespace Log
 {
 	namespace Logger
 	{
-		//DEFINE_SIGNAL_CONNECT_DISCONNECT(ContextLogger, onNewMessage, const Message&);
 		DEFINE_SIGNAL_CONNECT_DISCONNECT(ContextLogger, onContextCreate, ContextLogger&);
 		DEFINE_SIGNAL_CONNECT_DISCONNECT(ContextLogger, onContextDestroy, ContextLogger&);
-		//DEFINE_SIGNAL_CONNECT_DISCONNECT(ContextLogger, onClear, const ContextLogger&);
-		//DEFINE_SIGNAL_CONNECT_DISCONNECT(ContextLogger, onDelete, ContextLogger&);
 
 
 		ContextLogger::ContextLogger(const std::string& name, ContextLogger* parent) 
@@ -18,9 +15,6 @@ namespace Log
 			, m_rootParent(parent ? parent->m_rootParent : this)
 			, onContextCreate("onContextCreate")
 			, onContextDestroy("onContextDestroy")
-			//, onNewMessage("onNewMessage")
-			//, onClear("onClear")
-			//, onDelete("onDelete")
 		{
 			if (!m_parent)
 				getAllRootLoggers().push_back(this);
@@ -32,9 +26,6 @@ namespace Log
 			, m_rootParent(this)
 			, onContextCreate("onContextCreate")
 			, onContextDestroy("onContextDestroy")
-			//, onNewMessage("onNewMessage")
-			//, onClear("onClear")
-			//, onDelete("onDelete")
 		{
 			getAllRootLoggers().push_back(this);
 		}
@@ -42,20 +33,9 @@ namespace Log
 			: AbstractLogger(other)
 			, m_parent(nullptr)
 			, m_rootParent(this)
-			//, m_creationsTime(other.m_creationsTime)
 			, onContextCreate("onContextCreate")
 			, onContextDestroy("onContextDestroy")
-			//, onNewMessage("onNewMessage")
-			//, onClear("onClear")
-			//, onDelete("onDelete")
 		{
-			/*m_messages.reserve(other.m_messages.size());
-			for (size_t i = 0; i < other.m_messages.size(); ++i)
-			{
-				m_messages.push_back(other.m_messages[i]);
-				m_messages.back().setContext(this);
-			}*/
-
 			m_childs.reserve(other.m_childs.size());
 			for (size_t i = 0; i < other.m_childs.size(); ++i)
 			{
@@ -66,7 +46,6 @@ namespace Log
 		ContextLogger::~ContextLogger()
 		{
 			destroyAllContext();
-			//clear();
 			if (!m_parent)
 			{
 				std::vector<ContextLogger*>& list = getAllRootLoggers();
@@ -82,7 +61,6 @@ namespace Log
 					m_parent->m_childs.erase(it);
 				}
 			}
-			//onDelete.emitSignal(*this);
 		}
 
 		ContextLogger* ContextLogger::getParent() const
@@ -135,14 +113,6 @@ namespace Log
 			delete child;
 		}
 
-
-		/*void ContextLogger::logInternal(const Message& msg)
-		{
-			m_messages.push_back(msg);
-			m_messages.back().setContext(this);
-			emitRecursive_onNewMessage(msg);
-		}*/
-
 		std::vector<ContextLogger*>& ContextLogger::getAllRootLoggers()
 		{
 			static std::vector<ContextLogger*> allRootLoggers;
@@ -160,14 +130,6 @@ namespace Log
 			return os;
 		}
 
-		/*const DateTime& ContextLogger::getCreationDateTime() const
-		{
-			return m_creationsTime;
-		}
-		const std::vector<Message>& ContextLogger::getMessages() const
-		{
-			return m_messages;
-		}*/
 		void ContextLogger::getMessagesRecursive(std::vector<Message>& list) const
 		{
 			const std::vector<Message>& messages = getMessages();
@@ -185,13 +147,6 @@ namespace Log
 		void ContextLogger::toStringVector(std::vector<std::string>& list) const
 		{
 			toStringVector(0, list);
-		}
-
-		void ContextLogger::logInternal(const Message& msg)
-		{
-			AbstractLogger::logInternal(msg);
-			//if(m_parent)
-			//	m_parent->emitNewMessage(msg);
 		}
 
 		void ContextLogger::toStringVector(size_t depth, std::vector<std::string>& list) const
@@ -232,13 +187,6 @@ namespace Log
 			if (m_parent)
 				m_parent->emitRecursive_onContextCreate(newContext);
 		}
-		/*void ContextLogger::emitRecursive_onNewMessage(const Message& newMessage)
-		{
-			if (onNewMessage.getSlotCount())
-				onNewMessage.emitSignal(newMessage);
-			if (m_parent)
-				m_parent->emitRecursive_onNewMessage(newMessage);
-		}*/
 		void ContextLogger::emitRecursive_onContextDestroy(ContextLogger& destroyedContext)
 		{
 			if (onContextDestroy.getSlotCount())
@@ -246,12 +194,5 @@ namespace Log
 			if (m_parent)
 				m_parent->emitRecursive_onContextDestroy(destroyedContext);
 		}
-		/*void ContextLogger::emitRecursive_onClear(const ContextLogger& logger)
-		{
-			if (onClear.getSlotCount())
-				onClear.emitSignal(logger);
-			if (m_parent)
-				m_parent->emitRecursive_onClear(logger);
-		}*/
 	}
 }

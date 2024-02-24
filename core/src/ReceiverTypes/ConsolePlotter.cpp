@@ -25,11 +25,6 @@ namespace Log
 		void ConsolePlotter::onNewSubscribed(Logger::AbstractLogger& logger)
 		{
 			onPrintAllMessages(logger);
-			/*const std::vector<Message>& messages = logger.getMessages();
-			for (const Message& m : messages)
-			{
-				printToConsole(logger, m);
-			}*/
 		}
 		void ConsolePlotter::onUnsubscribed(Logger::AbstractLogger& logger)
 		{

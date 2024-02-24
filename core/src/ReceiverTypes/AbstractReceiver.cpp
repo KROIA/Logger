@@ -42,11 +42,8 @@ namespace Log
 				return;
 			}
 			m_loggers.push_back(&logger);
-			//logger.connect_onContextCreate_slot(this, &AbstractReceiver::onContextCreate);
 			logger.connect_onNewMessage_slot(this, &AbstractReceiver::onNewMessage);
 			logger.connect_onClear_slot(this, &AbstractReceiver::onClear);
-			//logger.connect_onContextDestroy_slot(this, &AbstractReceiver::onContextDestroy);
-			//logger.connect_onDelete_slot(this, &AbstractReceiver::onContextDelete);
 			logger.connect_onDelete_slot(this, &AbstractReceiver::onDelete);
 			logger.connect_onDelete_slot(this, &AbstractReceiver::onDeletePrivate);
 
@@ -54,11 +51,8 @@ namespace Log
 		}
 		void AbstractReceiver::detachLogger(Logger::AbstractLogger& logger)
 		{
-			//logger.disconnect_onContextCreate_slot(this, &AbstractReceiver::onContextCreate);
 			logger.disconnect_onNewMessage_slot(this, &AbstractReceiver::onNewMessage);
 			logger.disconnect_onClear_slot(this, &AbstractReceiver::onClear);
-			//logger.disconnect_onContextDestroy_slot(this, &AbstractReceiver::onContextDestroy);
-			//logger.disconnect_onDelete_slot(this, &AbstractReceiver::onContextDelete);
 			logger.disconnect_onDelete_slot(this, &AbstractReceiver::onDelete);
 			logger.disconnect_onDelete_slot(this, &AbstractReceiver::onDeletePrivate);
 
