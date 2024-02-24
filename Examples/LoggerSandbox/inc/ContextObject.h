@@ -2,7 +2,7 @@
 
 #include <QWidget>
 #include "ui_ContextObject.h"
-#include "ContextLogger.h"
+#include "Logger.h"
 #include <QTimer>
 
 class ContextObject : public QWidget
@@ -12,12 +12,12 @@ class ContextObject : public QWidget
 public:
 	ContextObject(
 		const std::string& contextName,
-		Log::ContextLogger& logger, 
+		Log::Logger::ContextLogger& logger,
 		QWidget *parent = nullptr);
-	~ContextObject();
+	virtual ~ContextObject();
 
 
-	Log::ContextLogger* m_logger;
+	Log::Logger::ContextLogger* m_logger;
 
 protected slots:
 	void onMessageTimer();
@@ -29,7 +29,7 @@ protected slots:
 	void onCloseContext_pushButton_clicked();
 	void onDeleteContext_pushButton_clicked();
 
-	void onDelete(Log::ContextLogger& logger);
+	void onDelete(Log::Logger::AbstractLogger& logger);
 protected:
 
 	QTimer m_messageTimer;

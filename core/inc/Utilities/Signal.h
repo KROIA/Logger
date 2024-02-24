@@ -109,10 +109,19 @@ namespace Log
         void emitSignal(Args... args) const
         {
             //JD_SIGNAL_PROFILING_BLOCK(m_profilerName.c_str(), JD_COLOR_STAGE_10);
-            for (const auto& slot : m_slotsWithArgs) {
+            std::vector<size_t> slotsToRemove;
+            for (size_t i = 0; i < m_slotsWithArgs.size(); ++i) {
                // JD_SIGNAL_PROFILING_BLOCK("Slot", JD_COLOR_STAGE_11);
-                (*slot.m_func)(args...);
+                const SlotFunctionContainer& slot = m_slotsWithArgs[i];
+                if(!slot.m_func)
+                    // Slot is no longer valid, remove it
+                    slotsToRemove.push_back(i);
+                else
+                    (*slot.m_func)(args...);
             }
+            //for (size_t i = 0; i < slotsToRemove.size(); ++i) {
+			//	m_slotsWithArgs.erase(m_slotsWithArgs.begin() + slotsToRemove[i]);
+			//}
         }
 
    // private:

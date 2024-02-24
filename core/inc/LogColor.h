@@ -66,6 +66,7 @@ namespace Log
 		public:
 			class Foreground
 			{
+			public:
 				static const Color red;
 				static const Color green;
 				static const Color blue;
@@ -85,6 +86,7 @@ namespace Log
 			};
 			class Background
 			{
+			public:
 				static const Color red;
 				static const Color green;
 				static const Color blue;

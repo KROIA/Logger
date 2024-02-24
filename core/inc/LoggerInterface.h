@@ -10,7 +10,7 @@ namespace Log
 	public:
 		virtual ~LoggerInterface() {}
 
-		virtual void log(const Message& msg) = 0;
+		virtual void log(Message msg) = 0;
 		 
 		virtual void log(const std::string& msg) = 0;
 		virtual void log(const std::string& msg, Level level) = 0;

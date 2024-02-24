@@ -1,4 +1,4 @@
-#include "LogProfiler.h"
+#include "Utilities/LogProfiler.h"
 
 namespace Log
 {

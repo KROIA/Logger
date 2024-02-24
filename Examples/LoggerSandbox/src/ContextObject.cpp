@@ -7,7 +7,7 @@
 size_t ContextObject::s_instanceCounter = 0;
 ContextObject::ContextObject(
 	const std::string& contextName,
-	Log::ContextLogger& logger,
+	Log::Logger::ContextLogger& logger,
 	QWidget* parent)
 	: QWidget(parent)
 	, m_logger(logger.createContext(contextName))
@@ -36,12 +36,15 @@ ContextObject::ContextObject(
 }
 
 ContextObject::~ContextObject()
-{
+{	
 	m_messageTimer.stop();
 	m_warningTimer.stop();
 	m_errorTimer.stop();
-	if(m_logger)
-	m_logger->log("Destroy " + m_logger->getName());
+	if (m_logger)
+	{
+		m_logger->disconnect_onDelete_slot(this, &ContextObject::onDelete);
+		m_logger->log("Destroy " + m_logger->getName());
+	}
 
 }
 
@@ -93,7 +96,7 @@ void ContextObject::onDeleteContext_pushButton_clicked()
 	if (obj)
 	{
 		obj->close();
-		Log::ContextLogger *logger = obj->m_logger;
+		Log::Logger::ContextLogger *logger = obj->m_logger;
 		obj->m_logger = nullptr;
 		obj->deleteLater();
 		
@@ -107,7 +110,7 @@ void ContextObject::onDeleteContext_pushButton_clicked()
 	}
 }
 
-void ContextObject::onDelete(Log::ContextLogger& logger)
+void ContextObject::onDelete(Log::Logger::AbstractLogger& logger)
 {
 	qDebug() << "Logger deleted";
 	m_logger = nullptr;

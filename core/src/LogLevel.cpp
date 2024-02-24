@@ -1,4 +1,5 @@
 #include "LogLevel.h"
+#include "Utilities/Resources.h"
 
 namespace Log
 {
@@ -21,11 +22,11 @@ namespace Log
 	{
 		switch (logLevel)
 		{
-		case Level::trace: { static const QIcon icon(":/icons/trace.png"); return icon; }
-		case Level::debug: { static const QIcon icon(":/icons/debug.png"); return icon; }
-		case Level::info: { static const QIcon icon(":/icons/info.png"); return icon; }
-		case Level::warning: { static const QIcon icon(":/icons/warning.png"); return icon; }
-		case Level::error: { static const QIcon icon(":/icons/error.png"); return icon; }
+		case Level::trace:		{ return Resources::getIconTrace(); }
+		case Level::debug:		{ return Resources::getIconDebug(); }
+		case Level::info:		{ return Resources::getIconInfo();	}
+		case Level::warning:	{ return Resources::getIconWarning(); }
+		case Level::error:		{ return Resources::getIconError(); }
 		}
 
 		const QIcon dummy;

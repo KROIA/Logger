@@ -1,4 +1,4 @@
-#include "DateTime.h"
+#include "Utilities/DateTime.h"
 #include <chrono>
 #include <ctime>
 
@@ -14,6 +14,47 @@ namespace Log
 		, m_day(other.m_day)
 	{
 
+	}
+
+	Date& Date::operator=(const Date& other)
+	{
+		m_year = other.m_year;
+		m_month = other.m_month;
+		m_day = other.m_day;
+		return *this;
+	}
+	bool Date::operator<(const Date& other) const
+	{
+		if (m_year < other.m_year) return true;
+		if (m_year > other.m_year) return false;
+
+		if (m_month < other.m_month) return true;
+		if (m_month > other.m_month) return false;
+
+		if (m_day < other.m_day) return true;
+		if (m_day > other.m_day) return false;
+
+		return false;
+	}
+	bool Date::operator>(const Date& other) const
+	{
+		return !(*this < other) && *this != other;
+	}
+	bool Date::operator<=(const Date& other) const
+	{
+		return *this < other || *this == other;
+	}
+	bool Date::operator>=(const Date& other) const
+	{
+		return !(*this < other);
+	}
+	bool Date::operator==(const Date& other) const
+	{
+		return m_year == other.m_year && m_month == other.m_month && m_day == other.m_day;
+	}
+	bool Date::operator!=(const Date& other) const
+	{
+		return !(*this == other);
 	}
 
 	void Date::update()
@@ -63,6 +104,59 @@ namespace Log
 	{
 
 	}
+	Time& Time::operator=(const Time& other)
+	{
+		m_hour = other.m_hour;
+		m_min = other.m_min;
+		m_sec = other.m_sec;
+		m_ms = other.m_ms;
+		return *this;
+	
+	}
+	bool Time::operator<(const Time& other) const
+	{
+		if (m_hour < other.m_hour) 
+			return true;
+		if (m_hour > other.m_hour) 
+			return false;
+
+		if (m_min < other.m_min) 
+			return true;
+		if (m_min > other.m_min) 
+			return false;
+
+		if (m_sec < other.m_sec) 
+			return true;
+		if (m_sec > other.m_sec) 
+			return false;
+
+		if (m_ms < other.m_ms) 
+			return true;
+		if (m_ms > other.m_ms) 
+			return false;
+
+		return false;
+	}
+	bool Time::operator>(const Time& other) const
+	{
+		return !(*this < other) && *this != other;
+	}
+	bool Time::operator<=(const Time& other) const
+	{
+		return *this < other || *this == other;
+	}
+	bool Time::operator>=(const Time& other) const
+	{
+		return !(*this < other);
+	}
+	bool Time::operator==(const Time& other) const
+	{
+		return m_hour == other.m_hour && m_min == other.m_min && m_sec == other.m_sec && m_ms == other.m_ms;
+	}
+	bool Time::operator!=(const Time& other) const
+	{
+		return !(*this == other);
+	}
 
 	void Time::update()
 	{
@@ -110,9 +204,9 @@ namespace Log
 		if (m_hour < 10) hour = "0" + hour;
 		if (m_min < 10) min = "0" + min;
 		if (m_sec < 10) sec = "0" + sec;
-		if (m_ms < 10) ms = "000" + ms;
-		else if (m_ms < 100) ms = "00" + ms;
-		else if (m_ms < 1000) ms = "0" + ms;
+		if (m_ms < 10) ms = "00" + ms;
+		else if (m_ms < 100) ms = "0" + ms;
+		//else if (m_ms < 1000) ms = "0" + ms;
 
 		return hour + ":" + min + ":" + sec + ":" + ms;
 	}
@@ -127,6 +221,49 @@ namespace Log
 		, m_time(other.m_time)
 	{
 
+	}
+
+	DateTime& DateTime::operator=(const DateTime& other)
+	{
+		m_date = other.m_date;
+		m_time = other.m_time;
+		return *this;
+	
+	}
+
+	bool DateTime::operator<(const DateTime& other) const
+	{
+		if (m_date < other.m_date) 
+			return true;
+		if (m_date > other.m_date) 
+			return false;
+
+		if (m_time < other.m_time) 
+			return true;
+		if (m_time > other.m_time) 
+			return false;
+
+		return false;
+	}
+	bool DateTime::operator>(const DateTime& other) const
+	{
+		return !(*this < other) && *this != other;
+	}
+	bool DateTime::operator<=(const DateTime& other) const
+	{
+		return *this < other || *this == other;
+	}
+	bool DateTime::operator>=(const DateTime& other) const
+	{
+		return !(*this < other);
+	}
+	bool DateTime::operator==(const DateTime& other) const
+	{
+		return m_date == other.m_date && m_time == other.m_time;
+	}
+	bool DateTime::operator!=(const DateTime& other) const
+	{
+		return !(*this == other);
 	}
 
 	void DateTime::update()

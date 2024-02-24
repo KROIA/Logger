@@ -1,11 +1,20 @@
 #pragma once
 
-#include "ConsoleLogger.h"
-#include "ContextLogger.h"
-#include "LogProfiler.h"
 
-#ifdef LOGGER_QT
-#include "QT/QContextLoggerTree.h"
 
-#include "QT/QContextLoggerTreeView.h"
-#endif
+// Logger Types
+#include "LoggerTypes/AbstractLogger.h"
+#include "LoggerTypes/ContextLogger.h"
+
+// Log Receivers
+#include "ReceiverTypes/AbstractReceiver.h"
+#include "ReceiverTypes/ContextReceiver.h"
+#include "ReceiverTypes/QContextLoggerTree.h"
+#include "ReceiverTypes/ConsolePlotter.h"
+#include "ReceiverTypes/ConsoleContextPlotter.h"
+
+// ui
+#include "ui/QContextLoggerTreeView.h"
+
+// Utilities
+#include "Utilities/LogProfiler.h"
