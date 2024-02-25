@@ -17,11 +17,11 @@ int main(int argc, char* argv[])
 	logger2.setColor(Log::Color::cyan);
 	Log::UI::QContextLoggerTreeView* view = new Log::UI::QContextLoggerTreeView();
 	view->show();
-	Context1Object obj1(logger1);
-	Context2Object obj2(logger2);
+	Context1Object *obj1 = new Context1Object(logger1,view);
+	Context2Object *obj2 = new Context2Object(logger2,view);
 
-	view->connectLogger(logger1);
-	view->connectLogger(logger2);
+	view->attachLogger(logger1);
+	view->attachLogger(logger2);
 
 	
 

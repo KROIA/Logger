@@ -8,9 +8,11 @@ size_t ContextObject::s_instanceCounter = 0;
 ContextObject::ContextObject(
 	const std::string& contextName,
 	Log::Logger::ContextLogger& logger,
+	Log::UI::QContextLoggerTreeView* view,
 	QWidget* parent)
 	: QWidget(parent)
 	, m_logger(logger.createContext(contextName))
+	, m_view(view)
 {
 	ui.setupUi(this);
 
@@ -22,6 +24,9 @@ ContextObject::ContextObject(
 	connect(&m_messageTimer, &QTimer::timeout, this, &ContextObject::onMessageTimer);
 	connect(&m_warningTimer, &QTimer::timeout, this, &ContextObject::onWarningTimer);
 	connect(&m_errorTimer, &QTimer::timeout, this, &ContextObject::onErrorTimer);
+	connect(ui.deleteContext_pushButton, &QPushButton::clicked, this, &ContextObject::onDeleteContext_pushButton_clicked);
+	connect(ui.closeContext_pushButton, &QPushButton::clicked, this, &ContextObject::onCloseContext_pushButton_clicked);
+	connect(ui.dateTimeFormatSwitch_pushButton, &QPushButton::clicked, this, &ContextObject::onDateTimeFormatSwitch_pushButton_clicked);
 	m_messageTimer.start();
 	m_warningTimer.start();
 	m_errorTimer.start();
@@ -75,7 +80,7 @@ void ContextObject::on_clear_pushButton_clicked()
 }
 void ContextObject::on_createContext_pushButton_clicked()
 {
-	ContextObject *obj = new ContextObject("ContextObject_" + std::to_string(m_contextObjects.size()), *m_logger);
+	ContextObject *obj = new ContextObject("ContextObject_" + std::to_string(m_contextObjects.size()), *m_logger, m_view);
 
 	connect(obj->ui.closeContext_pushButton, &QPushButton::clicked, this, &ContextObject::onCloseContext_pushButton_clicked);
 	connect(obj->ui.deleteContext_pushButton, &QPushButton::clicked, this, &ContextObject::onDeleteContext_pushButton_clicked);
@@ -109,10 +114,21 @@ void ContextObject::onDeleteContext_pushButton_clicked()
 				logger->getParent()->destroyContext(logger);
 	}
 }
+void ContextObject::onDateTimeFormatSwitch_pushButton_clicked()
+{
+	if(!m_view)
+		return;
+	static bool switcher = false;
+	switcher = !switcher;
+	if(switcher)
+		m_view->setDateTimeFormat(Log::DateTime::Format::yearMonthDay | Log::DateTime::Format::hourMinuteSecond);
+	else
+		m_view->setDateTimeFormat(Log::DateTime::Format::dayMonthYear | Log::DateTime::Format::hourMinuteSecondMillisecond);
+}
 
 void ContextObject::onDelete(Log::Logger::AbstractLogger& logger)
 {
-	qDebug() << "Logger deleted";
+	//qDebug() << "Logger deleted";
 	m_logger = nullptr;
 	m_messageTimer.stop();
 	m_warningTimer.stop();

@@ -13,6 +13,7 @@ public:
 	ContextObject(
 		const std::string& contextName,
 		Log::Logger::ContextLogger& logger,
+		Log::UI::QContextLoggerTreeView* view,
 		QWidget *parent = nullptr);
 	virtual ~ContextObject();
 
@@ -28,6 +29,7 @@ protected slots:
 	virtual void on_createContext_pushButton_clicked();
 	void onCloseContext_pushButton_clicked();
 	void onDeleteContext_pushButton_clicked();
+	void onDateTimeFormatSwitch_pushButton_clicked();
 
 	void onDelete(Log::Logger::AbstractLogger& logger);
 protected:
@@ -42,7 +44,9 @@ protected:
 private:
 	Ui::ContextObject ui;
 	size_t m_instanceID;
+	Log::UI::QContextLoggerTreeView* m_view = nullptr;
 	static size_t s_instanceCounter;
+	
 
 
 };

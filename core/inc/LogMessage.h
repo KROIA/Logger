@@ -56,7 +56,7 @@ namespace Log
 		void setTabCount(unsigned int count);
 		unsigned int getTabCount() const;
 
-		std::string toString() const;
+		std::string toString(DateTime::Format format) const;
 
 		static const Color& getLevelColor(Level l);
 		static const LevelColors& getLevelColors();

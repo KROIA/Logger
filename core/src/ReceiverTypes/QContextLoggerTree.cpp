@@ -10,6 +10,7 @@ namespace Log
 			: QWidget(parent)
 			, m_treeWidget(parent)
 		{
+			m_timeFormat = DateTime::Format::yearMonthDay | DateTime::Format::hourMinuteSecondMillisecond;
 			m_updateTimer.setInterval(100);
 			connect(&m_updateTimer, &QTimer::timeout, this, &QContextLoggerTree::onUpdateTimer);
 			m_updateTimer.start();
@@ -28,7 +29,6 @@ namespace Log
 		{
 
 		}
-
 
 		const QString& QContextLoggerTree::getHeaderName(HeaderPos pos) const
 		{
@@ -51,6 +51,20 @@ namespace Log
 			}
 			return 0;
 		}
+		void QContextLoggerTree::setDateTimeFormat(DateTime::Format format)
+		{
+			if(m_timeFormat == format)
+				return;
+			m_timeFormat = format;
+			for (auto& context : m_msgItems)
+			{
+				context.second->updateDateTime();
+			}
+		}
+		DateTime::Format QContextLoggerTree::getDateTimeFormat() const
+		{
+			return m_timeFormat;
+		}
 
 		void QContextLoggerTree::onNewSubscribed(Logger::AbstractLogger& logger)
 		{
@@ -59,40 +73,7 @@ namespace Log
 			if (it != m_msgItems.end())
 				return;
 
-			/*onContextCreate(*contextLogger);
-			return;*/
-
-			TreeData *treeData = new TreeData();
-			treeData->attachLogger(logger);
-			treeData->logger = contextLogger;
-			QTreeWidgetItem* newItem = new QTreeWidgetItem(m_treeWidget);
-			QTreeWidgetItem* newMessageRoot = new QTreeWidgetItem(newItem);
-			treeData->childRoot = newItem;
-			treeData->thisMessagesRoot = newMessageRoot;
-
-			newItem->setData((int)HeaderPos::contextName, Qt::DisplayRole, logger.getName().c_str());
-			newItem->setData((int)HeaderPos::timestamp, Qt::DisplayRole, logger.getCreationDateTime().toString().c_str());
-			QColor contextColor = logger.getColor().toQColor();
-			newItem->setBackgroundColor((int)HeaderPos::contextName, contextColor);
-
-			newMessageRoot->setData((int)HeaderPos::contextName, Qt::DisplayRole, "Messages");
-			newMessageRoot->setBackgroundColor((int)HeaderPos::contextName, contextColor);
-			const std::vector<Message>& messages = logger.getMessages();
-			m_msgItems[&logger] = treeData;
-			for (size_t i = 0; i < messages.size(); ++i)
-			{
-				onNewMessage(messages[i]);
-			}
-
-			const std::vector<Logger::ContextLogger*>& childs = contextLogger->getChilds();
-			for (size_t i = 0; i < childs.size(); ++i)
-			{
-				onContextCreate(*childs[i]);
-			}
-
-
-			unsigned int dummy;
-			updateMessageCount(*contextLogger, dummy);
+			addContextRecursive(*contextLogger);
 		}
 		void QContextLoggerTree::onUnsubscribed(Logger::AbstractLogger& logger)
 		{
@@ -100,79 +81,55 @@ namespace Log
 		}
 		void QContextLoggerTree::onContextCreate(Logger::ContextLogger& newContext)
 		{
-			Logger::ContextLogger* contextLogger = dynamic_cast<Logger::ContextLogger*>(&newContext);
-			const Logger::ContextLogger* parent = contextLogger->getParent();
+			const Logger::ContextLogger* parent = newContext.getParent();
 			auto& parentIt = m_msgItems.find(parent);
 
-			parentIt = m_msgItems.find(parent);
-			if (parentIt == m_msgItems.end())
-			{
-				return;
-			}
-
-			if (m_msgItems.find(contextLogger) != m_msgItems.end())
+			if (m_msgItems.find(&newContext) != m_msgItems.end())
 				return;
 
-			QTreeWidgetItem* newItem = new QTreeWidgetItem(parentIt->second->childRoot);
+			QTreeWidgetItem* newItem = nullptr;
+			if (parentIt != m_msgItems.end())
+				newItem = new QTreeWidgetItem(parentIt->second->childRoot);
+			else
+				newItem = new QTreeWidgetItem(m_treeWidget);
+
 			QTreeWidgetItem* newMessageRoot = new QTreeWidgetItem(newItem);
 			TreeData *treeData = new TreeData();
+			treeData->parent = this;
 			treeData->attachLogger(newContext);
-			treeData->logger = contextLogger;
+			treeData->logger = &newContext;
 			treeData->childRoot = newItem;
 			treeData->thisMessagesRoot = newMessageRoot;
 
-			newItem->setData((int)HeaderPos::contextName, Qt::DisplayRole, contextLogger->getName().c_str());
-			newItem->setData((int)HeaderPos::timestamp, Qt::DisplayRole, contextLogger->getCreationDateTime().toString().c_str());
-			QColor contextColor = contextLogger->getColor().toQColor();
+			newItem->setData((int)HeaderPos::contextName, Qt::DisplayRole, newContext.getName().c_str());
+			newItem->setData((int)HeaderPos::timestamp, Qt::DisplayRole, newContext.getCreationDateTime().toString(m_timeFormat).c_str());
+			QColor contextColor = newContext.getColor().toQColor();
 			newItem->setBackgroundColor((int)HeaderPos::contextName, contextColor);
 
 			newMessageRoot->setData((int)HeaderPos::contextName, Qt::DisplayRole, "Messages");
 			newMessageRoot->setBackgroundColor((int)HeaderPos::contextName, contextColor);
 
-			const std::vector<Message>& messages = contextLogger->getMessages();
-			m_msgItems[contextLogger] = treeData;
+			const std::vector<Message>& messages = newContext.getMessages();
+			m_msgItems[&newContext] = treeData;
 			for (size_t i = 0; i < messages.size(); ++i)
 			{
 				onNewMessage(messages[i]);
 			}
 			unsigned int dummy;
-			updateMessageCount(*contextLogger, dummy);
+			updateMessageCount(newContext, dummy);
+		}
+		void QContextLoggerTree::addContextRecursive(Logger::ContextLogger& newContext)
+		{
+			onContextCreate(newContext);
+			const std::vector<Logger::ContextLogger*>& childs = newContext.getChilds();
+			for (size_t i = 0; i < childs.size(); ++i)
+			{
+				addContextRecursive(*childs[i]);
+			}
 		}
 		void QContextLoggerTree::onNewMessage(const Message& m)
 		{
-			Logger::ContextLogger* logger = dynamic_cast<Logger::ContextLogger*>(m.getContext());
-			auto& it = m_msgItems.find(logger);
-			if (it == m_msgItems.end())
-			{
-				if (logger)
-				{
-					onContextCreate(*logger);
-				}
-			}
 
-			it = m_msgItems.find(logger);
-			if (it == m_msgItems.end())
-				return;
-			TreeData* treeData = it->second;
-
-			QTreeWidgetItem* line = new QTreeWidgetItem(treeData->thisMessagesRoot);
-			line->setData((int)HeaderPos::timestamp, Qt::DisplayRole, m.getDateTime().toString().c_str());
-			line->setData((int)HeaderPos::message, Qt::DisplayRole, m.getText().c_str());
-
-			line->setIcon((int)HeaderPos::contextName, getIcon(m.getLevel()));
-			line->setBackgroundColor((int)HeaderPos::message, m.getColor().toQColor());
-			if (m.getContext())
-			{
-				QColor contextColor = m.getContext()->getColor().toQColor();
-				line->setBackgroundColor((int)HeaderPos::contextName, contextColor);
-			}
-			
-
-			treeData->msgItems.push_back(line);
-			treeData->thisMessagesRoot->addChild(line);
-
-			unsigned int dummy;
-			updateMessageCount(*logger, dummy);
 		}
 		void QContextLoggerTree::onClear(Logger::AbstractLogger& logger)
 		{
@@ -193,14 +150,55 @@ namespace Log
 			if (it == m_msgItems.end())
 				return;
 			TreeData *treeData = it->second;
-
-			delete treeData->childRoot;
 			m_msgItems.erase(it);
+
+			treeData->detachLogger(loggerToDestroy);
+			delete treeData->childRoot;
+			delete treeData;
+			
 		}
 		void QContextLoggerTree::onDelete(Logger::AbstractLogger& loggerToDestroy)
 		{
 			onContextDestroy(*dynamic_cast<Logger::ContextLogger*>(&loggerToDestroy));
 			detachLogger(loggerToDestroy);
+		}
+		void QContextLoggerTree::setContextVisibility(Logger::ContextLogger& logger, bool isVisible)
+		{
+			auto& it = m_msgItems.find(&logger);
+			if (it == m_msgItems.end())
+				return;
+			TreeData* treeData = it->second;
+			treeData->childRoot->setHidden(!isVisible);
+		}
+		bool QContextLoggerTree::getContextVisibility(Logger::ContextLogger& logger) const
+		{
+			auto& it = m_msgItems.find(&logger);
+			if (it == m_msgItems.end())
+				return false;
+			TreeData* treeData = it->second;
+			return !treeData->childRoot->isHidden();
+		}
+		void QContextLoggerTree::setLevelVisibility(Level level, bool isVisible)
+		{
+			if(level >= sizeof(m_levelVisibility) / sizeof(m_levelVisibility[0]))
+				return;
+			m_levelVisibility[level] = isVisible;
+			for (auto& context : m_msgItems)
+			{
+				TreeData* treeData = context.second;
+				for (size_t i = 0; i < treeData->msgItems.size(); ++i)
+				{
+					const Message& m = treeData->logger->getMessages()[i];
+					if (m.getLevel() == level)
+						treeData->msgItems[i]->setHidden(!isVisible);
+				}
+			}
+		}
+		bool QContextLoggerTree::getLevelVisibility(Level level) const
+		{
+			if (level >= sizeof(m_levelVisibility) / sizeof(m_levelVisibility[0]))
+				return false;
+			return m_levelVisibility[level];
 		}
 		void QContextLoggerTree::onUpdateTimer()
 		{
@@ -231,7 +229,7 @@ namespace Log
 			const std::vector<Logger::ContextLogger*>& childs = logger.getChilds();
 			for (size_t i = 0; i < childs.size(); ++i)
 			{
-				unsigned int childCount;
+				unsigned int childCount = 0;
 				updateMessageCountRecursive(*childs[i], childCount);
 				countOut += childCount;
 			}
@@ -239,7 +237,15 @@ namespace Log
 			treeData->childRoot->setData((int)HeaderPos::message, Qt::DisplayRole, text);
 		}
 
-
+		void QContextLoggerTree::TreeData::updateDateTime()
+		{
+			childRoot->setData((int)HeaderPos::timestamp, Qt::DisplayRole, logger->getCreationDateTime().toString(parent->m_timeFormat).c_str());
+			for (size_t i = 0; i < msgItems.size(); ++i)
+			{
+				const Message& m = logger->getMessages()[i];
+				msgItems[i]->setData((int)HeaderPos::timestamp, Qt::DisplayRole, m.getDateTime().toString(parent->m_timeFormat).c_str());
+			}
+		}
 		void QContextLoggerTree::TreeData::onNewSubscribed(Logger::AbstractLogger& logger)
 		{
 
@@ -251,7 +257,7 @@ namespace Log
 		void QContextLoggerTree::TreeData::onNewMessage(const Message& m)
 		{
 			QTreeWidgetItem* line = new QTreeWidgetItem(thisMessagesRoot);
-			line->setData((int)HeaderPos::timestamp, Qt::DisplayRole, m.getDateTime().toString().c_str());
+			line->setData((int)HeaderPos::timestamp, Qt::DisplayRole, m.getDateTime().toString(parent->m_timeFormat).c_str());
 			line->setData((int)HeaderPos::message, Qt::DisplayRole, m.getText().c_str());
 
 			line->setIcon((int)HeaderPos::contextName, getIcon(m.getLevel()));
@@ -261,7 +267,13 @@ namespace Log
 				QColor contextColor = m.getContext()->getColor().toQColor();
 				line->setBackgroundColor((int)HeaderPos::contextName, contextColor);
 			}
-
+			unsigned int levelIndex = (unsigned int)m.getLevel();
+			if (levelIndex < static_cast<unsigned int>(Level::__count))
+			{
+				if (!parent->m_levelVisibility[levelIndex])
+					line->setHidden(true);
+			}
+			
 			msgItems.push_back(line);
 			thisMessagesRoot->addChild(line);
 		}

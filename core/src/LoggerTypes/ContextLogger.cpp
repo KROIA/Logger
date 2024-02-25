@@ -123,7 +123,7 @@ namespace Log
 		std::ostream& operator<<(std::ostream& os, const ContextLogger& msg)
 		{
 			std::vector<std::string> lines;
-			msg.toStringVector(lines);
+			msg.toStringVector(lines, DateTime::Format::yearMonthDay | DateTime::Format::hourMinuteSecondMillisecond);
 			for (size_t i = 0; i < lines.size(); ++i)
 				os << lines[i] << "\n";
 
@@ -144,23 +144,23 @@ namespace Log
 			return m_childs;
 		}
 
-		void ContextLogger::toStringVector(std::vector<std::string>& list) const
+		void ContextLogger::toStringVector(std::vector<std::string>& list, DateTime::Format dateTimeFormat) const
 		{
-			toStringVector(0, list);
+			toStringVector(0, list, dateTimeFormat);
 		}
 
-		void ContextLogger::toStringVector(size_t depth, std::vector<std::string>& list) const
+		void ContextLogger::toStringVector(size_t depth, std::vector<std::string>& list, DateTime::Format dateTimeFormat) const
 		{
 			std::string depthStr(depth, ' ');
 			const std::vector<Message>& messages = getMessages();
-			std::string title = getCreationDateTime().toString() + depthStr +
+			std::string title = getCreationDateTime().toString(dateTimeFormat) + depthStr +
 				"Context: " + getName() +
 				" Msgs: " + std::to_string(messages.size()) +
 				" Childs: " + std::to_string(m_childs.size());
 			list.push_back(title);
 			for (const Message& m : messages)
 			{
-				std::string msgString = m.getDateTime().toString() + " " +
+				std::string msgString = m.getDateTime().toString(dateTimeFormat) + " " +
 					getLevelStr(m.getLevel()) +
 					depthStr +
 					std::string(m.getTabCount(), ' ') +
@@ -171,7 +171,7 @@ namespace Log
 			for (const ContextLogger* m : m_childs)
 			{
 				std::vector<std::string> tmp;
-				m->toStringVector(depth + 1, tmp);
+				m->toStringVector(depth + 1, tmp, dateTimeFormat);
 
 				list.insert(list.end(), tmp.begin(), tmp.end());
 			}

@@ -2,6 +2,8 @@
 
 #include "Logger_base.h"
 #include <string>
+#include <windows.h>
+
 
 namespace Log
 {
@@ -10,6 +12,11 @@ namespace Log
 	{
 		friend DateTime;
 	public:
+		enum class Format : uint16_t
+		{
+			dayMonthYear = 16,
+			yearMonthDay = 32,
+		};
 		Date();
 		Date(const Date& other);
 
@@ -28,7 +35,7 @@ namespace Log
 		int getMonth() const;
 		int getDay() const;
 
-		std::string toString() const;
+		std::string toString(Format format) const;
 
 	private:
 		int m_year;
@@ -39,6 +46,16 @@ namespace Log
 	{
 		friend DateTime;
 	public:
+		enum class Format : uint16_t
+		{
+			millisecond = 1,
+			second = 2,
+			minute = 4,
+			hour = 8,
+
+			hourMinuteSecond = hour | minute | second,
+			hourMinuteSecondMillisecond = hour | minute | second | millisecond,
+		};
 		Time();
 		Time(const Time& other);
 
@@ -58,7 +75,7 @@ namespace Log
 		int getSec() const;
 		int getMSec() const;
 
-		std::string toString() const;
+		std::string toString(Format format) const;
 
 	private:
 		int m_hour;
@@ -70,6 +87,22 @@ namespace Log
 	class LOGGER_EXPORT DateTime
 	{
 	public:
+		enum Format: uint16_t
+		{
+			millisecond = 1,
+			second = 2,
+			minute = 4,
+			hour = 8,
+
+			hourMinuteSecond = hour | minute | second,
+			hourMinuteSecondMillisecond = hour | minute | second | millisecond,
+
+			dayMonthYear = 16,
+			yearMonthDay = 32,
+
+
+		};
+		
 		DateTime();
 		DateTime(const DateTime& other);
 
@@ -88,10 +121,14 @@ namespace Log
 		const Time& getTime() const;
 		const Date& getDate() const;
 
-		std::string toString() const;
+		std::string toString(Format format) const;
 
 	private:
 		Date m_date;
 		Time m_time;
 	};
+
+	DEFINE_ENUM_FLAG_OPERATORS(Time::Format);
+	DEFINE_ENUM_FLAG_OPERATORS(Date::Format);
+	DEFINE_ENUM_FLAG_OPERATORS(DateTime::Format);
 }

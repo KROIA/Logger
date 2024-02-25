@@ -80,7 +80,7 @@ namespace Log
 		return m_day;
 	}
 
-	std::string Date::toString() const
+	std::string Date::toString(Format format) const
 	{
 		std::string day = std::to_string(m_day);
 		std::string month = std::to_string(m_month);
@@ -89,7 +89,11 @@ namespace Log
 		if (m_day < 10) day = "0" + day;
 		if (m_month < 10) month = "0" + month;
 
-		return day + "." + month + "." + year;
+		if (((int)format & (int)Format::dayMonthYear) == (int)Format::dayMonthYear)
+			return day + "." + month + "." + year;
+		if (((int)format & (int)Format::yearMonthDay) == (int)Format::yearMonthDay)
+			return year + "." + month + "." + day;
+		return "";
 	}
 
 	Time::Time()
@@ -194,7 +198,7 @@ namespace Log
 		return m_ms;
 	}
 
-	std::string Time::toString() const
+	std::string Time::toString(Format format) const
 	{
 		std::string hour = std::to_string(m_hour);
 		std::string min = std::to_string(m_min);
@@ -207,8 +211,21 @@ namespace Log
 		if (m_ms < 10) ms = "00" + ms;
 		else if (m_ms < 100) ms = "0" + ms;
 		//else if (m_ms < 1000) ms = "0" + ms;
+		if(((int)format & (int)Format::hourMinuteSecondMillisecond) == (int)Format::hourMinuteSecondMillisecond)
+			return hour + ":" + min + ":" + sec + ":" + ms;
+		if (((int)format & (int)Format::hourMinuteSecond) == (int)Format::hourMinuteSecond)
+			return hour + ":" + min + ":" + sec;
 
-		return hour + ":" + min + ":" + sec + ":" + ms;
+		std::string time;
+		if ((int)format & (int)Format::hour)
+			time = hour;
+		if ((int)format & (int)Format::minute)
+			time += (time.size()?":":"") + min;
+		if ((int)format & (int)Format::second)
+			time += (time.size() ? ":" : "") + sec;
+		if ((int)format & (int)Format::millisecond)
+			time += (time.size() ? ":" : "") + ms;
+		return time;
 	}
 
 
@@ -298,8 +315,8 @@ namespace Log
 		return m_date;
 	}
 
-	std::string DateTime::toString() const
+	std::string DateTime::toString(Format format) const
 	{
-		return m_date.toString() + " " + m_time.toString();
+		return m_date.toString((Date::Format)format) + " " + m_time.toString((Time::Format)format);
 	}
 }

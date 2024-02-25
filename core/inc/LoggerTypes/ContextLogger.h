@@ -32,7 +32,7 @@ namespace Log
 			void destroyAllContext();
 			void destroyContext(ContextLogger* child);
 
-			void toStringVector(std::vector<std::string>& list) const;
+			void toStringVector(std::vector<std::string>& list, DateTime::Format dateTimeFormat) const;
 			friend std::ostream& operator<<(std::ostream& os, const ContextLogger& msg);
 
 			void getMessagesRecursive(std::vector<Message>& list) const;
@@ -41,7 +41,7 @@ namespace Log
 		protected:
 
 		private:
-			void toStringVector(size_t depth, std::vector<std::string>& list) const;
+			void toStringVector(size_t depth, std::vector<std::string>& list, DateTime::Format dateTimeFormat) const;
 
 			static std::vector<ContextLogger*>& getAllRootLoggers();
 			

@@ -216,9 +216,9 @@ namespace Log
 		return m_tabCount;
 	}
 
-	std::string Message::toString() const
+	std::string Message::toString(DateTime::Format format) const
 	{
-		return m_dateTime.toString() + " " +
+		return m_dateTime.toString(format) + " " +
 			getLevelStr(m_level) +
 			std::string(m_tabCount, ' ') +
 			m_message;

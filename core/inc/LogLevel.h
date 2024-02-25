@@ -17,7 +17,9 @@ namespace Log
 		info,
 		warning,
 		error,
-		custom
+		custom,
+
+		__count
 	};
 
 	struct LOGGER_EXPORT LevelColors

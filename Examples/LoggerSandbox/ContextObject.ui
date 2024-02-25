@@ -42,6 +42,13 @@
      </property>
     </widget>
    </item>
+   <item>
+    <widget class="QPushButton" name="dateTimeFormatSwitch_pushButton">
+     <property name="text">
+      <string>DateTimeFormat</string>
+     </property>
+    </widget>
+   </item>
   </layout>
  </widget>
  <layoutdefault spacing="6" margin="11"/>

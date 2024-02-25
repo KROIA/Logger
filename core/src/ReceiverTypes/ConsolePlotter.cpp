@@ -8,11 +8,13 @@ namespace Log
 	{
 		ConsolePlotter::ConsolePlotter()
 			: AbstractReceiver()
+			, m_dateTimeFormat(DateTime::Format::yearMonthDay | DateTime::Format::hourMinuteSecondMillisecond)
 		{
 
 		}
 		ConsolePlotter::ConsolePlotter(const ConsolePlotter& other)
 			: AbstractReceiver(other)
+			, m_dateTimeFormat(DateTime::Format::yearMonthDay | DateTime::Format::hourMinuteSecondMillisecond)
 		{
 
 		}
@@ -20,6 +22,15 @@ namespace Log
 		ConsolePlotter::~ConsolePlotter()
 		{
 
+		}
+
+		void ConsolePlotter::setDateTimeFormat(DateTime::Format format)
+		{
+			m_dateTimeFormat = format;
+		}
+		DateTime::Format ConsolePlotter::getDateTimeFormat() const
+		{
+			return m_dateTimeFormat;
 		}
 
 		void ConsolePlotter::onNewSubscribed(Logger::AbstractLogger& logger)
@@ -70,7 +81,7 @@ namespace Log
 				contextColor = logger->getColor().getConsoleValue();
 			int color = msg.getColor().getConsoleValue();
 			
-			cout << msg.getDateTime().toString() << "  ";
+			cout << msg.getDateTime().toString(m_dateTimeFormat) << "  ";
 			SetConsoleTextAttribute(h, contextColor);
 			cout << contextName << ": ";
 			SetConsoleTextAttribute(h, color);

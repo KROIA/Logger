@@ -14,6 +14,9 @@ namespace Log
 
 			~ConsoleContextPlotter();
 
+			void setDateTimeFormat(DateTime::Format format);
+			DateTime::Format getDateTimeFormat() const;
+
 		private:
 			void onContextCreate(Logger::ContextLogger& logger) override;
 			void onContextDestroy(Logger::ContextLogger& logger) override;
@@ -28,6 +31,8 @@ namespace Log
 			void onDelete(Logger::AbstractLogger& logger) override;
 
 			void printToConsole(const Message& msg);
+
+			DateTime::Format m_dateTimeFormat;
 		};
 	}
 }
