@@ -93,14 +93,14 @@ namespace Log
 		}
 		void ContextLogger::destroyAllContext()
 		{
-			for (size_t i = 0; i < m_childs.size(); ++i)
-			{
-				m_childs[i]->destroyAllContext();
-				emitRecursive_onContextDestroy(*m_childs[i]);
-				delete m_childs[i];
-			}
-
+			std::vector<ContextLogger*> childs = m_childs;
 			m_childs.clear();
+			for (size_t i = 0; i < childs.size(); ++i)
+			{
+				childs[i]->destroyAllContext();
+				emitRecursive_onContextDestroy(*childs[i]);
+				delete childs[i];
+			}
 		}
 		void ContextLogger::destroyContext(ContextLogger* child)
 		{
@@ -161,7 +161,7 @@ namespace Log
 			for (const Message& m : messages)
 			{
 				std::string msgString = m.getDateTime().toString(dateTimeFormat) + " " +
-					getLevelStr(m.getLevel()) +
+					Utilities::getLevelStr(m.getLevel()) +
 					depthStr +
 					std::string(m.getTabCount(), ' ') +
 					m.getText();

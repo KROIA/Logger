@@ -66,6 +66,7 @@ namespace Log
 				}
 			}
 		}
+		
 
 		void AbstractReceiver::onDeletePrivate(Logger::AbstractLogger& logger)
 		{

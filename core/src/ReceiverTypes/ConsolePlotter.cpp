@@ -60,7 +60,7 @@ namespace Log
 		{
 			using std::cout;
 
-			std::string type = getLevelStr(msg.getLevel());
+			std::string type = Utilities::getLevelStr(msg.getLevel());
 			Logger::AbstractLogger* logger = msg.getContext();
 			std::string contextName;
 			if(logger)

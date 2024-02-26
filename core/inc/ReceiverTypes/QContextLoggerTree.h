@@ -67,11 +67,13 @@ namespace Log
 			class TreeData : public ContextReceiver
 			{
 				public:
+				
 				QTreeWidgetItem* childRoot = nullptr;
-				const Logger::ContextLogger* logger = nullptr;
+				Logger::ContextLogger* logger = nullptr;
 				QTreeWidgetItem* thisMessagesRoot = nullptr;
 				std::vector<QTreeWidgetItem*> msgItems;
 
+				~TreeData();
 				void updateDateTime();
 
 				void onNewSubscribed(Logger::AbstractLogger& logger) override;

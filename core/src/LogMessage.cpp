@@ -1,5 +1,5 @@
 #include "LogMessage.h"
-
+#include "LoggerTypes/AbstractLogger.h"
 namespace Log
 {
 
@@ -196,7 +196,7 @@ namespace Log
 	}
 	std::string Message::getLevelString() const
 	{
-		return getLevelStr(m_level);
+		return Utilities::getLevelStr(m_level);
 	}
 	void Message::updateTimestamp()
 	{
@@ -219,7 +219,7 @@ namespace Log
 	std::string Message::toString(DateTime::Format format) const
 	{
 		return m_dateTime.toString(format) + " " +
-			getLevelStr(m_level) +
+			Utilities::getLevelStr(m_level) +
 			std::string(m_tabCount, ' ') +
 			m_message;
 	}
@@ -260,5 +260,18 @@ namespace Log
 				std::sort(messages.begin(), messages.end(), [](const Message& a, const Message& b) { return a.m_dateTime > b.m_dateTime; });
 				break;
 		}
+	}
+
+	Message::SnapshotData Message::createSnapshot() const
+	{
+		SnapshotData data;
+		data.message = m_message;
+		data.contextName = m_context ? m_context->getName() : "";
+		data.level = m_level;
+		data.textColor = getColor();
+		data.contextColor = m_context ? m_context->getColor() : Color::white;
+		data.tabCount = m_tabCount;
+		data.dateTime = m_dateTime;
+		return data;
 	}
 }

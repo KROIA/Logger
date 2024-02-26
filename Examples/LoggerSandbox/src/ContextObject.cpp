@@ -17,6 +17,7 @@ ContextObject::ContextObject(
 	ui.setupUi(this);
 
 	m_logger->connect_onDelete_slot(this, &ContextObject::onDelete);
+	m_logger->setColor(Log::Color::darkGray);
 
 	m_messageTimer.setInterval(1000);
 	m_warningTimer.setInterval(2000);
@@ -58,7 +59,19 @@ void ContextObject::onMessageTimer()
 {
 	++m_counter;
 	if (m_logger)
-	m_logger->log(std::to_string(m_counter) + " Message from " + m_logger->getName());
+	{
+		if(counter<10)
+			m_logger->log(std::to_string(m_counter) + " Message from " + m_logger->getName());
+		else
+		{
+			std::string txt = "Long Message from " + m_logger->getName() + "\n";
+			txt += "This is a new line\n";
+			txt += "This is another new line\n";
+			m_logger->log(txt, Log::Level::info);
+			counter = 0;
+		}
+		++counter;
+	}
 }
 void ContextObject::onWarningTimer()
 {

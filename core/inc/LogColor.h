@@ -11,6 +11,7 @@ namespace Log
 	class LOGGER_EXPORT Color
 	{
 	public:
+		Color();
 		Color(uint8_t r, uint8_t g, uint8_t b);
 		Color(uint8_t r, uint8_t g, uint8_t b, int consoleValue);
 		Color(const Color& other);
@@ -20,6 +21,12 @@ namespace Log
 		Color& operator+=(const Color& other);
 		Color operator-(const Color& other) const;
 		Color& operator-=(const Color& other);
+
+		Color& operator*=(float x);
+		Color operator*(float x) const;
+		Color& operator/=(float x);
+		Color operator/(float x) const;
+
 
 		bool operator==(const Color& other) const;
 		bool operator!=(const Color& other) const;
@@ -112,5 +119,7 @@ namespace Log
 		uint8_t m_g;
 		uint8_t m_b;
 		int m_consoleValue;
+
+		static bool m_isDarkMode;
 	};
 }

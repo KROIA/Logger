@@ -46,6 +46,7 @@ private:
 	size_t m_instanceID;
 	Log::UI::QContextLoggerTreeView* m_view = nullptr;
 	static size_t s_instanceCounter;
+	int counter = 0;
 	
 
 

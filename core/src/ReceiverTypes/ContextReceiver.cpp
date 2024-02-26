@@ -35,6 +35,25 @@ namespace Log
 			AbstractReceiver::detachLogger(logger);
 		}
 
+		void ContextReceiver::attachLoggerAndChilds(Logger::ContextLogger& logger)
+		{
+			attachLogger(logger);
+			const std::vector<Logger::ContextLogger*> &childs = logger.getChilds();
+			for (size_t i = 0; i < childs.size(); i++)
+			{
+				attachLoggerAndChilds(*childs[i]);
+			}
+		}
+		void ContextReceiver::detachLoggerAndChilds(Logger::ContextLogger& logger)
+		{
+			const std::vector<Logger::ContextLogger*>& childs = logger.getChilds();
+			for (size_t i = 0; i < childs.size(); i++)
+			{
+				detachLoggerAndChilds(*childs[i]);
+			}
+			detachLogger(logger);
+		}
+
 		void ContextReceiver::clearAttachedLoggers()
 		{
 			for (size_t i = 0; i < m_loggers.size(); i++)

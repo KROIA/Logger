@@ -101,8 +101,8 @@ namespace Log
 			{
 				QCheckBox* checkBox = new QCheckBox(parent);
 				checkBox->setChecked(true);
-				checkBox->setText(getLevelStr((Level)i).c_str());
-				checkBox->setIcon(getIcon((Level)i));
+				checkBox->setText(Utilities::getLevelStr((Level)i).c_str());
+				checkBox->setIcon(Utilities::getIcon((Level)i));
 				QObject::connect(checkBox, &QCheckBox::stateChanged,
 						&m_signalHandler, &QSignalHandler::onLevelCheckBoxStateChangedSlot);
 				m_levelCheckBoxes[i] = checkBox;

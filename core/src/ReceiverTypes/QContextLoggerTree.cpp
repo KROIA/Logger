@@ -105,9 +105,13 @@ namespace Log
 			newItem->setData((int)HeaderPos::timestamp, Qt::DisplayRole, newContext.getCreationDateTime().toString(m_timeFormat).c_str());
 			QColor contextColor = newContext.getColor().toQColor();
 			newItem->setBackgroundColor((int)HeaderPos::contextName, contextColor);
+			newItem->setBackgroundColor((int)HeaderPos::timestamp, contextColor);
+			newItem->setBackgroundColor((int)HeaderPos::message, contextColor);
 
 			newMessageRoot->setData((int)HeaderPos::contextName, Qt::DisplayRole, "Messages");
 			newMessageRoot->setBackgroundColor((int)HeaderPos::contextName, contextColor);
+			newMessageRoot->setBackgroundColor((int)HeaderPos::timestamp, contextColor);
+			newMessageRoot->setBackgroundColor((int)HeaderPos::message, contextColor);
 
 			const std::vector<Message>& messages = newContext.getMessages();
 			m_msgItems[&newContext] = treeData;
@@ -153,7 +157,8 @@ namespace Log
 			m_msgItems.erase(it);
 
 			treeData->detachLogger(loggerToDestroy);
-			delete treeData->childRoot;
+			
+			//delete treeData->thisMessagesRoot;
 			delete treeData;
 			
 		}
@@ -237,6 +242,14 @@ namespace Log
 			treeData->childRoot->setData((int)HeaderPos::message, Qt::DisplayRole, text);
 		}
 
+		QContextLoggerTree::TreeData::~TreeData()
+		{
+			QTreeWidgetItem *childRoot_ = childRoot;
+			childRoot = nullptr;
+			thisMessagesRoot = nullptr;
+			detachLogger(*logger);
+			delete childRoot_;
+		}
 		void QContextLoggerTree::TreeData::updateDateTime()
 		{
 			childRoot->setData((int)HeaderPos::timestamp, Qt::DisplayRole, logger->getCreationDateTime().toString(parent->m_timeFormat).c_str());
@@ -260,12 +273,18 @@ namespace Log
 			line->setData((int)HeaderPos::timestamp, Qt::DisplayRole, m.getDateTime().toString(parent->m_timeFormat).c_str());
 			line->setData((int)HeaderPos::message, Qt::DisplayRole, m.getText().c_str());
 
-			line->setIcon((int)HeaderPos::contextName, getIcon(m.getLevel()));
-			line->setBackgroundColor((int)HeaderPos::message, m.getColor().toQColor());
+			line->setIcon((int)HeaderPos::contextName, Utilities::getIcon(m.getLevel()));
+			line->setTextColor((int)HeaderPos::message, m.getColor().toQColor());
+			QFont font = line->font((int)HeaderPos::message);
+			font.setBold(true);
+			line->setFont((int)HeaderPos::message, font);
+			//line->setBackgroundColor((int)HeaderPos::message, m.getColor().toQColor());
 			if (m.getContext())
 			{
-				QColor contextColor = m.getContext()->getColor().toQColor();
+				QColor contextColor = (m.getContext()->getColor()*0.5).toQColor();
 				line->setBackgroundColor((int)HeaderPos::contextName, contextColor);
+				line->setBackgroundColor((int)HeaderPos::timestamp, contextColor);
+				line->setBackgroundColor((int)HeaderPos::message, contextColor);
 			}
 			unsigned int levelIndex = (unsigned int)m.getLevel();
 			if (levelIndex < static_cast<unsigned int>(Level::__count))

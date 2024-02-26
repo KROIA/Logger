@@ -15,6 +15,7 @@
 
 // ui
 #include "ui/QContextLoggerTreeView.h"
+#include "ui/QConsoleView.h"
 
 // Utilities
 #include "Utilities/LogProfiler.h"

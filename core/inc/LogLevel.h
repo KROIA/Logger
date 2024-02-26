@@ -32,11 +32,15 @@ namespace Log
 		Color custom;
 	};
 
-	extern const std::string& getLevelStr(Level l);
+	namespace Utilities
+	{
+	
+		extern const std::string& getLevelStr(Level l);
 
 #ifdef LOGGER_QT
-	extern const QIcon& getIcon(Level logLevel);
+		extern const QIcon& getIcon(Level logLevel);
 #endif
+	}
 
 
 }

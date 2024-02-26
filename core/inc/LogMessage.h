@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 
+
 namespace Log
 {
 	namespace Logger
@@ -68,6 +69,19 @@ namespace Log
 			timeDescending
 		};
 		static void sort(std::vector<Message>& messages, SortType type);
+
+		struct SnapshotData
+		{
+			std::string message;
+			std::string contextName;
+			Level level;
+			Color textColor;
+			Color contextColor;
+			unsigned int tabCount;
+
+			DateTime dateTime;
+		};
+		SnapshotData createSnapshot() const;
 
 	protected:
 		std::string m_message;
