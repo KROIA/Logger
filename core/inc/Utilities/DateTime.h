@@ -102,6 +102,13 @@ namespace Log
 
 
 		};
+		enum Range
+		{
+			before,
+			after,
+			between,
+			equal
+		};
 		
 		DateTime();
 		DateTime(const DateTime& other);

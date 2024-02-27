@@ -12,7 +12,16 @@ namespace Log
     QLogMessageItemModel::QLogMessageItemModel(QObject* parent) 
         : QAbstractItemModel(parent) 
     {
-    
+    	m_dateTimeFormat = DateTime::Format::yearMonthDay | DateTime::Format::hourMinuteSecondMillisecond;
+    }
+
+    void QLogMessageItemModel::setDateTimeFormat(DateTime::Format format)
+    {
+        m_dateTimeFormat = format;
+    }
+    DateTime::Format QLogMessageItemModel::getDateTimeFormat() const
+    {
+        return m_dateTimeFormat;
     }
 
     int QLogMessageItemModel::rowCount(const QModelIndex& parent) const 
@@ -133,6 +142,155 @@ namespace Log
             }
         }
         return QVariant();
+    }
+
+    const Message::SnapshotData& QLogMessageItemModel::getElement(size_t row) const
+    {
+        return logs[row];
+    }
+
+    void QLogMessageItemModel::clear()
+    {
+        beginResetModel();
+		logs.clear();
+		endResetModel();
+    }
+
+
+    QLogMessageItemProxyModel::QLogMessageItemProxyModel(QObject* parent)
+        : QSortFilterProxyModel(parent)
+        , m_sourceModel(nullptr)
+    {
+        for(int i=0; i<Level::__count; ++i)
+            m_levelActivated[i] = true;
+        m_dateTimeFilter.active = false;
+    }
+
+    void QLogMessageItemProxyModel::setLevelVisibility(Level level, bool isVisible)
+    {
+        m_levelActivated[static_cast<int>(level)] = isVisible;
+    }
+    bool QLogMessageItemProxyModel::getLevelVisibility(Level level) const
+    {
+        return m_levelActivated[static_cast<int>(level)];
+    }
+
+    void QLogMessageItemProxyModel::setContextVisibility(Logger::AbstractLogger::LoggerID loggerID, bool isVisible)
+    {
+        auto it = m_contextVisibility.find(loggerID);
+        if (it != m_contextVisibility.end())
+        {
+            it->second = isVisible;
+        }
+        else
+        {
+            m_contextVisibility[loggerID] = isVisible;
+        }
+    }
+    void QLogMessageItemProxyModel::setContextVisibility(const Logger::AbstractLogger& logger, bool isVisible)
+    {
+        setContextVisibility(logger.getID(), isVisible);
+    }
+
+    bool QLogMessageItemProxyModel::getContextVisibility(Logger::AbstractLogger::LoggerID loggerID) const
+    {
+        auto it = m_contextVisibility.find(loggerID);
+        if (it != m_contextVisibility.end())
+        {
+            return it->second;
+        }
+        return true;
+    }
+    bool QLogMessageItemProxyModel::getContextVisibility(const Logger::AbstractLogger& logger) const
+    {
+        return getContextVisibility(logger.getID());
+    }
+
+    void QLogMessageItemProxyModel::setDateTimeFilter(DateTime min, DateTime max, DateTime::Range rangeType)
+    {
+		m_dateTimeFilter.min = min;
+		m_dateTimeFilter.max = max;
+		m_dateTimeFilter.rangeType = rangeType;
+        m_dateTimeFilter.active = true;
+
+    }
+    void QLogMessageItemProxyModel::clearDateTimeFilter()
+    {
+        m_dateTimeFilter.active = false;
+    }
+    const DateTime& QLogMessageItemProxyModel::getDateTimeFilterMin() const
+    {
+        return m_dateTimeFilter.min;
+    }
+    const DateTime& QLogMessageItemProxyModel::getDateTimeFilterMax() const
+    {
+        return m_dateTimeFilter.max;
+    }
+    DateTime::Range QLogMessageItemProxyModel::getDateTimeFilterRangeType() const
+    {
+        return m_dateTimeFilter.rangeType;
+    }
+    bool QLogMessageItemProxyModel::isDateTimeFilterActive() const
+    {
+        return m_dateTimeFilter.active;
+    }
+
+    void QLogMessageItemProxyModel::setSourceModel(QAbstractItemModel* sourceModel)
+    {
+        QLogMessageItemModel * model = dynamic_cast<QLogMessageItemModel*>(sourceModel);
+        QSortFilterProxyModel::setSourceModel(sourceModel);
+        if (model)
+        {
+            m_sourceModel = model;
+        }
+    }
+    bool QLogMessageItemProxyModel::filterAcceptsRow(int sourceRow, const QModelIndex& sourceParent) const
+    {
+        if (!m_sourceModel)
+			return false;
+		const Message::SnapshotData &data = m_sourceModel->getElement(sourceRow);
+        if(!m_levelActivated[static_cast<int>(data.level)])
+			return false;
+
+        if(!getContextVisibility(data.loggerID))
+            return false;
+
+        if (m_dateTimeFilter.active)
+        {
+            switch (m_dateTimeFilter.rangeType)
+            {
+                case DateTime::Range::before:
+					if(m_dateTimeFilter.min < data.dateTime)
+						return false;
+					break; 
+                case DateTime::Range::after:
+                    if(m_dateTimeFilter.min > data.dateTime)
+                        return false;
+                    break;
+                case DateTime::Range::between:
+                    if(m_dateTimeFilter.min > data.dateTime ||
+                        m_dateTimeFilter.max < data.dateTime)
+					    return false;
+                    break;
+                case DateTime::Range::equal:
+                    if(m_dateTimeFilter.min != data.dateTime)
+						return false;
+					break;
+            }
+        }
+		return true;
+    }
+    bool QLogMessageItemProxyModel::lessThan(const QModelIndex& left,
+        const QModelIndex& right) const
+    {
+        if(!m_sourceModel)
+			return false;
+        const Message::SnapshotData &leftData = m_sourceModel->getElement(left.row());
+        const Message::SnapshotData &rightData = m_sourceModel->getElement(right.row());
+
+        if(leftData.dateTime < rightData.dateTime)
+			return true;
+        return false;
     }
 }
 #endif

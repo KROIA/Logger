@@ -1,13 +1,22 @@
 #include "Utilities/Resources.h"
 #include <vector>
-
+#ifdef LOGGER_QT
+#include <QDebug>
+#endif
 namespace Log
 {
 
 #ifdef LOGGER_QT
+
 	const QIcon& Resources::getIcon(const std::string& name)
 	{
-		return instance().m_icons[name];
+		Resources &instance = Resources::instance(); 
+		const auto it = instance.m_icons.find(name);
+		if(it != instance.m_icons.end())
+			return it->second;
+		qDebug() << __PRETTY_FUNCTION__ << "Icon not in initial list: " << name.c_str();
+		instance.m_icons[name] = QIcon(QString::fromStdString(instance.m_filePath + name + instance.m_fileEnding));
+		return instance.m_icons[name];
 	}
 
 	const QIcon& Resources::getIconTrace()
@@ -30,9 +39,15 @@ namespace Log
 	{
 		return getIcon("error");
 	}
+	const QIcon& Resources::getIconSearch()
+	{
+		return getIcon("magnifying-glass");
+	}
 
 
 	Resources::Resources()
+		: m_filePath(":/icons/")
+		, m_fileEnding(".png")
 	{
 		initResources();
 		loadIcons();
@@ -45,8 +60,6 @@ namespace Log
 	void Resources::loadIcons()
 	{
 		m_icons.clear();
-		const std::string fileEnding = ".png";
-		const std::string path = ":/icons/";
 
 		// List of icon names
 		const std::vector<std::string> iconNames = 
@@ -55,11 +68,12 @@ namespace Log
 			"debug", 
 			"info", 
 			"warning", 
-			"error" 
+			"error",
+			"magnifying-glass"	
 		};
 		for(const auto& name : iconNames)
 		{
-			m_icons[name] = QIcon(QString::fromStdString(path + name + fileEnding));
+			m_icons[name] = QIcon(QString::fromStdString(m_filePath + name + m_fileEnding));
 		}
 	}
 	Resources& Resources::instance()

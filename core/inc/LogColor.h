@@ -47,6 +47,12 @@ namespace Log
 		QColor toQColor() const;
 #endif
 
+		static void setDarkMode(bool enable);
+		static bool isDarkModeEnabled();
+
+		static void setDarkModeFactor(float factor);
+		static float getDarkModeFactor();
+
 		static Color lerp(const Color& c1, const Color& c2, float x);
 
 		static const Color red;
@@ -120,6 +126,7 @@ namespace Log
 		uint8_t m_b;
 		int m_consoleValue;
 
-		static bool m_isDarkMode;
+		static bool s_isDarkMode;
+		static float s_darkModeFactor;
 	};
 }

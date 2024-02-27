@@ -89,7 +89,8 @@ The different color codes are
 		Color::green		// custom
 	};
 
-	bool Color::m_isDarkMode = true;
+	bool Color::s_isDarkMode = false;
+	float Color::s_darkModeFactor = 0.7f;
 
 	Color::Color()
 		: m_r(255)
@@ -288,7 +289,7 @@ The different color codes are
 #ifdef LOGGER_QT
 	QColor Color::toQColor() const
 	{
-		if(!m_isDarkMode)
+		if(!s_isDarkMode)
 			return QColor(m_r, m_g, m_b);
 
 		//int sum = m_r + m_g + m_b;
@@ -297,11 +298,29 @@ The different color codes are
 		// Darken the color by reducing its brightness
 		qreal h, s, v;
 		QColor(m_r, m_g, m_b).getHsvF(&h, &s, &v);
-		v *= 0.7; // Reduce brightness to 70%
+		v *= s_darkModeFactor; // Reduce brightness to 70%
 		//v = 0.5*v;
 		return QColor::fromHsvF(h, s, v);
 	}
 #endif
+
+	void Color::setDarkMode(bool enable)
+	{
+		s_isDarkMode = enable;
+	}
+	bool Color::isDarkModeEnabled()
+	{
+		return s_isDarkMode;
+	}
+
+	void Color::setDarkModeFactor(float factor)
+	{
+		s_darkModeFactor = factor;
+	}
+	float Color::getDarkModeFactor()
+	{
+		return s_darkModeFactor;
+	}
 
 
 	Color Color::lerp(const Color& c1, const Color& c2, float x)

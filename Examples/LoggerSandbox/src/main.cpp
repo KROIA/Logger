@@ -15,6 +15,11 @@
 
 int main(int argc, char* argv[])
 {
+    QGuiApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+    QGuiApplication::setAttribute(Qt::AA_UseHighDpiPixmaps);
+    QGuiApplication::setHighDpiScaleFactorRoundingPolicy(Qt::HighDpiScaleFactorRoundingPolicy::PassThrough);
+
+
 	QApplication app(argc, argv);
 
     // Set up a dark color palette
@@ -49,8 +54,17 @@ int main(int argc, char* argv[])
         styleFile.close();
     }
     else {
-        qDebug() << "Failed to load stylesheet.";
+        QFile styleFile("D:\\Users\\Alex\\Dokumente\\SoftwareProjects\\Logger\\bin\\styles\\darkstyle.qss"); // Load stylesheet from resources
+        if (styleFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
+            QTextStream stream(&styleFile);
+            qApp->setStyleSheet(stream.readAll());
+            styleFile.close();
+        }
+        else {
+            qDebug() << "Failed to load stylesheet."; 
+        }
     }
+    Log::Color::setDarkMode(true);
 
     int count = 0;
     bool swtch = false;

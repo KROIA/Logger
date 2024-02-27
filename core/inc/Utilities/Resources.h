@@ -21,6 +21,7 @@ namespace Log
 		static const QIcon& getIconInfo();
 		static const QIcon& getIconWarning();
 		static const QIcon& getIconError();
+		static const QIcon& getIconSearch();
 	private:
 		Resources();
 		void initResources();
@@ -28,6 +29,9 @@ namespace Log
 		static Resources& instance();
 
 		std::unordered_map<std::string, QIcon> m_icons;
+
+		const std::string m_filePath;
+		const std::string m_fileEnding;
 	};
 }
 #endif

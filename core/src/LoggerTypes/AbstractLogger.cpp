@@ -8,10 +8,13 @@ namespace Log
 		DEFINE_SIGNAL_CONNECT_DISCONNECT(AbstractLogger, onClear, AbstractLogger&);
 		DEFINE_SIGNAL_CONNECT_DISCONNECT(AbstractLogger, onDelete, AbstractLogger&);
 
+		int AbstractLogger::s_idCounter = 0;
+
 		AbstractLogger::AbstractLogger(const std::string& name)
 			: LoggerInterface()
 			, m_enable(true)
 			, m_tabCount(0)
+			, m_id(++s_idCounter)
 			, m_name(name)
 			, m_creationsTime()
 			, m_color(Color::white)
@@ -26,6 +29,7 @@ namespace Log
 			: LoggerInterface()
 			, m_enable(other.m_enable)
 			, m_tabCount(other.m_tabCount)
+			, m_id(++s_idCounter)
 			, m_name(other.m_name)
 			, m_creationsTime(other.m_creationsTime)
 			, m_color(other.m_color)
@@ -165,6 +169,10 @@ namespace Log
 		const std::vector<Message>& AbstractLogger::getMessages() const
 		{
 			return m_messages;
+		}
+		AbstractLogger::LoggerID AbstractLogger::getID() const
+		{
+			return m_id;
 		}
 
 		void AbstractLogger::logInternal(const Message& msg)

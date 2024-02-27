@@ -266,10 +266,20 @@ namespace Log
 	{
 		SnapshotData data;
 		data.message = m_message;
-		data.contextName = m_context ? m_context->getName() : "";
+		if (m_context)
+		{
+			data.contextName = m_context ? m_context->getName() : "";
+			data.loggerID = m_context->getID();
+			data.contextColor = m_context->getColor();
+		}
+		else
+		{
+			data.loggerID = 0;
+			data.contextColor = Color::white;
+		}
 		data.level = m_level;
 		data.textColor = getColor();
-		data.contextColor = m_context ? m_context->getColor() : Color::white;
+		
 		data.tabCount = m_tabCount;
 		data.dateTime = m_dateTime;
 		return data;

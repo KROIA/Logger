@@ -13,7 +13,9 @@ namespace Log
 		class LOGGER_EXPORT AbstractLogger : public LoggerInterface
 		{
 		public:
-			AbstractLogger(const std::string& name = "");
+			typedef int LoggerID;
+
+			explicit AbstractLogger(const std::string& name = "");
 			AbstractLogger(const AbstractLogger& other);
 
 			virtual ~AbstractLogger();
@@ -49,6 +51,8 @@ namespace Log
 			const DateTime& getCreationDateTime() const;
 			const std::vector<Message>& getMessages() const;
 
+			LoggerID getID() const;
+
 			// Signals
 			DECLARE_SIGNAL_CONNECT_DISCONNECT(onNewMessage, const Message&);
 			DECLARE_SIGNAL_CONNECT_DISCONNECT(onClear, AbstractLogger&);
@@ -61,6 +65,7 @@ namespace Log
 		private:
 			bool m_enable;
 			unsigned int m_tabCount;
+			LoggerID m_id = 0;
 			std::string m_name;
 			DateTime m_creationsTime;
 			Color m_color;
@@ -70,6 +75,8 @@ namespace Log
 			Signal<const Message&> onNewMessage;
 			Signal<AbstractLogger&> onClear;
 			Signal<AbstractLogger&> onDelete;
+
+			static LoggerID s_idCounter;
 		};
 	}
 }

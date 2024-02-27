@@ -74,6 +74,7 @@ namespace Log
 		{
 			std::string message;
 			std::string contextName;
+			int loggerID;
 			Level level;
 			Color textColor;
 			Color contextColor;
