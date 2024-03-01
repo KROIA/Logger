@@ -19,7 +19,9 @@ namespace Log
 
         QTreeItem* child(size_t row);
         size_t childCount() const;
-        size_t columnCount() const;
+        //size_t columnCount() const;
+        size_t rowCount() const;
+        size_t getMessagesCount() const;
         const Message::SnapshotData& data(size_t column) const;
         size_t row() const;
         QTreeItem* parentItem();

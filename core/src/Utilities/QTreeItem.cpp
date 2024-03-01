@@ -46,7 +46,15 @@ namespace Log
 		return 0;
 	}
 
-	size_t QTreeItem::columnCount() const
+	/*size_t QTreeItem::columnCount() const
+	{
+		return m_itemData.size();
+	}*/
+	size_t QTreeItem::rowCount() const
+	{
+		return m_itemData.size() + childCount();
+	}
+	size_t QTreeItem::getMessagesCount() const
 	{
 		return m_itemData.size();
 	}

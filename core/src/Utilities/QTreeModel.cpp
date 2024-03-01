@@ -5,7 +5,7 @@
 
 namespace Log
 {
-	QTreeModel::QTreeModel(const QString& data, QObject* parent)
+	QTreeModel::QTreeModel(QObject* parent)
 		: QAbstractItemModel(parent)
 	{
 		m_rootItem = new QTreeItem();
@@ -26,7 +26,8 @@ namespace Log
 
 		QTreeItem* item = static_cast<QTreeItem*>(index.internalPointer());
 
-		return item->data(index.column()).message.c_str();
+		std::string msg = item->data(index.column()).message;
+		return msg.c_str();
 	}
 
 	Qt::ItemFlags QTreeModel::flags(const QModelIndex& index) const
@@ -51,13 +52,25 @@ namespace Log
 		if (!hasIndex(row, column, parent))
 			return QModelIndex();
 
-		QTreeItem* parentItem;
+		QTreeItem* parentItem = nullptr;
 
 		if (!parent.isValid())
 			parentItem = m_rootItem;
 		else
 			parentItem = static_cast<QTreeItem*>(parent.internalPointer());
-
+		long messageRows = parentItem->getMessagesCount();
+		if ((long)row - messageRows >= 0)
+		{
+			QTreeItem* childItem = parentItem->child(row - messageRows);
+			if (childItem)
+				return createIndex(0, column, childItem);
+			else
+				return QModelIndex();
+		}
+		else
+		{
+			return createIndex(row, column, parentItem);
+		}
 		QTreeItem* childItem = parentItem->child(row);
 		if (childItem)
 			return createIndex(row, column, childItem);
@@ -90,15 +103,16 @@ namespace Log
 		else
 			parentItem = static_cast<QTreeItem*>(parent.internalPointer());
 
-		return parentItem->childCount();
+		return parentItem->rowCount();
 	}
 
 	int QTreeModel::columnCount(const QModelIndex& parent) const
 	{
-		if (parent.isValid())
+		return 1;
+		/*if (parent.isValid())
 			return static_cast<QTreeItem*>(parent.internalPointer())->columnCount();
 		else
-			return m_rootItem->columnCount();
+			return 1;*/
 	}
 
 
@@ -182,6 +196,7 @@ namespace Log
 		{
 			it->second->addElement(m.createSnapshot());
 		}
+
 	}
 	void QTreeModel::onClear(Logger::AbstractLogger& logger)
 	{

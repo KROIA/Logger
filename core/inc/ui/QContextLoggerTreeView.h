@@ -5,7 +5,9 @@
 #include "LoggerTypes/ContextLogger.h"
 #include "ReceiverTypes/QContextLoggerTree.h"
 #include "ui/QAbstractLogView.h"
+#include "Utilities/QTreeModel.h"
 #include <QTreeWidget>
+#include <QTreeView>
 
 namespace Log 
 {
@@ -39,8 +41,11 @@ namespace Log
            // void onNewContextCheckBoxCreated(ContextData* context) override;
            // void onContextCheckBoxDestroyed(ContextData* context) override;
 
-            QTreeWidget* m_treeWidget;
-            Receiver::QContextLoggerTree* m_treeItem;
+           // QTreeWidget* m_treeWidget;
+            //Receiver::QContextLoggerTree* m_treeItem;
+
+            QTreeView* m_treeView;
+            QTreeModel* m_treeModel;
         };
     }
 }

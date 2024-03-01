@@ -103,10 +103,10 @@ int main(int argc, char* argv[])
 	view->attachLogger(logger1);
 	view->attachLogger(logger2);
 
-    Log::UI::QConsoleView* console = new Log::UI::QConsoleView();
-    console->attachLogger(logger1);
-    console->attachLogger(logger2);
-    console->show();
+    //Log::UI::QConsoleView* console = new Log::UI::QConsoleView();
+    //console->attachLogger(logger1);
+    //console->attachLogger(logger2);
+    //console->show();
 	
 
 	app.exec();

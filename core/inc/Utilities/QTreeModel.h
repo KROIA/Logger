@@ -16,7 +16,7 @@ namespace Log
         Q_OBJECT
 
     public:
-        explicit QTreeModel(const QString& data, QObject* parent = nullptr);
+        explicit QTreeModel(QObject* parent = nullptr);
         ~QTreeModel();
 
         QVariant data(const QModelIndex& index, int role) const override;
