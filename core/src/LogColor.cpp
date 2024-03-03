@@ -89,7 +89,17 @@ The different color codes are
 		Color::green		// custom
 	};
 
+	bool Color::s_isDarkMode = false;
+	float Color::s_darkModeFactor = 0.7f;
 
+	Color::Color()
+		: m_r(255)
+		, m_g(255)
+		, m_b(255)
+		, m_consoleValue(15)
+	{
+
+	}
 	Color::Color(uint8_t r, uint8_t g, uint8_t b)
 		: m_r(r)
 		, m_g(g)
@@ -175,6 +185,51 @@ The different color codes are
 		m_b = b;
 		return *this;
 	}
+	Color& Color::operator*=(float x)
+	{
+		m_r *= x;
+		m_g *= x;
+		m_b *= x;
+		if (m_r < 0) m_r = 0; else if (m_r > 255) m_r = 255;
+		if (m_g < 0) m_g = 0; else if (m_g > 255) m_g = 255;
+		if (m_b < 0) m_b = 0; else if (m_b > 255) m_b = 255;
+		return *this;
+	}
+	Color Color::operator*(float x) const
+	{
+		float r = m_r * x;
+		float g = m_g * x;
+		float b = m_b * x;
+		if (r < 0) r = 0; else if (r > 255) r = 255;
+		if (g < 0) g = 0; else if (g > 255) g = 255;
+		if (b < 0) b = 0; else if (b > 255) b = 255;
+
+		return Color(r, g, b);
+	
+	}
+	Color& Color::operator/=(float x)
+	{
+		m_r /= x;
+		m_g /= x;
+		m_b /= x;
+		if (m_r < 0) m_r = 0; else if (m_r > 255) m_r = 255;
+		if (m_g < 0) m_g = 0; else if (m_g > 255) m_g = 255;
+		if (m_b < 0) m_b = 0; else if (m_b > 255) m_b = 255;
+		return *this;
+	
+	}
+	Color Color::operator/(float x) const
+	{
+		float r = m_r / x;
+		float g = m_g / x;
+		float b = m_b / x;
+		if (r < 0) r = 0; else if (r > 255) r = 255;
+		if (g < 0) g = 0; else if (g > 255) g = 255;
+		if (b < 0) b = 0; else if (b > 255) b = 255;
+
+		return Color(r, g, b);
+	
+	}
 
 	bool Color::operator==(const Color& other) const
 	{
@@ -229,6 +284,42 @@ The different color codes are
 	uint8_t Color::getBlue() const
 	{
 		return m_b;
+	}
+
+#ifdef LOGGER_QT
+	QColor Color::toQColor() const
+	{
+		if(!s_isDarkMode)
+			return QColor(m_r, m_g, m_b);
+
+		//int sum = m_r + m_g + m_b;
+		//if(sum > 240*3)
+		//	return QColor(50, 50, 50);
+		// Darken the color by reducing its brightness
+		qreal h, s, v;
+		QColor(m_r, m_g, m_b).getHsvF(&h, &s, &v);
+		v *= s_darkModeFactor; // Reduce brightness to 70%
+		//v = 0.5*v;
+		return QColor::fromHsvF(h, s, v);
+	}
+#endif
+
+	void Color::setDarkMode(bool enable)
+	{
+		s_isDarkMode = enable;
+	}
+	bool Color::isDarkModeEnabled()
+	{
+		return s_isDarkMode;
+	}
+
+	void Color::setDarkModeFactor(float factor)
+	{
+		s_darkModeFactor = factor;
+	}
+	float Color::getDarkModeFactor()
+	{
+		return s_darkModeFactor;
 	}
 
 

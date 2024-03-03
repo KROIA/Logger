@@ -1,5 +1,5 @@
 #include "LogMessage.h"
-
+#include "LoggerTypes/AbstractLogger.h"
 namespace Log
 {
 
@@ -10,24 +10,27 @@ namespace Log
 
 	Message::Message(const std::string& msg)
 		: m_message(msg)
+		, m_context(nullptr)
 		, m_level(Level::info)
 		, m_customColor(Color::white)
 		, m_useCustomColor(false)
 		, m_tabCount(0)
 	{
-		//m_color = getLevelColor(m_level);
+
 	}
 	Message::Message(const std::string& msg, Level level)
 		: m_message(msg)
+		, m_context(nullptr)
 		, m_level(level)
 		, m_customColor(Color::white)
 		, m_useCustomColor(false)
 		, m_tabCount(0)
 	{
-		//m_color = getLevelColor(m_level);
+
 	}
 	Message::Message(const std::string& msg, Level level, const Color& col)
 		: m_message(msg)
+		, m_context(nullptr)
 		, m_level(level)
 		, m_customColor(col)
 		, m_useCustomColor(true)
@@ -37,28 +40,27 @@ namespace Log
 	}
 	Message::Message(const char* msg)
 		: m_message(msg)
+		, m_context(nullptr)
 		, m_level(Level::info)
 		, m_customColor(Color::white)
 		, m_useCustomColor(false)
 		, m_tabCount(0)
-		//, m_color(Color::white)
-		//, m_autoSetColor(true)
 	{
-		//m_color = getLevelColor(m_level);
+
 	}
 	Message::Message(const char* msg, Level level)
 		: m_message(msg)
+		, m_context(nullptr)
 		, m_level(level)
 		, m_customColor(Color::white)
 		, m_useCustomColor(false)
 		, m_tabCount(0)
-		//, m_color(Color::white)
-		//, m_autoSetColor(true)
 	{
-		//m_color = getLevelColor(m_level);
+
 	}
 	Message::Message(const char* msg, Level level, const Color& col)
 		: m_message(msg)
+		, m_context(nullptr)
 		, m_level(level)
 		, m_customColor(col)
 		, m_useCustomColor(true)
@@ -69,10 +71,12 @@ namespace Log
 
 	Message::Message(const Message& other)
 		: m_message(other.m_message)
+		, m_context(other.m_context)
 		, m_level(other.m_level)
 		, m_customColor(other.m_customColor)
 		, m_useCustomColor(other.m_useCustomColor)
 		, m_tabCount(other.m_tabCount)
+		, m_dateTime(other.m_dateTime)
 	{
 
 	}
@@ -81,18 +85,25 @@ namespace Log
 	{
 
 	}
-
+	Message& Message::operator=(const std::string& text)
+	{
+		m_message = text;
+		return *this;
+	}
 	Message& Message::operator=(const Message& other)
 	{
 		m_message = other.m_message;
-		//m_color = other.m_color;
+		m_context = other.m_context;
 		m_level = other.m_level;
-		//m_autoSetColor = other.m_autoSetColor;
+		m_customColor = other.m_customColor;
+		m_useCustomColor = other.m_useCustomColor;
+		m_tabCount = other.m_tabCount;
+		m_dateTime = other.m_dateTime;
 		return *this;
 	}
 	Message Message::operator+(const Message& other) const
 	{
-		return Message(m_message + other.m_message, m_level/*, m_color*/);
+		return Message(m_message + other.m_message, m_level);
 	}
 	Message& Message::operator+=(const Message& other)
 	{
@@ -142,13 +153,22 @@ namespace Log
 		return m_message;
 	}
 
+	void Message::setContext(Logger::AbstractLogger* context)
+	{
+		m_context = context;
+	}
+	Logger::AbstractLogger* Message::getContext() const
+	{
+		return m_context;
+	}
+
 	void Message::setColor(const Color& color)
 	{
 		m_customColor = color;
 	}
 	const Color& Message::getColor() const
 	{
-		if (m_level != Level::custom)
+		if (m_level != Level::custom && !m_useCustomColor)
 			return getLevelColor(m_level);
 		return m_customColor;
 	}
@@ -169,8 +189,6 @@ namespace Log
 				m_customColor = getLevelColor(m_level);
 			}
 		}
-		//if (m_autoSetColor)
-			//m_color = getLevelColor(m_level);
 	}
 	Level Message::getLevel() const
 	{
@@ -178,7 +196,7 @@ namespace Log
 	}
 	std::string Message::getLevelString() const
 	{
-		return getLevelStr(m_level);
+		return Utilities::getLevelStr(m_level);
 	}
 	void Message::updateTimestamp()
 	{
@@ -196,6 +214,14 @@ namespace Log
 	unsigned int Message::getTabCount() const
 	{
 		return m_tabCount;
+	}
+
+	std::string Message::toString(DateTime::Format format) const
+	{
+		return m_dateTime.toString(format) + " " +
+			Utilities::getLevelStr(m_level) +
+			std::string(m_tabCount, ' ') +
+			m_message;
 	}
 
 	const Color& Message::getLevelColor(Level l)
@@ -220,22 +246,42 @@ namespace Log
 		s_levelColors = colors;
 	}
 
-	/*void Message::autoSetColor(bool enable)
+	void Message::sort(std::vector<Message>& messages, SortType type)
 	{
-		m_autoSetColor = enable;
-		if(m_autoSetColor)
-			m_color = getLevelColor(m_level);
-	}
-	Color Message::getLevelColor(Level level)
-	{
-		switch (level)
+		switch (type)
 		{
-			case Level::trace:   return Color::cyan;
-			case Level::debug:   return Color::magenta;
-			case Level::info:    return Color::white;
-			case Level::warning: return Color::yellow;
-			case Level::error:   return Color::red;
+			case SortType::timeAscending:
+				std::sort(messages.begin(), messages.end(), [](const Message& a, const Message& b) 
+					{ 
+						return a.m_dateTime.getTime() < b.m_dateTime.getTime();
+					});
+				break;
+			case SortType::timeDescending:
+				std::sort(messages.begin(), messages.end(), [](const Message& a, const Message& b) { return a.m_dateTime > b.m_dateTime; });
+				break;
 		}
-		return Color::white;
-	}*/
+	}
+
+	Message::SnapshotData Message::createSnapshot() const
+	{
+		SnapshotData data;
+		data.message = m_message;
+		if (m_context)
+		{
+			data.contextName = m_context ? m_context->getName() : "";
+			data.loggerID = m_context->getID();
+			data.contextColor = m_context->getColor();
+		}
+		else
+		{
+			data.loggerID = 0;
+			data.contextColor = Color::white;
+		}
+		data.level = m_level;
+		data.textColor = getColor();
+		
+		data.tabCount = m_tabCount;
+		data.dateTime = m_dateTime;
+		return data;
+	}
 }

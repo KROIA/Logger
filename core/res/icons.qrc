@@ -1,0 +1,10 @@
+<RCC>
+    <qresource prefix="/">
+        <file>icons/trace.png</file>
+        <file>icons/debug.png</file>
+        <file>icons/info.png</file>
+        <file>icons/warning.png</file>
+        <file>icons/error.png</file>
+        <file>icons/magnifying-glass.png</file>
+    </qresource>
+</RCC>

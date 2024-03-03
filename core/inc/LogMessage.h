@@ -3,12 +3,17 @@
 #include "Logger_base.h"
 #include "LogColor.h"
 #include "LogLevel.h"
-#include "DateTime.h"
+#include "Utilities/DateTime.h"
 #include <string>
 #include <vector>
 
+
 namespace Log
 {
+	namespace Logger
+	{
+		class AbstractLogger;
+	}
 	class LOGGER_EXPORT Message
 	{
 	public:
@@ -24,6 +29,7 @@ namespace Log
 
 		~Message();
 
+		Message& operator=(const std::string& text);
 		Message& operator=(const Message& other);
 		Message operator+(const Message& other) const;
 		Message& operator+=(const Message& other);
@@ -35,6 +41,8 @@ namespace Log
 		void setText(const char* text);
 		const std::string& getText() const;
 		
+		void setContext(Logger::AbstractLogger* context);
+		Logger::AbstractLogger* getContext() const;
 
 		void setColor(const Color& color);
 		const Color& getColor() const;
@@ -49,32 +57,45 @@ namespace Log
 		void setTabCount(unsigned int count);
 		unsigned int getTabCount() const;
 
-		//void autoSetColor(bool enable);
-		//static Color getLevelColor(Level level);
-
+		std::string toString(DateTime::Format format) const;
 
 		static const Color& getLevelColor(Level l);
 		static const LevelColors& getLevelColors();
 		static void setLevelColors(const LevelColors& colors);
 
+		enum SortType
+		{
+			timeAscending,
+			timeDescending
+		};
+		static void sort(std::vector<Message>& messages, SortType type);
+
+		struct SnapshotData
+		{
+			std::string message;
+			std::string contextName;
+			int loggerID;
+			Level level;
+			Color textColor;
+			Color contextColor;
+			unsigned int tabCount;
+
+			DateTime dateTime;
+		};
+		SnapshotData createSnapshot() const;
+
 	protected:
 		std::string m_message;
+		Logger::AbstractLogger* m_context;
 		Level m_level;
 		Color m_customColor;
 		bool m_useCustomColor;
 		unsigned int m_tabCount;
 
-		//bool m_autoSetColor;
 		DateTime m_dateTime;
 		
 	private:
 
 		static LevelColors s_levelColors; // Initialized in LogColor.cpp
 	};
-
-	/*struct LOGGER_EXPORT NastedMessage
-	{
-		Message message;
-		std::vector<NastedMessage> childMessages;
-	};*/
 }
