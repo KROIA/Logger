@@ -168,7 +168,7 @@ namespace Log
 	}
 	const Color& Message::getColor() const
 	{
-		if (m_level != Level::custom)
+		if (m_level != Level::custom && !m_useCustomColor)
 			return getLevelColor(m_level);
 		return m_customColor;
 	}

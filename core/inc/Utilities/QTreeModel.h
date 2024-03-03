@@ -33,7 +33,7 @@ namespace Log
       // void onPrintAllMessagesRecursive(Logger::ContextLogger& logger) override;
 
        void onContextCreate(Logger::ContextLogger& logger) override;
-       void onContextDestroy(Logger::ContextLogger& logger) override;
+       void onContextDestroy(Logger::AbstractLogger& logger) override;
 
        void onNewSubscribed(Logger::AbstractLogger& logger) override;
        void onUnsubscribed(Logger::AbstractLogger& logger) override;
@@ -47,5 +47,7 @@ namespace Log
         std::unordered_map<Logger::AbstractLogger::LoggerID, QTreeItem*> m_loggerTreeItems;
 
     };
+
+
 }
 #endif

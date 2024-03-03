@@ -67,7 +67,7 @@ void ContextObject::onMessageTimer()
 			std::string txt = "Long Message from " + m_logger->getName() + "\n";
 			txt += "This is a new line\n";
 			txt += "This is another new line\n";
-			m_logger->log(txt, Log::Level::info);
+			m_logger->log(Log::Level::info, txt);
 			counter = 0;
 		}
 		++counter;
@@ -77,13 +77,13 @@ void ContextObject::onWarningTimer()
 {
 	++m_counter;
 	if (m_logger)
-	m_logger->log(std::to_string(m_counter) + " Warning from " + m_logger->getName(), Log::Level::warning);
+	m_logger->log(Log::Level::warning, std::to_string(m_counter) + " Warning from " + m_logger->getName());
 }
 void ContextObject::onErrorTimer()
 {
 	++m_counter;
 	if (m_logger)
-	m_logger->log(std::to_string(m_counter) + " Error from " + m_logger->getName(), Log::Level::error);
+	m_logger->log(Log::Level::error, std::to_string(m_counter) + " Error from " + m_logger->getName());
 }
 
 void ContextObject::on_clear_pushButton_clicked()

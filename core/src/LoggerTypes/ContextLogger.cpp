@@ -6,7 +6,7 @@ namespace Log
 	namespace Logger
 	{
 		DEFINE_SIGNAL_CONNECT_DISCONNECT(ContextLogger, onContextCreate, ContextLogger&);
-		DEFINE_SIGNAL_CONNECT_DISCONNECT(ContextLogger, onContextDestroy, ContextLogger&);
+		DEFINE_SIGNAL_CONNECT_DISCONNECT(ContextLogger, onContextDestroy, AbstractLogger&);
 
 
 		ContextLogger::ContextLogger(const std::string& name, ContextLogger* parent) 
@@ -187,7 +187,7 @@ namespace Log
 			if (m_parent)
 				m_parent->emitRecursive_onContextCreate(newContext);
 		}
-		void ContextLogger::emitRecursive_onContextDestroy(ContextLogger& destroyedContext)
+		void ContextLogger::emitRecursive_onContextDestroy(AbstractLogger& destroyedContext)
 		{
 			if (onContextDestroy.getSlotCount())
 				onContextDestroy.emitSignal(destroyedContext);

@@ -26,7 +26,7 @@ namespace Log
 
 
 			DECLARE_SIGNAL_CONNECT_DISCONNECT(onContextCreate, ContextLogger&);
-			DECLARE_SIGNAL_CONNECT_DISCONNECT(onContextDestroy, ContextLogger&);
+			DECLARE_SIGNAL_CONNECT_DISCONNECT(onContextDestroy, AbstractLogger&);
 
 			void clear() override;
 			void destroyAllContext();
@@ -50,10 +50,10 @@ namespace Log
 			ContextLogger* m_rootParent;
 
 			Signal<ContextLogger&> onContextCreate;
-			Signal<ContextLogger&> onContextDestroy;
+			Signal<AbstractLogger&> onContextDestroy;
 
 			void emitRecursive_onContextCreate(ContextLogger& newContext);
-			void emitRecursive_onContextDestroy(ContextLogger& destroyedContext);
+			void emitRecursive_onContextDestroy(AbstractLogger& destroyedContext);
 		};
 	}
 }

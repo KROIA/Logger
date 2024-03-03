@@ -9,8 +9,6 @@
 // Log Receivers
 #include "ReceiverTypes/AbstractReceiver.h"
 #include "ReceiverTypes/ContextReceiver.h"
-#include "ReceiverTypes/QContextLoggerTree.h"
-#include "ReceiverTypes/ConsolePlotter.h"
 #include "ReceiverTypes/ConsoleContextPlotter.h"
 
 // ui

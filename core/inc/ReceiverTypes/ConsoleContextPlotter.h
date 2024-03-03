@@ -19,7 +19,7 @@ namespace Log
 
 		private:
 			void onContextCreate(Logger::ContextLogger& logger) override;
-			void onContextDestroy(Logger::ContextLogger& logger) override;
+			void onContextDestroy(Logger::AbstractLogger& logger) override;
 
 
 			void onNewSubscribed(Logger::AbstractLogger& logger) override;

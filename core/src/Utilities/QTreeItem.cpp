@@ -4,8 +4,9 @@
 #ifdef LOGGER_QT
 namespace Log
 {
-	QTreeItem::QTreeItem()
-		: m_itemData()
+	QTreeItem::QTreeItem(const std::string& name)
+		: m_name(name)
+		, m_itemData()
 		, m_parentItem(nullptr)
 	{}
 
@@ -52,7 +53,7 @@ namespace Log
 	}*/
 	size_t QTreeItem::rowCount() const
 	{
-		return m_itemData.size() + childCount();
+		return m_itemData.size() + childCount() + 1;
 	}
 	size_t QTreeItem::getMessagesCount() const
 	{

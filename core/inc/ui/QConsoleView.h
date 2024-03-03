@@ -4,7 +4,7 @@
 #ifdef LOGGER_QT
 //#include "LoggerTypes/ContextLogger.h"
 #include "ui/QConsoleWidget.h"
-#include "ui/QAbstractLogView.h"
+#include "ReceiverTypes/ui/QAbstractLogView.h"
 #include <QTreeWidget>
 
 namespace Log 
@@ -25,10 +25,10 @@ namespace Log
 
         private:
             void on_clear_pushButton_clicked() override;
-            void onAllContextCheckBoxStateChanged(int state) override;
+           // void onAllContextCheckBoxStateChanged(int state) override;
 
-            void onNewSubscribed(Logger::AbstractLogger& logger) override;
-            void onUnsubscribed(Logger::AbstractLogger& logger) override;
+            //void onNewSubscribed(Logger::AbstractLogger& logger) override;
+            //void onUnsubscribed(Logger::AbstractLogger& logger) override;
 
            // void onContextCreate(Logger::ContextLogger& logger) override;
            // void onContextDestroy(Logger::ContextLogger& logger) override;
@@ -38,6 +38,8 @@ namespace Log
             void onContextCheckBoxChanged(ContextData* context, bool isChecked) override;
            // void onNewContextCheckBoxCreated(ContextData* context) override;
            // void onContextCheckBoxDestroyed(ContextData* context) override;
+
+            void onNewMessage(const Message& m) override;
 
             QConsoleWidget* m_consoleWidget;
         };

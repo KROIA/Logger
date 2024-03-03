@@ -1,10 +1,10 @@
 #pragma once
 #include "Logger_base.h"
 #include "LoggerTypes/ContextLogger.h"
-#include "ReceiverTypes/QContextLoggerTree.h"
+#include "ReceiverTypes/ui/QContextLoggerTree.h"
 
 #ifdef LOGGER_QT
-#include "ui/QAbstractLogView.h"
+#include "ReceiverTypes/ui/QAbstractLogView.h"
 #include <QWidget>
 #include <QTreeWidget>
 #include <QTimer>
@@ -54,7 +54,7 @@ namespace Log
 
            // void onCheckBoxStateChanged(int state);
             virtual void onAllContextCheckBoxStateChanged(int state);
-            virtual void on_clear_pushButton_clicked() = 0;
+            virtual void on_clear_pushButton_clicked();
             //void onLevelCheckBoxStateChanged(int state);
             //void onFilterTextChanged(const QString& text);
         protected:
@@ -64,12 +64,18 @@ namespace Log
             //void onContextDestroy(Logger::ContextLogger& logger);
             struct ContextData
             {
-                Logger::AbstractLogger* logger;
+                //Logger::AbstractLogger* logger;
                 QCheckBox* checkBox;
+                std::shared_ptr<Logger::AbstractLogger::LoggerMetaInfo> loggerInfo;
 
-                ContextData()
-                    : logger(nullptr), checkBox(nullptr)
-                {}
+                ContextData(std::shared_ptr<Logger::AbstractLogger::LoggerMetaInfo> loggerInfo,
+                    QCheckBox* checkBox)
+                    : checkBox(checkBox)
+                    , loggerInfo(loggerInfo)
+                {
+                    checkBox->setChecked(true);
+                    checkBox->setText(loggerInfo->name.c_str());
+                }
             };
             void setContentWidget(QWidget* widget);
 
@@ -77,7 +83,8 @@ namespace Log
             void onUnsubscribed(Logger::AbstractLogger& logger) override;
 
             void onContextCreate(Logger::ContextLogger& logger) override;
-            void onContextDestroy(Logger::ContextLogger& logger) override;
+            void onContextDestroy(Logger::AbstractLogger& logger) override;
+            virtual void addContext(Logger::AbstractLogger& logger);
 
             virtual void onLevelCheckBoxChanged(size_t index, Level level, bool isChecked);
             virtual void onFilterTextChanged(size_t index, QLineEdit* lineEdit, const std::string& text);
@@ -86,40 +93,27 @@ namespace Log
             virtual void onContextCheckBoxDestroyed(ContextData* context);
 
             //-------------
+            virtual void removeContext(Logger::AbstractLogger::LoggerID id);
           
 
 
 
-            void onNewMessage(const Message& m) override;
+            void onNewMessage(const Message& m) = 0;
             void onClear(Logger::AbstractLogger& logger) override;
             void onDelete(Logger::AbstractLogger& logger) override;
 
             virtual void addContextRecursive(Logger::ContextLogger& logger);
+            virtual void addChildContextRecursive(Logger::ContextLogger& logger);
 
 
             Ui::QAbstractLogView* ui;
         private:
             QCheckBox* m_levelCheckBoxes[static_cast<int>(Level::__count)];
             std::vector<QLineEdit*> m_filterTextEdits;
-            std::unordered_map<Logger::AbstractLogger*, ContextData*> m_contextData;
+            std::unordered_map<Logger::AbstractLogger::LoggerID, ContextData*> m_contextData;
 
             bool m_autoCreateNewCheckBoxForNewContext = false;
             QSignalHandler m_signalHandler;
-            //------------------
-            
-            //QTreeWidget* m_treeWidget;
-            //Receiver::QContextLoggerTree* m_treeItem;
-
-            //QTimer m_updateTimer;
-            /*struct LoggerData
-            {
-                Logger::ContextLogger* logger;
-                QCheckBox* checkBox;
-            };
-            std::unordered_map<Logger::ContextLogger*, LoggerData*> m_loggerData;
-
-            QCheckBox *m_levelCheckBoxes[static_cast<int>(Level::__count)];*/
-
             bool m_ignoreAllContextCheckBox_signals = false;
         };
     }

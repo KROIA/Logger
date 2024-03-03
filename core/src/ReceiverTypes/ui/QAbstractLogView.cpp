@@ -1,4 +1,4 @@
-#include "ui/QAbstractLogView.h"
+#include "ReceiverTypes/ui/QAbstractLogView.h"
 
 #ifdef LOGGER_QT
 #include "ui_QAbstractLogView.h"
@@ -70,9 +70,9 @@ namespace Log
 			//m_treeWidget = new QTreeWidget();
 
 			//ui->tree_widget->layout()->addWidget(m_treeWidget);
-			ui->context_listView->setLayout(new QVBoxLayout());
-			ui->context_listView->setItemAlignment(Qt::AlignTop);
-			ui->context_listView->layout()->setAlignment(Qt::AlignTop);
+			//ui->context_listView->setLayout(new QVBoxLayout());
+			//ui->context_scrollAreaWidgetContents->setItemAlignment(Qt::AlignTop);
+			ui->context_scrollAreaWidgetContents->layout()->setAlignment(Qt::AlignTop);
 			ui->searchIcon_label->setPixmap(Resources::getIconSearch().pixmap(16,16));
 
 			/*QSplitter* splitter = new QSplitter(this);
@@ -212,6 +212,17 @@ namespace Log
 				loggerData.second->checkBox->setChecked(isChecked);
 			}
 		}
+		void QAbstractLogView::on_clear_pushButton_clicked()
+		{
+			auto copy = m_contextData;
+			for(auto& context : copy)
+			{
+				if(!context.second->loggerInfo->isAlive)
+				{
+					removeContext(context.first);
+				}
+			}
+		}
 		
 		/*void QAbstractLogView::onLevelCheckBoxStateChanged(int state)
 		{
@@ -273,8 +284,9 @@ namespace Log
 		}
 		void QAbstractLogView::onNewSubscribed(Logger::AbstractLogger& logger)
 		{
+			addContext(logger);
 			if (auto* contextLogger = dynamic_cast<Logger::ContextLogger*>(&logger))
-				addContextRecursive(*contextLogger);
+				addChildContextRecursive(*contextLogger);
 			//m_treeItem->attachLogger(logger);
 		}
 		void QAbstractLogView::onUnsubscribed(Logger::AbstractLogger& logger)
@@ -285,26 +297,7 @@ namespace Log
 
 		void QAbstractLogView::onContextCreate(Logger::ContextLogger& logger)
 		{
-			if (m_autoCreateNewCheckBoxForNewContext)
-			{
-				ContextData* data = new ContextData();
-				data->logger = &logger;
-				data->checkBox = new QCheckBox(this);
-				data->checkBox->setChecked(true);
-				data->checkBox->setText(logger.getName().c_str());
-				QPalette p = data->checkBox->palette();
-				//p.setColor(QPalette::Active, QPalette::WindowText, logger.getColor().toQColor());
-				//p.setColor(QPalette::WindowText, logger.getColor().toQColor());
-				data->checkBox->setAutoFillBackground(true);
-
-				p.setColor(QPalette::Button, logger.getColor().toQColor());
-
-				data->checkBox->setPalette(p);
-				QObject::connect(data->checkBox, &QCheckBox::stateChanged,
-					&m_signalHandler, &QSignalHandler::onCheckBoxStateChangedSlot);
-				m_contextData[&logger] = data;
-				onNewContextCheckBoxCreated(data);
-			}
+			addContext(logger);
 			/*m_loggerData[&logger] = new LoggerData();
 			m_loggerData[&logger]->logger = &logger;
 			QCheckBox* checkBox = new QCheckBox(this);
@@ -323,20 +316,36 @@ namespace Log
 
 			
 		}
-		void QAbstractLogView::onContextDestroy(Logger::ContextLogger& logger)
+		void QAbstractLogView::onContextDestroy(Logger::AbstractLogger& logger)
 		{
-			const auto& it = m_contextData.find(&logger);
-			if (it == m_contextData.end())
-				return;
-			ContextData* data = it->second;
-			onContextCheckBoxDestroyed(data);
-			m_contextData.erase(&logger);
-			delete data->checkBox;
-			delete data;
-
-			for (auto& child : logger.getChilds())
+			
+		}
+		void QAbstractLogView::addContext(Logger::AbstractLogger& logger)
+		{
+			attachLogger(logger);
+			if (m_autoCreateNewCheckBoxForNewContext)
 			{
-				onContextDestroy(*child);
+				if (m_contextData.find(logger.getID()) != m_contextData.end())
+					return;
+				ContextData* data = new ContextData(logger.getMetaInfo(), new QCheckBox(this));
+				QPalette p = data->checkBox->palette();
+				//p.setColor(QPalette::Active, QPalette::WindowText, logger.getColor().toQColor());
+				//p.setColor(QPalette::WindowText, logger.getColor().toQColor());
+				data->checkBox->setAutoFillBackground(true);
+
+				p.setColor(QPalette::Button, logger.getColor().toQColor());
+
+				data->checkBox->setPalette(p);
+				QObject::connect(data->checkBox, &QCheckBox::stateChanged,
+					&m_signalHandler, &QSignalHandler::onCheckBoxStateChangedSlot);
+				m_contextData[logger.getID()] = data;
+				onNewContextCheckBoxCreated(data);
+			}
+			const auto &messages = logger.getMessages();
+
+			for (const auto& message : messages)
+			{
+				onNewMessage(message);
 			}
 		}
 
@@ -386,17 +395,26 @@ namespace Log
 		}
 		void QAbstractLogView::onNewContextCheckBoxCreated(ContextData* context)
 		{
-			ui->context_listView->layout()->addWidget(context->checkBox);
+			ui->context_scrollAreaWidgetContents->layout()->addWidget(context->checkBox);
 		}
 		void QAbstractLogView::onContextCheckBoxDestroyed(ContextData* context) 
 		{
-			ui->context_listView->layout()->removeWidget(context->checkBox);
+			ui->context_scrollAreaWidgetContents->layout()->removeWidget(context->checkBox);
 		}
 
-		void QAbstractLogView::onNewMessage(const Message& m)
+		void QAbstractLogView::removeContext(Logger::AbstractLogger::LoggerID id)
 		{
-
+			const auto& it = m_contextData.find(id);
+			if (it == m_contextData.end())
+				return;
+			ContextData* data = it->second;
+			onContextCheckBoxDestroyed(data);
+			m_contextData.erase(it);
+			delete data->checkBox;
+			delete data;
 		}
+
+		
 		void QAbstractLogView::onClear(Logger::AbstractLogger& logger)
 		{
 
@@ -407,7 +425,14 @@ namespace Log
 		}
 		void QAbstractLogView::addContextRecursive(Logger::ContextLogger& logger)
 		{
-			onContextCreate(logger);
+			addContext(logger);
+			for (auto& child : logger.getChilds())
+			{
+				addContextRecursive(*child);
+			}
+		}
+		void QAbstractLogView::addChildContextRecursive(Logger::ContextLogger& logger)
+		{
 			for (auto& child : logger.getChilds())
 			{
 				addContextRecursive(*child);

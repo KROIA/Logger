@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>766</width>
+    <width>758</width>
     <height>544</height>
    </rect>
   </property>
@@ -252,17 +252,25 @@
            </layout>
           </widget>
          </item>
-         <item>
-          <widget class="QListView" name="context_listView">
-           <property name="maximumSize">
-            <size>
-             <width>16777215</width>
-             <height>16777215</height>
-            </size>
-           </property>
-          </widget>
-         </item>
         </layout>
+       </widget>
+      </item>
+      <item>
+       <widget class="QScrollArea" name="context_scrollArea">
+        <property name="widgetResizable">
+         <bool>true</bool>
+        </property>
+        <widget class="QWidget" name="context_scrollAreaWidgetContents">
+         <property name="geometry">
+          <rect>
+           <x>0</x>
+           <y>0</y>
+           <width>185</width>
+           <height>385</height>
+          </rect>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_7"/>
+        </widget>
        </widget>
       </item>
       <item>

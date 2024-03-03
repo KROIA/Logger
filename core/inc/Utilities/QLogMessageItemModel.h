@@ -67,9 +67,7 @@ namespace Log
         bool getLevelVisibility(Level level) const;
 
         void setContextVisibility(Logger::AbstractLogger::LoggerID loggerID, bool isVisible);
-        void setContextVisibility(const Logger::AbstractLogger& logger, bool isVisible);
         bool getContextVisibility(Logger::AbstractLogger::LoggerID loggerID) const;
-        bool getContextVisibility(const Logger::AbstractLogger& logger) const;
 
         void setDateTimeFilter(DateTime min, DateTime max, DateTime::Range rangeType);
         void clearDateTimeFilter();

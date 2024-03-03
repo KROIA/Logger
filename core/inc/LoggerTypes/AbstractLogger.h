@@ -5,6 +5,7 @@
 #include "LoggerInterface.h"
 #include "Utilities/Signal.h"
 #include "LogColor.h"
+#include <memory>
 
 namespace Log
 {
@@ -32,12 +33,12 @@ namespace Log
 			void log(Message msg) override;
 
 			void log(const std::string& msg) override;
-			void log(const std::string& msg, Level level) override;
-			void log(const std::string& msg, Level level, const Color& col) override;
+			void log(Level level, const std::string& msg) override;
+			void log(Level level, const Color& col, const std::string& msg) override;
 
 			void log(const char* msg) override;
-			void log(const char* msg, Level level) override;
-			void log(const char* msg, Level level, const Color& col) override;
+			void log(Level level, const char* msg) override;
+			void log(Level level, const Color& col, const char* msg) override;
 
 			void setTabCount(unsigned int tabCount) override;
 			void tabIn() override;
@@ -53,6 +54,43 @@ namespace Log
 
 			LoggerID getID() const;
 
+			struct LoggerMetaInfo
+			{
+				LoggerID id;
+				std::string name;
+				DateTime creationTime;
+				Color color;
+				unsigned int tabCount;
+				bool enabled;
+				bool isAlive;
+
+				LoggerMetaInfo(LoggerID id,
+					const std::string &name,
+					const DateTime &creationTime,
+					const Color &color,
+					unsigned int tabCount,
+					bool enabled,
+					bool isAlive) 
+					: id(id)
+					, name(name)
+					, creationTime(creationTime)
+					, color(color)
+					, tabCount(tabCount)
+					, enabled(enabled)
+					, isAlive(isAlive) 
+				{}
+				LoggerMetaInfo(const LoggerMetaInfo &other) 
+					: id(other.id)
+					, name(other.name)
+					, creationTime(other.creationTime)
+					, color(other.color)
+					, tabCount(other.tabCount)
+					, enabled(other.enabled)
+					, isAlive(other.isAlive) 
+				{}
+			};
+			std::shared_ptr<LoggerMetaInfo> getMetaInfo() const;
+
 			// Signals
 			DECLARE_SIGNAL_CONNECT_DISCONNECT(onNewMessage, const Message&);
 			DECLARE_SIGNAL_CONNECT_DISCONNECT(onClear, AbstractLogger&);
@@ -63,12 +101,9 @@ namespace Log
 
 			void emitNewMessage(const Message& msg);
 		private:
-			bool m_enable;
-			unsigned int m_tabCount;
-			LoggerID m_id = 0;
-			std::string m_name;
-			DateTime m_creationsTime;
-			Color m_color;
+			LoggerMetaInfo m_metaInfo;
+
+			std::shared_ptr<LoggerMetaInfo> m_sharedMetaInfo;
 			std::vector<Message> m_messages;
 
 

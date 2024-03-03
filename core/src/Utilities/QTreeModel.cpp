@@ -8,7 +8,7 @@ namespace Log
 	QTreeModel::QTreeModel(QObject* parent)
 		: QAbstractItemModel(parent)
 	{
-		m_rootItem = new QTreeItem();
+		m_rootItem = new QTreeItem("Root");
 	}
 
 	QTreeModel::~QTreeModel()
@@ -26,6 +26,7 @@ namespace Log
 
 		QTreeItem* item = static_cast<QTreeItem*>(index.internalPointer());
 
+		return "DATA";
 		std::string msg = item->data(index.column()).message;
 		return msg.c_str();
 	}
@@ -52,6 +53,20 @@ namespace Log
 		if (!hasIndex(row, column, parent))
 			return QModelIndex();
 
+		QTreeItem* parentItem;
+
+		if (!parent.isValid())
+			parentItem = m_rootItem;
+		else
+			parentItem = static_cast<QTreeItem*>(parent.internalPointer());
+
+		QTreeItem* childItem = parentItem->child(row);
+		if (childItem)
+			return createIndex(row, column, childItem);
+		return QModelIndex();
+		/*if (!hasIndex(row, column, parent))
+			return QModelIndex();
+
 		QTreeItem* parentItem = nullptr;
 
 		if (!parent.isValid())
@@ -63,7 +78,7 @@ namespace Log
 		{
 			QTreeItem* childItem = parentItem->child(row - messageRows);
 			if (childItem)
-				return createIndex(0, column, childItem);
+				return createIndex(row, column, childItem);
 			else
 				return QModelIndex();
 		}
@@ -75,7 +90,7 @@ namespace Log
 		if (childItem)
 			return createIndex(row, column, childItem);
 		else
-			return QModelIndex();
+			return QModelIndex();*/
 	}
 
 	QModelIndex QTreeModel::parent(const QModelIndex& index) const
@@ -110,7 +125,7 @@ namespace Log
 	{
 		return 1;
 		/*if (parent.isValid())
-			return static_cast<QTreeItem*>(parent.internalPointer())->columnCount();
+			return static_cast<QTreeItem*>(parent.internalPointer())->getMessagesCount()+1;
 		else
 			return 1;*/
 	}
@@ -125,7 +140,7 @@ namespace Log
 	{
 		attachLogger(logger);
 	}
-	void QTreeModel::onContextDestroy(Logger::ContextLogger& logger)
+	void QTreeModel::onContextDestroy(Logger::AbstractLogger& logger)
 	{
 		detachLogger(logger);
 	}
@@ -135,6 +150,7 @@ namespace Log
 		Logger::ContextLogger* contextLogger = dynamic_cast<Logger::ContextLogger*>(&logger);
 
 		const auto &it = m_loggerTreeItems.find(logger.getID());
+		std::string name = logger.getName();
 		if (it == m_loggerTreeItems.end())
 		{
 			
@@ -150,20 +166,20 @@ namespace Log
 					const auto &parentIt = m_loggerTreeItems.find(parentID);
 					if (parentIt != m_loggerTreeItems.end())
 					{
-						QTreeItem* item = new QTreeItem();
+						QTreeItem* item = new QTreeItem(name);
 						parentIt->second->appendChild(item);
 						m_loggerTreeItems[logger.getID()] = item;
 					}
 					else
 					{
-						QTreeItem* item = new QTreeItem();
+						QTreeItem* item = new QTreeItem(name);
 						m_loggerTreeItems[logger.getID()] = item;
 						m_rootItem->appendChild(item);
 					}
 				}
 				else
 				{
-					QTreeItem* item = new QTreeItem();
+					QTreeItem* item = new QTreeItem(name);
 					m_loggerTreeItems[logger.getID()] = item;
 					m_rootItem->appendChild(item);
 				}
@@ -171,7 +187,7 @@ namespace Log
 			}
 			else
 			{
-				QTreeItem* item = new QTreeItem();
+				QTreeItem* item = new QTreeItem(name);
 				m_loggerTreeItems[logger.getID()] = item;
 				m_rootItem->appendChild(item);
 				onPrintAllMessages(logger);
@@ -206,6 +222,9 @@ namespace Log
 	{
 		detachLogger(logger);
 	}
+
+
+
 
 }
 #endif

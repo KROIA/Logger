@@ -187,10 +187,6 @@ namespace Log
             m_contextVisibility[loggerID] = isVisible;
         }
     }
-    void QLogMessageItemProxyModel::setContextVisibility(const Logger::AbstractLogger& logger, bool isVisible)
-    {
-        setContextVisibility(logger.getID(), isVisible);
-    }
 
     bool QLogMessageItemProxyModel::getContextVisibility(Logger::AbstractLogger::LoggerID loggerID) const
     {
@@ -200,10 +196,6 @@ namespace Log
             return it->second;
         }
         return true;
-    }
-    bool QLogMessageItemProxyModel::getContextVisibility(const Logger::AbstractLogger& logger) const
-    {
-        return getContextVisibility(logger.getID());
     }
 
     void QLogMessageItemProxyModel::setDateTimeFilter(DateTime min, DateTime max, DateTime::Range rangeType)

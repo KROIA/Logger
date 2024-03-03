@@ -23,7 +23,7 @@ namespace Log
 			virtual void onPrintAllMessagesRecursive(Logger::ContextLogger& logger);
 
 			virtual void onContextCreate(Logger::ContextLogger& logger) = 0;
-			virtual void onContextDestroy(Logger::ContextLogger& logger) = 0;
+			virtual void onContextDestroy(Logger::AbstractLogger& logger) = 0;
 		private:
 		};
 	}

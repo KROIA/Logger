@@ -110,9 +110,10 @@ namespace Log
         {
             //JD_SIGNAL_PROFILING_BLOCK(m_profilerName.c_str(), JD_COLOR_STAGE_10);
             std::vector<size_t> slotsToRemove;
-            for (size_t i = 0; i < m_slotsWithArgs.size(); ++i) {
+            std::vector<SlotFunctionContainer> slotsToInvoke = m_slotsWithArgs;
+            for (size_t i = 0; i < slotsToInvoke.size(); ++i) {
                // JD_SIGNAL_PROFILING_BLOCK("Slot", JD_COLOR_STAGE_11);
-                const SlotFunctionContainer& slot = m_slotsWithArgs[i];
+                const SlotFunctionContainer& slot = slotsToInvoke[i];
                 if(!slot.m_func)
                     // Slot is no longer valid, remove it
                     slotsToRemove.push_back(i);

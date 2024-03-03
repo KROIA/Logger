@@ -12,32 +12,30 @@ namespace Log
 
 		AbstractLogger::AbstractLogger(const std::string& name)
 			: LoggerInterface()
-			, m_enable(true)
-			, m_tabCount(0)
-			, m_id(++s_idCounter)
-			, m_name(name)
-			, m_creationsTime()
-			, m_color(Color::white)
-			, m_messages()
+			, m_metaInfo(
+				++s_idCounter,
+				name,
+				DateTime(),
+				Color::white,
+				0,
+				true,
+				true)
 			, onNewMessage("onNewMessage")
 			, onClear("onClear")
 			, onDelete("onDelete")
 		{
-
+			m_sharedMetaInfo = std::make_shared<LoggerMetaInfo>(m_metaInfo);
 		}
 		AbstractLogger::AbstractLogger(const AbstractLogger& other)
 			: LoggerInterface()
-			, m_enable(other.m_enable)
-			, m_tabCount(other.m_tabCount)
-			, m_id(++s_idCounter)
-			, m_name(other.m_name)
-			, m_creationsTime(other.m_creationsTime)
-			, m_color(other.m_color)
+			, m_metaInfo(other.m_metaInfo)
 			, m_messages()
 			, onNewMessage("onNewMessage")
 			, onClear("onClear")
 			, onDelete("onDelete")
 		{
+			m_metaInfo.id = ++s_idCounter;
+			m_sharedMetaInfo = std::make_shared<LoggerMetaInfo>(m_metaInfo);
 			m_messages.reserve(other.m_messages.size());
 			for (size_t i = 0; i < other.m_messages.size(); ++i)
 			{
@@ -47,111 +45,120 @@ namespace Log
 		}
 		AbstractLogger::~AbstractLogger()
 		{
+			m_sharedMetaInfo->isAlive = false;
 			onDelete.emitSignal(*this);
 		}
 
 		void AbstractLogger::setEnabled(bool enable)
 		{
-			m_enable = enable;
+			m_metaInfo.enabled = enable;
+			m_sharedMetaInfo->enabled = enable;
 		}
 		bool AbstractLogger::isEnabled() const
 		{
-			return m_enable;
+			return m_metaInfo.enabled;
 		}
 
 		void AbstractLogger::setName(const std::string& name)
 		{
-			m_name = name;
+			m_metaInfo.name = name;
+			m_sharedMetaInfo->name = name;
 		}
 		const std::string& AbstractLogger::getName() const
 		{
-			return m_name;
+			return m_metaInfo.name;
 		}
 		void AbstractLogger::setColor(const Color& col)
 		{
-			m_color = col;
+			m_metaInfo.color = col;
+			m_sharedMetaInfo->color = col;
 		}
 		const Color& AbstractLogger::getColor() const
 		{
-			return m_color;
+			return m_metaInfo.color;
 		}
 
 		void AbstractLogger::log(Message msg)
 		{
-			if (!m_enable) return;
+			if (!m_metaInfo.enabled) return;
 			msg.setContext(this);
 			logInternal(msg);
 		}
 
 		void AbstractLogger::log(const std::string& msg)
 		{
-			if (!m_enable) return;
+			if (!m_metaInfo.enabled) return;
 			Message m(msg);
-			m.setTabCount(m_tabCount);
+			m.setTabCount(m_metaInfo.tabCount);
 			m.setContext(this);
 			logInternal(m);
 		}
-		void AbstractLogger::log(const std::string& msg, Level level)
+		void AbstractLogger::log(Level level, const std::string& msg)
 		{
-			if (!m_enable) return;
+			if (!m_metaInfo.enabled) return;
 			Message m(msg, level);
-			m.setTabCount(m_tabCount);
+			m.setTabCount(m_metaInfo.tabCount);
 			m.setContext(this);
 			logInternal(m);
 		}
-		void AbstractLogger::log(const std::string& msg, Level level, const Color& col)
+		void AbstractLogger::log(Level level, const Color& col, const std::string& msg)
 		{
-			if (!m_enable) return;
+			if (!m_metaInfo.enabled) return;
 			Message m(msg, level, col);
-			m.setTabCount(m_tabCount);
+			m.setTabCount(m_metaInfo.tabCount);
 			m.setContext(this);
 			logInternal(m);
 		}
 
 		void AbstractLogger::log(const char* msg)
 		{
-			if (!m_enable) return;
+			if (!m_metaInfo.enabled) return;
 			Message m(msg);
-			m.setTabCount(m_tabCount);
+			m.setTabCount(m_metaInfo.tabCount);
 			m.setContext(this);
 			logInternal(m);
 		}
-		void AbstractLogger::log(const char* msg, Level level)
+		void AbstractLogger::log(Level level, const char* msg)
 		{
-			if (!m_enable) return;
+			if (!m_metaInfo.enabled) return;
 			Message m(msg, level);
-			m.setTabCount(m_tabCount);
+			m.setTabCount(m_metaInfo.tabCount);
 			m.setContext(this);
 			logInternal(m);
 		}
-		void AbstractLogger::log(const char* msg, Level level, const Color& col)
+		void AbstractLogger::log(Level level, const Color& col, const char* msg)
 		{
-			if (!m_enable) return;
+			if (!m_metaInfo.enabled) return;
 			Message m(msg, level, col);
-			m.setTabCount(m_tabCount);
+			m.setTabCount(m_metaInfo.tabCount);
 			m.setContext(this);
 			logInternal(m);
 		}
 
 		void AbstractLogger::setTabCount(unsigned int tabCount)
 		{
-			if (!m_enable) return;
-			m_tabCount = tabCount;
+			if (!m_metaInfo.enabled) return;
+			m_metaInfo.tabCount = tabCount;
+			m_sharedMetaInfo->tabCount = tabCount;
 		}
 		void AbstractLogger::tabIn()
 		{
-			if (!m_enable) return;
-			++m_tabCount;
+			if (!m_metaInfo.enabled) return;
+			++m_metaInfo.tabCount;
+			++m_sharedMetaInfo->tabCount;
 		}
 		void AbstractLogger::tabOut()
 		{
-			if (!m_enable) return;
-			if (m_tabCount > 0)
-				--m_tabCount;
+			if (!m_metaInfo.enabled) return;
+			if (m_metaInfo.tabCount > 0)
+			{
+				--m_metaInfo.tabCount;
+				--m_sharedMetaInfo->tabCount;
+			}
 		}
 		unsigned int AbstractLogger::getTabCount() const
 		{
-			return m_tabCount;
+			return m_metaInfo.tabCount;
 		}
 
 		
@@ -164,7 +171,7 @@ namespace Log
 
 		const DateTime& AbstractLogger::getCreationDateTime() const
 		{
-			return m_creationsTime;
+			return m_metaInfo.creationTime;
 		}
 		const std::vector<Message>& AbstractLogger::getMessages() const
 		{
@@ -172,7 +179,11 @@ namespace Log
 		}
 		AbstractLogger::LoggerID AbstractLogger::getID() const
 		{
-			return m_id;
+			return m_metaInfo.id;
+		}
+		std::shared_ptr<AbstractLogger::LoggerMetaInfo> AbstractLogger::getMetaInfo() const
+		{
+			return m_sharedMetaInfo;
 		}
 
 		void AbstractLogger::logInternal(const Message& msg)

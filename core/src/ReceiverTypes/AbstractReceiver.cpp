@@ -70,7 +70,7 @@ namespace Log
 
 		void AbstractReceiver::onDeletePrivate(Logger::AbstractLogger& logger)
 		{
-			detachLogger(logger);
+			//detachLogger(logger);
 		}
 
 		void AbstractReceiver::onPrintAllMessages(Logger::AbstractLogger& logger)

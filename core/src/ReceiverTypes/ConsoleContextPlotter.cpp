@@ -37,7 +37,7 @@ namespace Log
 		{
 
 		}
-		void ConsoleContextPlotter::onContextDestroy(Logger::ContextLogger& logger)
+		void ConsoleContextPlotter::onContextDestroy(Logger::AbstractLogger& logger)
 		{
 
 		}
@@ -47,6 +47,8 @@ namespace Log
 			Logger::ContextLogger *context = dynamic_cast<Logger::ContextLogger*>(&logger);
 			if (context)
 				onPrintAllMessagesRecursive(*context);
+			else
+				onPrintAllMessages(logger);
 		}
 		void ConsoleContextPlotter::onUnsubscribed(Logger::AbstractLogger& logger)
 		{

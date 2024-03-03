@@ -13,12 +13,12 @@ namespace Log
 		virtual void log(Message msg) = 0;
 		 
 		virtual void log(const std::string& msg) = 0;
-		virtual void log(const std::string& msg, Level level) = 0;
-		virtual void log(const std::string& msg, Level level, const Color& col) = 0;
+		virtual void log(Level level, const std::string& msg) = 0;
+		virtual void log(Level level, const Color& col, const std::string& msg) = 0;
 		 
 		virtual void log(const char* msg) = 0;
-		virtual void log(const char* msg, Level level) = 0;
-		virtual void log(const char* msg, Level level, const Color& col) = 0;
+		virtual void log(Level level, const char* msg) = 0;
+		virtual void log(Level level, const Color& col, const char* msg) = 0;
 		 
 		virtual void setTabCount(unsigned int tabCount) = 0;
 		virtual void tabIn() = 0;

@@ -13,7 +13,7 @@ namespace Log
 {
     namespace UI
     {
-        class LOGGER_EXPORT QConsoleWidget : public QTableView, public Receiver::ContextReceiver
+        class LOGGER_EXPORT QConsoleWidget : public QTableView//, public Receiver::ContextReceiver
         {
             Q_OBJECT
             public:
@@ -24,8 +24,9 @@ namespace Log
             DateTime::Format getDateTimeFormat() const;
 
             void setLevelVisibility(Level level, bool isVisible);
-            void setContextVisibility(Logger::AbstractLogger& logger, bool isVisible);
+            void setContextVisibility(Logger::AbstractLogger::LoggerID loggerID, bool isVisible);
 
+            void onNewMessage(const Message& m);
             void clear();
 
         private slots:
@@ -41,7 +42,7 @@ namespace Log
             QLogMessageItemModel* m_model;
             QLogMessageItemProxyModel * m_proxyModel;
 
-            void onNewSubscribed(Logger::AbstractLogger& logger) override;
+           /* void onNewSubscribed(Logger::AbstractLogger& logger) override;
             void onUnsubscribed(Logger::AbstractLogger& logger) override;
 
             void onNewMessage(const Message& m) override;
@@ -49,7 +50,9 @@ namespace Log
             void onDelete(Logger::AbstractLogger& logger) override;
 
             void onContextCreate(Logger::ContextLogger& logger) override;
-            void onContextDestroy(Logger::ContextLogger& logger) override;
+            void onContextDestroy(Logger::AbstractLogger& logger) override;*/
+
+            
 
             bool m_isAttaching = false;
             bool m_isDetaching = false;

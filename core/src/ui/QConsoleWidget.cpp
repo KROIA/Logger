@@ -12,7 +12,7 @@ namespace Log
 
         QConsoleWidget::QConsoleWidget(QWidget* parent)
             : QTableView(parent)
-            , ContextReceiver()
+            //, ContextReceiver()
 
         {
             m_model = new QLogMessageItemModel(this);
@@ -69,9 +69,9 @@ namespace Log
             m_proxyModel->setLevelVisibility(level, isVisible);
             m_proxyModel->invalidate(); // force update the new filter
         }
-        void QConsoleWidget::setContextVisibility(Logger::AbstractLogger& logger, bool isVisible)
+        void QConsoleWidget::setContextVisibility(Logger::AbstractLogger::LoggerID loggerID, bool isVisible)
         {
-            m_proxyModel->setContextVisibility(logger, isVisible);
+            m_proxyModel->setContextVisibility(loggerID, isVisible);
             m_proxyModel->invalidate(); // force update the new filter
         }
 
@@ -79,19 +79,6 @@ namespace Log
         {
 			m_model->clear();
 		}
-
-       /* QSize QConsoleWidget::CustomDelegate::sizeHint(const QStyleOptionViewItem& option, const QModelIndex& index) const
-        {
-            Q_UNUSED(option);
-            QString text = index.data(Qt::DisplayRole).toString();
-
-            QFontMetrics fontMetrics(option.font);
-            QSize textSize = fontMetrics.size(Qt::TextSingleLine, text);
-            textSize.setHeight(textSize.height()*text.count('\n'));
-            textSize.setHeight(50);
-            // You can adjust the size as per your requirement
-            return QSize(textSize.width(), textSize.height());
-        }*/
 
         void QConsoleWidget::onAutoScrollTimerTimeout()
         {
@@ -106,7 +93,7 @@ namespace Log
 				m_autoScrollTimer.stop();
         }
 
-        void QConsoleWidget::onNewSubscribed(Logger::AbstractLogger& logger)
+        /*void QConsoleWidget::onNewSubscribed(Logger::AbstractLogger& logger)
         {
             if (m_isAttaching)
                 return;
@@ -125,7 +112,7 @@ namespace Log
             if (contextLogger)
                 detachLoggerAndChilds(*contextLogger);
             m_isDetaching = false;
-        }
+        }*/
 
         void QConsoleWidget::onNewMessage(const Message& m)
         {
@@ -134,20 +121,20 @@ namespace Log
             if(count > 0) // Ajust row height if message has multiple lines
 				setRowHeight(m_model->rowCount()-1, verticalHeader()->defaultSectionSize()*count);
         }
-        void QConsoleWidget::onClear(Logger::AbstractLogger& logger)
+        /*void QConsoleWidget::onClear(Logger::AbstractLogger& logger)
         {
 
-        }
-        void QConsoleWidget::onDelete(Logger::AbstractLogger& logger)
+        }*/
+        /*void QConsoleWidget::onDelete(Logger::AbstractLogger& logger)
         {
             if(m_isDetaching)
                 return;
             Logger::ContextLogger* contextLogger = dynamic_cast<Logger::ContextLogger*>(&logger);
             if(contextLogger)
                 detachLoggerAndChilds(*contextLogger);
-        }
+        }*/
 
-        void QConsoleWidget::onContextCreate(Logger::ContextLogger& logger)
+        /*void QConsoleWidget::onContextCreate(Logger::ContextLogger& logger)
         {
             if (m_isAttaching)
                 return;
@@ -155,14 +142,12 @@ namespace Log
             if (contextLogger)
                 attachLoggerAndChilds(*contextLogger);
         }
-        void QConsoleWidget::onContextDestroy(Logger::ContextLogger& logger)
+        void QConsoleWidget::onContextDestroy(Logger::AbstractLogger& logger)
         {
             if (m_isDetaching)
                 return;
-            Logger::ContextLogger* contextLogger = dynamic_cast<Logger::ContextLogger*>(&logger);
-            if (contextLogger)
-                detachLoggerAndChilds(*contextLogger);
-        }
+            detachLogger(logger);
+        }*/
     }
 }
 #endif

@@ -12,7 +12,7 @@ namespace Log
     class QTreeItem
     {
     public:
-        explicit QTreeItem();
+        explicit QTreeItem(const std::string &name);
         ~QTreeItem();
 
         void appendChild(QTreeItem* child);
@@ -30,6 +30,7 @@ namespace Log
         void clear();
 
     private:
+        std::string m_name;
         std::vector<QTreeItem*> m_childItems;
         std::vector<Message::SnapshotData> m_itemData;
         QTreeItem* m_parentItem;

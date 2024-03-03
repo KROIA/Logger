@@ -20,11 +20,11 @@ namespace Log
 		}
 		QConsoleView::~QConsoleView()
 		{
-			auto loggers = getAttachedLoggers();
+			/*auto loggers = getAttachedLoggers();
 			for (auto& logger : loggers)
 			{
 				m_consoleWidget->detachLogger(*logger);
-			}
+			}*/
 		}
 
 		void QConsoleView::setDateTimeFormat(DateTime::Format format)
@@ -37,9 +37,10 @@ namespace Log
 		}
 		void QConsoleView::on_clear_pushButton_clicked()
 		{
+			QAbstractLogView::on_clear_pushButton_clicked();
 			m_consoleWidget->clear();
 		}
-		void QConsoleView::onAllContextCheckBoxStateChanged(int state)
+		/*void QConsoleView::onAllContextCheckBoxStateChanged(int state)
 		{
 			QAbstractLogView::onAllContextCheckBoxStateChanged(state);
 		}
@@ -47,46 +48,30 @@ namespace Log
 		void QConsoleView::onNewSubscribed(Logger::AbstractLogger& logger)
 		{
 			QAbstractLogView::onNewSubscribed(logger);
-			m_consoleWidget->attachLogger(logger);
+			//m_consoleWidget->attachLogger(logger);
 		}
 		void QConsoleView::onUnsubscribed(Logger::AbstractLogger& logger)
 		{
 			QAbstractLogView::onUnsubscribed(logger);
-			m_consoleWidget->detachLogger(logger);
-		}
-
-		/*void QConsoleView::onContextCreate(Logger::ContextLogger& logger)
-		{
-			QAbstractLogView::onContextCreate(logger);	
+			//m_consoleWidget->detachLogger(logger);
 		}*/
-		/*void QConsoleView::onContextDestroy(Logger::ContextLogger& logger)
-		{
-			QAbstractLogView::onContextDestroy(logger);
-		}*/
-
 
 		void QConsoleView::onLevelCheckBoxChanged(size_t index, Level level, bool isChecked)
 		{
 			QAbstractLogView::onLevelCheckBoxChanged(index, level, isChecked);
 			m_consoleWidget->setLevelVisibility(level, isChecked);
 		}
-		/*void QConsoleView::onFilterTextChanged(size_t index, QLineEdit* lineEdit, const std::string& text)
-		{
-			QAbstractLogView::onFilterTextChanged(index, lineEdit, text);
-		}*/
 		void QConsoleView::onContextCheckBoxChanged(ContextData* context, bool isChecked)
 		{
 			QAbstractLogView::onContextCheckBoxChanged(context, isChecked);
-			m_consoleWidget->setContextVisibility(*context->logger, isChecked);
+			m_consoleWidget->setContextVisibility(context->loggerInfo->id, isChecked);
 		}
-		/*void QConsoleView::onNewContextCheckBoxCreated(ContextData* context)
+
+		void QConsoleView::onNewMessage(const Message& m)
 		{
-			QAbstractLogView::onNewContextCheckBoxCreated(context);
-		}*/
-		/*void QConsoleView::onContextCheckBoxDestroyed(ContextData* context)
-		{
-			QAbstractLogView::onContextCheckBoxDestroyed(context);
-		}*/
+			m_consoleWidget->onNewMessage(m);
+		}
+
 	}
 }
 #endif
