@@ -35,10 +35,10 @@ namespace Log
 	namespace Utilities
 	{
 	
-		extern const std::string& getLevelStr(Level l);
+		const std::string& getLevelStr(Level l);
 
 #ifdef LOGGER_QT
-		extern const QIcon& getIcon(Level logLevel);
+		const QIcon& getIcon(Level logLevel);
 #endif
 	}
 

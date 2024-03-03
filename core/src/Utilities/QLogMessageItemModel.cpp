@@ -49,7 +49,7 @@ namespace Log
         case Qt::DisplayRole:
             switch (index.column())
             {
-            case Column::TimeColumn:    return QString::fromStdString(entry.dateTime.toString(DateTime::Format::yearMonthDay | DateTime::Format::hourMinuteSecondMillisecond));
+            case Column::TimeColumn:    return QString::fromStdString(entry.dateTime.toString(m_dateTimeFormat));
             case Column::ContextColumn: return QString::fromStdString(entry.contextName);
             case Column::MessageColumn: return QString::fromStdString(entry.message);
             }
@@ -129,16 +129,6 @@ namespace Log
                         default: break;
                     }
                     break;
-                /*case Qt::SizeHintRole:
-                    switch (section)
-                    {
-						case Column::TimeColumn: return QSize(500, 20);
-						case Column::LevelColumn: return QSize(20, 20);
-						case Column::ContextColumn: return QSize(150, 20);
-						case Column::MessageColumn: return QSize(300, 20);
-						default: break;
-					}
-					break;*/
             }
         }
         return QVariant();

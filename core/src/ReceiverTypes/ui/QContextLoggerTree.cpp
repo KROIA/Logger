@@ -126,7 +126,7 @@ namespace Log
 					it.second->clearMessages();
 			}
 		}
-		void QContextLoggerTree::setContextVisibility(Logger::AbstractLogger::LoggerID& id, bool isVisible)
+		void QContextLoggerTree::setContextVisibility(Logger::AbstractLogger::LoggerID id, bool isVisible)
 		{
 			auto& it = m_msgItems.find(id);
 			if (it == m_msgItems.end())
@@ -134,7 +134,7 @@ namespace Log
 			TreeData* treeData = it->second;
 			treeData->setContextVisibility(isVisible);
 		}
-		bool QContextLoggerTree::getContextVisibility(Logger::AbstractLogger::LoggerID& id) const
+		bool QContextLoggerTree::getContextVisibility(Logger::AbstractLogger::LoggerID id) const
 		{
 			auto& it = m_msgItems.find(id);
 			if (it == m_msgItems.end())
@@ -353,7 +353,6 @@ namespace Log
 			QString childsCountTxt = "[" + QString::number(countOut) + "] Messages childsCountTxt";
 			childRoot->setData((int)HeaderPos::message, Qt::DisplayRole, childsCountTxt);
 
-			//countOut += msgItems.size();
 			QString messageCountTxt = "[" + QString::number(msgItems.size()) + "] Messages messageCountTxt";
 			thisMessagesRoot->setData((int)HeaderPos::message, Qt::DisplayRole, messageCountTxt);
 		}

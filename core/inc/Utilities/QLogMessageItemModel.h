@@ -57,12 +57,6 @@ namespace Log
     public:
         QLogMessageItemProxyModel(QObject* parent = nullptr);
 
-        /*QDate filterMinimumDate() const { return minDate; }
-        void setFilterMinimumDate(QDate date);
-
-        QDate filterMaximumDate() const { return maxDate; }
-        void setFilterMaximumDate(QDate date);*/
-
         void setLevelVisibility(Level level, bool isVisible);
         bool getLevelVisibility(Level level) const;
 
@@ -82,8 +76,6 @@ namespace Log
         bool lessThan(const QModelIndex& left, const QModelIndex& right) const override;
 
     private:
-        
-        //bool dateInRange(QDate date) const;
 
         QLogMessageItemModel *m_sourceModel;
         bool m_levelActivated[static_cast<int>(Level::__count)];
@@ -97,8 +89,6 @@ namespace Log
             DateTime::Range rangeType;
         };
         DateTimeFilter m_dateTimeFilter;
-        
-        //QDate maxDate;
     };
 }
 #endif

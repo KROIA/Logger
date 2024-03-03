@@ -21,20 +21,6 @@ namespace Log
 {
     namespace UI
     {
-        class QAbstractLogView;
-        class LOGGER_EXPORT QSignalHandler : public QObject
-        {
-
-            Q_OBJECT
-        public slots:
-            void onLevelCheckBoxStateChangedSlot(int state);
-            void onFilterTextChangedSlot(const QString& text);
-            void onCheckBoxStateChangedSlot(int state);
-
-        public:
-            QAbstractLogView* m_parent;
-        };
-
         class LOGGER_EXPORT QAbstractLogView : public QWidget, public Receiver::ContextReceiver
         {
             Q_OBJECT
@@ -43,32 +29,26 @@ namespace Log
             QAbstractLogView(QWidget* parent = nullptr);
             ~QAbstractLogView();
 
-           // void connectLogger(Logger::ContextLogger& logger);
-           // void disconnectLogger(Logger::ContextLogger& logger);
             virtual void setDateTimeFormat(DateTime::Format format) = 0;
             virtual DateTime::Format getDateTimeFormat() const = 0;
 
 
         protected slots:
-            //void onUpdateTimer();
-
-           // void onCheckBoxStateChanged(int state);
             virtual void onAllContextCheckBoxStateChanged(int state);
             virtual void on_clear_pushButton_clicked();
-            //void onLevelCheckBoxStateChanged(int state);
-            //void onFilterTextChanged(const QString& text);
+
+        private slots:
+            void onLevelCheckBoxStateChangedSlot(int state);
+            void onFilterTextChangedSlot(const QString& text);
+            void onCheckBoxStateChangedSlot(int state);
+
         protected:
-            //void onDeletePrivate(Logger::AbstractLogger& logger);
-            //void addContextRecursive(Logger::ContextLogger& logger);
-            //void onContextCreate(Logger::ContextLogger& logger);
-            //void onContextDestroy(Logger::ContextLogger& logger);
             struct ContextData
             {
-                //Logger::AbstractLogger* logger;
                 QCheckBox* checkBox;
-                std::shared_ptr<Logger::AbstractLogger::LoggerMetaInfo> loggerInfo;
+                std::shared_ptr<const Logger::AbstractLogger::LoggerMetaInfo> loggerInfo;
 
-                ContextData(std::shared_ptr<Logger::AbstractLogger::LoggerMetaInfo> loggerInfo,
+                ContextData(std::shared_ptr<const Logger::AbstractLogger::LoggerMetaInfo> loggerInfo,
                     QCheckBox* checkBox)
                     : checkBox(checkBox)
                     , loggerInfo(loggerInfo)
@@ -88,11 +68,10 @@ namespace Log
 
             virtual void onLevelCheckBoxChanged(size_t index, Level level, bool isChecked);
             virtual void onFilterTextChanged(size_t index, QLineEdit* lineEdit, const std::string& text);
-            virtual void onContextCheckBoxChanged(ContextData* context, bool isChecked);
-            virtual void onNewContextCheckBoxCreated(ContextData* context);
-            virtual void onContextCheckBoxDestroyed(ContextData* context);
+            virtual void onContextCheckBoxChanged(ContextData const* context, bool isChecked);
+            virtual void onNewContextCheckBoxCreated(ContextData const* context);
+            virtual void onContextCheckBoxDestroyed(ContextData const* context);
 
-            //-------------
             virtual void removeContext(Logger::AbstractLogger::LoggerID id);
           
 
@@ -113,7 +92,6 @@ namespace Log
             std::unordered_map<Logger::AbstractLogger::LoggerID, ContextData*> m_contextData;
 
             bool m_autoCreateNewCheckBoxForNewContext = false;
-            QSignalHandler m_signalHandler;
             bool m_ignoreAllContextCheckBox_signals = false;
         };
     }

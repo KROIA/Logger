@@ -34,7 +34,7 @@ namespace Log
 
 			std::vector<Logger::AbstractLogger*> m_loggers;
 		private:
-			void onDeletePrivate(Logger::AbstractLogger& logger);
+			//void onDeletePrivate(Logger::AbstractLogger& logger);
 			
 
 		};

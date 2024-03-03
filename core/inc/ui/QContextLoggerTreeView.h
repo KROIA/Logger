@@ -5,7 +5,6 @@
 #include "LoggerTypes/ContextLogger.h"
 #include "ReceiverTypes/ui/QContextLoggerTree.h"
 #include "ReceiverTypes/ui/QAbstractLogView.h"
-#include "Utilities/QTreeModel.h"
 #include <QTreeWidget>
 #include <QTreeView>
 
@@ -27,28 +26,14 @@ namespace Log
 
         private:
             void on_clear_pushButton_clicked() override;
-            //void onAllContextCheckBoxStateChanged(int state) override;
-
-            //void onNewSubscribed(Logger::AbstractLogger& logger) override;
-            //void onUnsubscribed(Logger::AbstractLogger& logger) override;
-
-            //void onContextCreate(Logger::ContextLogger& logger) override;
-            //void onContextDestroy(Logger::AbstractLogger& logger) override;
             void addContext(Logger::AbstractLogger& logger) override;
 
             void onLevelCheckBoxChanged(size_t index, Level level, bool isChecked) override;
-           // void onFilterTextChanged(size_t index, QLineEdit* lineEdit, const std::string& text) override;
-            void onContextCheckBoxChanged(ContextData* context, bool isChecked) override;
-           // void onNewContextCheckBoxCreated(ContextData* context) override;
-           // void onContextCheckBoxDestroyed(ContextData* context) override;
-
+            void onContextCheckBoxChanged(ContextData const* context, bool isChecked) override;
             void onNewMessage(const Message& m) override;
 
             QTreeWidget* m_treeWidget;
             Receiver::QContextLoggerTree* m_treeItem;
-
-            //QTreeView* m_treeView;
-            //QTreeModel* m_treeModel;
         };
     }
 }

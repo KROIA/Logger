@@ -7,7 +7,10 @@ class Context2Object : public ContextObject
 	Q_OBJECT
 
 public:
-	Context2Object(Log::Logger::ContextLogger& logger, Log::UI::QContextLoggerTreeView* view, QWidget *parent = nullptr);
+	Context2Object(Log::Logger::ContextLogger& logger, 
+		Log::UI::QContextLoggerTreeView* view, 
+		Log::UI::QConsoleView* consoleView,
+		QWidget *parent = nullptr);
 	~Context2Object();
 
 protected slots:

@@ -16,7 +16,7 @@ namespace Log
 				loggers[i]->disconnect_onNewMessage_slot(this, &AbstractReceiver::onNewMessage);
 				loggers[i]->disconnect_onClear_slot(this, &AbstractReceiver::onClear);
 				loggers[i]->disconnect_onDelete_slot(this, &AbstractReceiver::onDelete);
-				loggers[i]->disconnect_onDelete_slot(this, &AbstractReceiver::onDeletePrivate);
+				//loggers[i]->disconnect_onDelete_slot(this, &AbstractReceiver::onDeletePrivate);
 			}
 			m_loggers.clear();
 		}
@@ -45,7 +45,7 @@ namespace Log
 			logger.connect_onNewMessage_slot(this, &AbstractReceiver::onNewMessage);
 			logger.connect_onClear_slot(this, &AbstractReceiver::onClear);
 			logger.connect_onDelete_slot(this, &AbstractReceiver::onDelete);
-			logger.connect_onDelete_slot(this, &AbstractReceiver::onDeletePrivate);
+			//logger.connect_onDelete_slot(this, &AbstractReceiver::onDeletePrivate);
 
 			onNewSubscribed(logger);
 		}
@@ -54,7 +54,7 @@ namespace Log
 			logger.disconnect_onNewMessage_slot(this, &AbstractReceiver::onNewMessage);
 			logger.disconnect_onClear_slot(this, &AbstractReceiver::onClear);
 			logger.disconnect_onDelete_slot(this, &AbstractReceiver::onDelete);
-			logger.disconnect_onDelete_slot(this, &AbstractReceiver::onDeletePrivate);
+			//logger.disconnect_onDelete_slot(this, &AbstractReceiver::onDeletePrivate);
 
 			onUnsubscribed(logger);
 			for (size_t i = 0; i < m_loggers.size(); i++)
@@ -68,10 +68,10 @@ namespace Log
 		}
 		
 
-		void AbstractReceiver::onDeletePrivate(Logger::AbstractLogger& logger)
+		/*void AbstractReceiver::onDeletePrivate(Logger::AbstractLogger& logger)
 		{
-			//detachLogger(logger);
-		}
+	
+		}*/
 
 		void AbstractReceiver::onPrintAllMessages(Logger::AbstractLogger& logger)
 		{

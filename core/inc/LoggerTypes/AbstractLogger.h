@@ -89,7 +89,7 @@ namespace Log
 					, isAlive(other.isAlive) 
 				{}
 			};
-			std::shared_ptr<LoggerMetaInfo> getMetaInfo() const;
+			std::shared_ptr<const LoggerMetaInfo> getMetaInfo() const;
 
 			// Signals
 			DECLARE_SIGNAL_CONNECT_DISCONNECT(onNewMessage, const Message&);

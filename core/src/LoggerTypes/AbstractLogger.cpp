@@ -181,7 +181,7 @@ namespace Log
 		{
 			return m_metaInfo.id;
 		}
-		std::shared_ptr<AbstractLogger::LoggerMetaInfo> AbstractLogger::getMetaInfo() const
+		std::shared_ptr<const AbstractLogger::LoggerMetaInfo> AbstractLogger::getMetaInfo() const
 		{
 			return m_sharedMetaInfo;
 		}

@@ -14,7 +14,7 @@ namespace Log
 {
 	namespace Receiver
 	{
-		class LOGGER_EXPORT QContextLoggerTree : public QWidget//, public ContextReceiver
+		class LOGGER_EXPORT QContextLoggerTree : public QWidget
 		{
 			Q_OBJECT
 			friend class TreeData;
@@ -39,12 +39,11 @@ namespace Log
 
 			void addContext(Logger::AbstractLogger& newContext);
 			void removeContext(Logger::AbstractLogger::LoggerID id);
-			//void loggerDeleted(Logger::AbstractLogger::LoggerID id);
 			void onNewMessage(const Message& m);
 			void clearMessages();
 		public slots:
-			void setContextVisibility(Logger::AbstractLogger::LoggerID& id, bool isVisible);
-			bool getContextVisibility(Logger::AbstractLogger::LoggerID& id) const;
+			void setContextVisibility(Logger::AbstractLogger::LoggerID id, bool isVisible);
+			bool getContextVisibility(Logger::AbstractLogger::LoggerID id) const;
 
 			void setLevelVisibility(Level level, bool isVisible);
 			bool getLevelVisibility(Level level) const;
@@ -94,18 +93,15 @@ namespace Log
 					Message::SnapshotData snapshot;
 					QTreeWidgetItem* item = nullptr;
 				};
-				std::shared_ptr<Logger::AbstractLogger::LoggerMetaInfo> loggerMetaInfo;
+				std::shared_ptr<const Logger::AbstractLogger::LoggerMetaInfo> loggerMetaInfo;
 				std::vector<MessageData> msgItems;
 				std::vector<TreeData*> children;
 				TreeData *parent = nullptr;
 				QContextLoggerTree *root = nullptr;
 			};
 			
-
-
 			QTreeWidget* m_treeWidget;
 			bool m_levelVisibility[static_cast<unsigned int>(Level::__count)];
-
 
 			std::unordered_map<Logger::AbstractLogger::LoggerID, TreeData*> m_msgItems;
 

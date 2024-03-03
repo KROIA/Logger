@@ -36,30 +36,6 @@ namespace Log
 			QAbstractLogView::on_clear_pushButton_clicked();
 			m_treeItem->clearMessages();
 		}
-		/*void QContextLoggerTreeView::onAllContextCheckBoxStateChanged(int state)
-		{
-			QAbstractLogView::onAllContextCheckBoxStateChanged(state);
-		}
-		
-		void QContextLoggerTreeView::onNewSubscribed(Logger::AbstractLogger& logger)
-		{
-			QAbstractLogView::onNewSubscribed(logger);
-		}
-		void QContextLoggerTreeView::onUnsubscribed(Logger::AbstractLogger& logger)
-		{
-			QAbstractLogView::onUnsubscribed(logger);
-		}*/
-
-		/*void QContextLoggerTreeView::onContextCreate(Logger::ContextLogger& logger)
-		{
-			QAbstractLogView::onContextCreate(logger);
-			//addContext(logger);
-		}*/
-		/*void QContextLoggerTreeView::onContextDestroy(Logger::AbstractLogger& logger)
-		{
-			QAbstractLogView::onContextDestroy(logger);
-			//m_treeItem->loggerDeleted(logger.getID());
-		}*/
 		void QContextLoggerTreeView::addContext(Logger::AbstractLogger& logger)
 		{
 			m_treeItem->addContext(logger);
@@ -72,7 +48,7 @@ namespace Log
 			QAbstractLogView::onLevelCheckBoxChanged(index, level, isChecked);
 			m_treeItem->setLevelVisibility(level, isChecked);
 		}
-		void QContextLoggerTreeView::onContextCheckBoxChanged(ContextData* context, bool isChecked)
+		void QContextLoggerTreeView::onContextCheckBoxChanged(ContextData const*  context, bool isChecked)
 		{
 			QAbstractLogView::onContextCheckBoxChanged(context, isChecked);
 			m_treeItem->setContextVisibility(context->loggerInfo->id, isChecked);

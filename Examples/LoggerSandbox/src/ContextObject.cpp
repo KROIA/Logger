@@ -9,10 +9,12 @@ ContextObject::ContextObject(
 	const std::string& contextName,
 	Log::Logger::ContextLogger& logger,
 	Log::UI::QContextLoggerTreeView* view,
+	Log::UI::QConsoleView* consoleView,
 	QWidget* parent)
 	: QWidget(parent)
 	, m_logger(logger.createContext(contextName))
 	, m_view(view)
+	, m_consoleView(consoleView)
 {
 	ui.setupUi(this);
 
@@ -93,7 +95,7 @@ void ContextObject::on_clear_pushButton_clicked()
 }
 void ContextObject::on_createContext_pushButton_clicked()
 {
-	ContextObject *obj = new ContextObject("ContextObject_" + std::to_string(m_contextObjects.size()), *m_logger, m_view);
+	ContextObject *obj = new ContextObject("ContextObject_" + std::to_string(m_contextObjects.size()), *m_logger, m_view, m_consoleView);
 
 	connect(obj->ui.closeContext_pushButton, &QPushButton::clicked, this, &ContextObject::onCloseContext_pushButton_clicked);
 	connect(obj->ui.deleteContext_pushButton, &QPushButton::clicked, this, &ContextObject::onDeleteContext_pushButton_clicked);
@@ -133,10 +135,12 @@ void ContextObject::onDateTimeFormatSwitch_pushButton_clicked()
 		return;
 	static bool switcher = false;
 	switcher = !switcher;
-	if(switcher)
-		m_view->setDateTimeFormat(Log::DateTime::Format::yearMonthDay | Log::DateTime::Format::hourMinuteSecond);
-	else
-		m_view->setDateTimeFormat(Log::DateTime::Format::dayMonthYear | Log::DateTime::Format::hourMinuteSecondMillisecond);
+	Log::DateTime::Format format = Log::DateTime::Format::dayMonthYear | Log::DateTime::Format::hourMinuteSecondMillisecond;
+	if (switcher)
+		format = Log::DateTime::Format::yearMonthDay | Log::DateTime::Format::hourMinuteSecond;
+	m_view->setDateTimeFormat(format);
+	if (m_consoleView)
+		m_consoleView->setDateTimeFormat(format);
 }
 
 void ContextObject::onDelete(Log::Logger::AbstractLogger& logger)

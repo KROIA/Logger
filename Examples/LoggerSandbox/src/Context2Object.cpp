@@ -1,8 +1,11 @@
 #include "Context2Object.h"
 #include "Logger.h"
 
-Context2Object::Context2Object(Log::Logger::ContextLogger& logger, Log::UI::QContextLoggerTreeView* view, QWidget*parent)
-	: ContextObject("Context1Object", logger, view, parent)
+Context2Object::Context2Object(Log::Logger::ContextLogger& logger, 
+	Log::UI::QContextLoggerTreeView* view, 
+	Log::UI::QConsoleView* consoleView,
+	QWidget*parent)
+	: ContextObject("Context1Object", logger, view, consoleView, parent)
 {
 	m_messageTimer.setInterval(2000);
 	m_warningTimer.setInterval(4000);
