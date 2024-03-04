@@ -47,6 +47,11 @@ namespace Log
 			m_consoleWidget->setContextVisibility(context->loggerInfo->id, isChecked);
 		}
 
+		void QConsoleView::onDateTimeFilterChanged(const DateTimeFilter& filter)
+		{
+			// Todo: implement
+		}
+
 		void QConsoleView::onNewMessage(const Message& m)
 		{
 			m_consoleWidget->onNewMessage(m);

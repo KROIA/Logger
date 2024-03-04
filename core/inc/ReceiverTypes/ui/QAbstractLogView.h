@@ -41,6 +41,10 @@ namespace Log
             void onLevelCheckBoxStateChangedSlot(int state);
             void onFilterTextChangedSlot(const QString& text);
             void onCheckBoxStateChangedSlot(int state);
+            
+            void onDateTimeFilterAll_checkBox_stateChanged(int state);
+            void onDateTimeFilterMin_changed(const DateTime& dateTime);
+            void onDateTimeFilterMax_changed(const DateTime& dateTime);
 
         protected:
             struct ContextData
@@ -72,6 +76,8 @@ namespace Log
             virtual void onNewContextCheckBoxCreated(ContextData const* context);
             virtual void onContextCheckBoxDestroyed(ContextData const* context);
 
+            virtual void onDateTimeFilterChanged(const DateTimeFilter& filter) = 0;
+
             virtual void removeContext(Logger::AbstractLogger::LoggerID id);
           
 
@@ -90,6 +96,7 @@ namespace Log
             QCheckBox* m_levelCheckBoxes[static_cast<int>(Level::__count)];
             std::vector<QLineEdit*> m_filterTextEdits;
             std::unordered_map<Logger::AbstractLogger::LoggerID, ContextData*> m_contextData;
+            DateTimeFilter m_dateTimeFilter;
 
             bool m_autoCreateNewCheckBoxForNewContext = false;
             bool m_ignoreAllContextCheckBox_signals = false;

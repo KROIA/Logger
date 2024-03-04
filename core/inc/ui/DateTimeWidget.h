@@ -10,7 +10,7 @@ namespace Log
 {
 	namespace UI
 	{
-		class DateTimeWidget : private QDateTimeEdit
+		class DateTimeWidget : public QDateTimeEdit
 		{
 			Q_OBJECT
 
@@ -27,9 +27,7 @@ namespace Log
 		private slots:
 			void onDateTimeChanged(const QDateTime& datetime);
 		private:
-			//bool event(QEvent* event) override;
-			//Ui::DateTimeWidget ui;
-
+			bool m_ignoreSignals = false;
 			DateTime m_dateTime;
 		};
 	}

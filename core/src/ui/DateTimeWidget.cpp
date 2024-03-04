@@ -9,7 +9,8 @@ namespace Log
 		DateTimeWidget::DateTimeWidget(QWidget* parent)
 			: QDateTimeEdit(parent)
 		{
-			//ui.setupUi(this);
+			connect(this, &QDateTimeEdit::dateTimeChanged, 
+				    this, &DateTimeWidget::onDateTimeChanged);
 		}
 
 		DateTimeWidget::~DateTimeWidget()
@@ -18,9 +19,11 @@ namespace Log
 
 		void DateTimeWidget::setDateTime(const DateTime& dateTime)
 		{
+			m_ignoreSignals = true;
 			m_dateTime = dateTime;
 			m_dateTime.normalize();
-
+			QDateTimeEdit::setDateTime(m_dateTime.toQDateTime());
+			m_ignoreSignals = false;
 		}
 		DateTime DateTimeWidget::getDateTime() const
 		{
@@ -29,16 +32,12 @@ namespace Log
 
 		void DateTimeWidget::onDateTimeChanged(const QDateTime& datetime)
 		{
-
+			if (m_ignoreSignals)
+				return;
 			m_dateTime = datetime;
 			emit dateTimeChanged(m_dateTime);
 		}
 
-		/*bool DateTimeWidget::event(QEvent* event)
-		{
-			QDateTimeEdit::event(event);
-
-		}*/
 	}
 }
 #endif

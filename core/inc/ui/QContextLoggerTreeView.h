@@ -30,7 +30,10 @@ namespace Log
 
             void onLevelCheckBoxChanged(size_t index, Level level, bool isChecked) override;
             void onContextCheckBoxChanged(ContextData const* context, bool isChecked) override;
+            void onDateTimeFilterChanged(const DateTimeFilter& filter) override;
             void onNewMessage(const Message& m) override;
+
+
 
             QTreeWidget* m_treeWidget;
             Receiver::QContextLoggerTree* m_treeItem;

@@ -53,6 +53,10 @@ namespace Log
 			QAbstractLogView::onContextCheckBoxChanged(context, isChecked);
 			m_treeItem->setContextVisibility(context->loggerInfo->id, isChecked);
 		}
+		void QContextLoggerTreeView::onDateTimeFilterChanged(const DateTimeFilter& filter)
+		{
+			// Todo: implement
+		}
 
 		void QContextLoggerTreeView::onNewMessage(const Message& m)
 		{

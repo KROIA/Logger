@@ -27,6 +27,7 @@ namespace Log
 		Date& operator=(const Date& other);
 #ifdef LOGGER_QT
 		Date& operator=(const QDate& other);
+		QDate toQDate() const;
 #endif
 
 		bool operator<(const Date& other) const;
@@ -76,6 +77,7 @@ namespace Log
 		Time& operator=(const Time& other);
 #ifdef LOGGER_QT
 		Time& operator=(const QTime& other);
+		QTime toQTime() const;
 #endif
 
 
@@ -136,6 +138,11 @@ namespace Log
 		DateTime(const DateTime& other);
 
 		DateTime& operator=(const DateTime& other);
+
+#ifdef LOGGER_QT
+		DateTime& operator=(const QDateTime& other);
+		QDateTime toQDateTime() const;
+#endif
 
 		bool operator<(const DateTime& other) const;
 		bool operator>(const DateTime& other) const;

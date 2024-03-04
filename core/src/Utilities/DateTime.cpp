@@ -31,6 +31,10 @@ namespace Log
 		m_day = other.day();
 		return *this;
 	}
+	QDate Date::toQDate() const
+	{
+		return QDate(m_year, m_month, m_day);
+	}
 #endif
 	bool Date::operator<(const Date& other) const
 	{
@@ -173,6 +177,10 @@ namespace Log
 		m_sec = other.second();
 		m_ms = other.msec();
 		return *this;
+	}
+	QTime Time::toQTime() const
+	{
+		return QTime(m_hour, m_min, m_sec, m_ms);
 	}
 #endif
 	bool Time::operator<(const Time& other) const
@@ -334,6 +342,19 @@ namespace Log
 		return *this;
 	
 	}
+
+#ifdef LOGGER_QT
+	DateTime& DateTime::operator=(const QDateTime& other)
+	{
+		m_date = other.date();
+		m_time = other.time();
+		return *this;
+	}
+	QDateTime DateTime::toQDateTime() const
+	{
+		return QDateTime(m_date.toQDate(), m_time.toQTime());
+	}
+#endif
 
 	bool DateTime::operator<(const DateTime& other) const
 	{

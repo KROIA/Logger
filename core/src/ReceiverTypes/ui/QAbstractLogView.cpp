@@ -6,6 +6,8 @@
 #include <QTreeWidget>
 #include <QMetaType>
 #include <QSplitter>
+#include <QCheckBox>
+#include "ui/DateTimeWidget.h"
 
 
 namespace Log
@@ -22,7 +24,7 @@ namespace Log
 			ui->searchIcon_label->setPixmap(Resources::getIconSearch().pixmap(16,16));
 
 			m_autoCreateNewCheckBoxForNewContext = true;
-			m_filterTextEdits = { ui->filter_lineEdit };
+			m_filterTextEdits = { ui->contextFilter_lineEdit };
 			for (size_t i = 0; i < m_filterTextEdits.size(); ++i)
 			{
 				QObject::connect(m_filterTextEdits[i], &QLineEdit::textChanged,
@@ -42,6 +44,13 @@ namespace Log
 					ui->logLevel_frame->layout()->addWidget(checkBox);
 			}
 			QObject::connect(ui->allContext_checkBox, &QCheckBox::stateChanged, this, &QAbstractLogView::onAllContextCheckBoxStateChanged);
+		
+			connect(ui->dateTimeFilterAll_checkBox, &QCheckBox::stateChanged, 
+				    this, &QAbstractLogView::onDateTimeFilterAll_checkBox_stateChanged);
+			connect(ui->dateTimeFilterMin_dateTimeEdit, &DateTimeWidget::dateTimeChanged,
+					this, &QAbstractLogView::onDateTimeFilterMin_changed);
+			connect(ui->dateTimeFilterMax_dateTimeEdit, &DateTimeWidget::dateTimeChanged,
+				    this, &QAbstractLogView::onDateTimeFilterMax_changed);
 		}
 		QAbstractLogView::~QAbstractLogView()
 		{
@@ -121,6 +130,34 @@ namespace Log
 				}
 			}
 		}
+
+		void QAbstractLogView::onDateTimeFilterAll_checkBox_stateChanged(int state)
+		{
+			if (ui->dateTimeFilterAll_checkBox->isChecked())
+			{
+				ui->dateTimeFilterMax_dateTimeEdit->setEnabled(true);
+				ui->dateTimeFilterMin_dateTimeEdit->setEnabled(true);
+				m_dateTimeFilter.active = true;
+				m_dateTimeFilter.min = ui->dateTimeFilterMin_dateTimeEdit->getDateTime();
+				m_dateTimeFilter.max = ui->dateTimeFilterMax_dateTimeEdit->getDateTime();
+			}
+			else
+			{
+				m_dateTimeFilter.active = false;
+				ui->dateTimeFilterMax_dateTimeEdit->setEnabled(false);
+				ui->dateTimeFilterMin_dateTimeEdit->setEnabled(false);
+			}
+			onDateTimeFilterChanged(m_dateTimeFilter);
+		}
+		void QAbstractLogView::onDateTimeFilterMin_changed(const DateTime& dateTime)
+		{
+
+		}
+		void QAbstractLogView::onDateTimeFilterMax_changed(const DateTime& dateTime)
+		{
+
+		}
+
 		void QAbstractLogView::setContentWidget(QWidget* widget)
 		{
 			ui->content_frame->layout()->addWidget(widget);
