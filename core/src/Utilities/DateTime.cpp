@@ -23,6 +23,15 @@ namespace Log
 		m_day = other.m_day;
 		return *this;
 	}
+#ifdef LOGGER_QT
+	Date& Date::operator=(const QDate& other)
+	{
+		m_year = other.year();
+		m_month = other.month();
+		m_day = other.day();
+		return *this;
+	}
+#endif
 	bool Date::operator<(const Date& other) const
 	{
 		if (m_year < other.m_year) return true;
@@ -79,6 +88,45 @@ namespace Log
 	{
 		return m_day;
 	}
+	void Date::normalize()
+	{
+		// Define arrays to hold the number of days in each month
+		int daysInMonth[] = { 31, 28 + isLeapYear(m_year), 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
+
+		// Adjust day if out of range
+		if (m_day < 1) {
+			m_month--;
+			if (m_month < 1) {
+				m_month = 12;
+				m_year--;
+			}
+			m_day += daysInMonth[m_month - 1];
+		}
+		else if (m_day > daysInMonth[m_month - 1]) {
+			m_day -= daysInMonth[m_month - 1];
+			m_year++;
+			if (m_month > 12) {
+				m_month = 1;
+				m_year++;
+			}
+		}
+
+		// Adjust month if out of range
+		if (m_month < 1) {
+			m_month = 12;
+			m_year--;
+		}
+		else if (m_month > 12) {
+			m_month = 1;
+			m_year++;
+		}
+	}
+	Date Date::normalized() const
+	{
+		Date copy = *this;
+		copy.normalize();
+		return copy;
+	}
 
 	std::string Date::toString(Format format) const
 	{
@@ -117,6 +165,16 @@ namespace Log
 		return *this;
 	
 	}
+#ifdef LOGGER_QT
+	Time& Time::operator=(const QTime& other)
+	{
+		m_hour = other.hour();
+		m_min = other.minute();
+		m_sec = other.second();
+		m_ms = other.msec();
+		return *this;
+	}
+#endif
 	bool Time::operator<(const Time& other) const
 	{
 		if (m_hour < other.m_hour) 
@@ -197,7 +255,36 @@ namespace Log
 	{
 		return m_ms;
 	}
+	void Time::normalize()
+	{
+		// Normalize the time by carrying over the excess minutes and seconds
+		m_min += m_sec / 60;
+		m_sec %= 60;
+		if (m_sec < 0) {
+			m_sec += 60;
+			m_min--;
+		}
 
+		m_hour += m_min / 60;
+		m_min %= 60;
+		if (m_min < 0) {
+			m_min += 60;
+			m_hour--;
+		}
+
+		//m_hour %= 24;
+		//if (m_hour < 0) {
+		//	m_hour += 24;
+		//}
+	
+		
+	}
+	Time Time::normalized() const
+	{
+		Time copy = *this;
+		copy.normalize();
+		return copy;
+	}
 	std::string Time::toString(Format format) const
 	{
 		std::string hour = std::to_string(m_hour);
@@ -313,6 +400,28 @@ namespace Log
 	const Date& DateTime::getDate() const
 	{
 		return m_date;
+	}
+
+	void DateTime::normalize()
+	{
+		m_time.normalize();
+		if (m_time.m_hour > 24)
+		{
+			m_date.m_day += m_time.m_hour / 24;
+			m_time.m_hour = m_time.m_hour % 24;
+		}
+		else if (m_time.m_hour < 0)
+		{
+			m_date.m_day += m_time.m_hour / 24 - 1;
+			m_time.m_hour = 24 + m_time.m_hour % 24;
+		}
+		m_date.normalize();
+	}
+	DateTime DateTime::normalized() const
+	{
+		DateTime copy = *this;
+		copy.normalize();
+		return copy;
 	}
 
 	std::string DateTime::toString(Format format) const

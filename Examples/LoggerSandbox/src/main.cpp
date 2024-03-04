@@ -11,7 +11,7 @@
 #include <QFile>
 #include <QTimer>
 
-
+#include "ui/DateTimeWidget.h"
 
 int main(int argc, char* argv[])
 {
@@ -69,6 +69,9 @@ int main(int argc, char* argv[])
     int count = 0;
     bool swtch = false;
 
+
+    Log::UI::DateTimeWidget dateTimeWidget;
+    dateTimeWidget.show();
     
 
 	Log::Logger::ContextLogger logger1("TestLogger1");

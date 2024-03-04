@@ -1,4 +1,4 @@
-#include "ReceiverTypes/ui/QContextLoggerTree.h"
+#include "ui/QContextLoggerTree.h"
 
 #ifdef LOGGER_QT
 
@@ -10,6 +10,7 @@ namespace Log
 			: QWidget(parent)
 			, m_treeWidget(parent)
 		{
+			m_dateTimeFilter.active = false;
 			m_timeFormat = DateTime::Format::yearMonthDay | DateTime::Format::hourMinuteSecondMillisecond;
 			m_updateTimer.setInterval(100);
 			connect(&m_updateTimer, &QTimer::timeout, this, &QContextLoggerTree::onUpdateTimer);
@@ -126,6 +127,48 @@ namespace Log
 					it.second->clearMessages();
 			}
 		}
+
+
+		void QContextLoggerTree::setDateTimeFilter(const DateTimeFilter& filter)
+		{
+			m_dateTimeFilter = filter;
+			updateDateTimeFilter();
+		}
+		const DateTimeFilter& QContextLoggerTree::getDateTimeFilter() const
+		{
+			return m_dateTimeFilter;
+		}
+		void QContextLoggerTree::setDateTimeFilter(DateTime min, DateTime max, DateTime::Range rangeType)
+		{
+			m_dateTimeFilter.min = min;
+			m_dateTimeFilter.max = max;
+			m_dateTimeFilter.rangeType = rangeType;
+			m_dateTimeFilter.active = true;
+			updateDateTimeFilter();
+		}
+		void QContextLoggerTree::clearDateTimeFilter()
+		{
+			m_dateTimeFilter.active = false;
+			updateDateTimeFilter();
+		}
+		const DateTime& QContextLoggerTree::getDateTimeFilterMin() const
+		{
+			return m_dateTimeFilter.min;
+		}
+		const DateTime& QContextLoggerTree::getDateTimeFilterMax() const
+		{
+			return m_dateTimeFilter.max;
+		}
+		DateTime::Range QContextLoggerTree::getDateTimeFilterRangeType() const
+		{
+			return m_dateTimeFilter.rangeType;
+		}
+		bool QContextLoggerTree::isDateTimeFilterActive() const
+		{
+			return m_dateTimeFilter.active;
+		}
+
+
 		void QContextLoggerTree::setContextVisibility(Logger::AbstractLogger::LoggerID id, bool isVisible)
 		{
 			auto& it = m_msgItems.find(id);
@@ -174,6 +217,14 @@ namespace Log
 				unsigned int tmp = 0;
 				it.second->updateMessageCount(tmp);
 				countOut += tmp;
+			}
+		}
+		void QContextLoggerTree::updateDateTimeFilter()
+		{
+			for (auto& it : m_msgItems)
+			{
+				TreeData* treeData = it.second;
+				treeData->updateDateTimeFilter(m_dateTimeFilter);
 			}
 		}
 
@@ -337,7 +388,7 @@ namespace Log
 			{
 				if (msgItems[i].snapshot.level == level)
 				{
-					msgItems[i].item->setHidden(!isVisible);
+					msgItems[i].setVisibilityFilter(MessageData::VisibilityBitMask::levelVisibility, isVisible);
 				}
 			}
 		}
@@ -379,6 +430,49 @@ namespace Log
 		QContextLoggerTree::TreeData* QContextLoggerTree::TreeData::getParent() const
 		{
 			return parent;
+		}
+		void QContextLoggerTree::TreeData::updateDateTimeFilter(const DateTimeFilter& filter)
+		{
+			if (filter.active)
+			{
+				for (size_t i = 0; i < msgItems.size(); ++i)
+				{
+					bool elementIsVisible = true;
+					MessageData &msgItem = msgItems[i];
+					switch (filter.rangeType)
+					{
+						case DateTime::Range::before:
+						{
+							elementIsVisible = msgItem.snapshot.dateTime < filter.min;
+							break;
+						}
+						case DateTime::Range::after:
+						{
+							elementIsVisible = msgItem.snapshot.dateTime > filter.min;
+							break;
+						}
+						case DateTime::Range::between:
+						{
+							elementIsVisible = msgItem.snapshot.dateTime < filter.min &&
+											   msgItem.snapshot.dateTime > filter.max;
+							break;
+						}
+						case DateTime::Range::equal:
+						{
+							elementIsVisible = msgItem.snapshot.dateTime == filter.min;
+							break;
+						}
+					}
+					msgItem.setVisibilityFilter(MessageData::VisibilityBitMask::dateTimeVisibility, elementIsVisible);
+				}
+			}
+			else
+			{
+				for (size_t i = 0; i < msgItems.size(); ++i)
+				{
+					msgItems[i].setVisibilityFilter(MessageData::VisibilityBitMask::dateTimeVisibility, true);
+				}
+			}
 		}
 	}
 }

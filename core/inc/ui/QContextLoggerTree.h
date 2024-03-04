@@ -41,6 +41,18 @@ namespace Log
 			void removeContext(Logger::AbstractLogger::LoggerID id);
 			void onNewMessage(const Message& m);
 			void clearMessages();
+
+
+
+			void setDateTimeFilter(const DateTimeFilter& filter);
+			const DateTimeFilter& getDateTimeFilter() const;
+			void setDateTimeFilter(DateTime min, DateTime max, DateTime::Range rangeType);
+			void clearDateTimeFilter();
+			const DateTime& getDateTimeFilterMin() const;
+			const DateTime& getDateTimeFilterMax() const;
+			DateTime::Range getDateTimeFilterRangeType() const;
+			bool isDateTimeFilterActive() const;
+
 		public slots:
 			void setContextVisibility(Logger::AbstractLogger::LoggerID id, bool isVisible);
 			bool getContextVisibility(Logger::AbstractLogger::LoggerID id) const;
@@ -54,6 +66,7 @@ namespace Log
 		private:
 			void addContextRecursive(Logger::ContextLogger& newContext);
 			void updateMessageCount(unsigned int& countOut);
+			void updateDateTimeFilter();
 
 			class TreeData
 			{
@@ -81,6 +94,8 @@ namespace Log
 					bool getLoggerIsAlive() const;
 
 					TreeData *getParent() const;
+
+					void updateDateTimeFilter(const DateTimeFilter &filter);
 			private:
 				void setupChildRoot();
 				void setupMessageRoot();
@@ -92,6 +107,25 @@ namespace Log
 				{
 					Message::SnapshotData snapshot;
 					QTreeWidgetItem* item = nullptr;
+
+					enum VisibilityBitMask
+					{
+						levelVisibility = 0,
+						dateTimeVisibility = 1
+					};
+					int hideFilter = 0;
+					void setVisibilityFilter(VisibilityBitMask mask, bool isVisible)
+					{
+						if (isVisible)
+						{
+							hideFilter &= ~(1 << mask);
+						}
+						else
+						{
+							hideFilter |= 1 << mask;
+						}
+						item->setHidden(hideFilter == 0);
+					}
 				};
 				std::shared_ptr<const Logger::AbstractLogger::LoggerMetaInfo> loggerMetaInfo;
 				std::vector<MessageData> msgItems;
@@ -107,6 +141,7 @@ namespace Log
 
 			QTimer m_updateTimer;
 			DateTime::Format m_timeFormat;
+			DateTimeFilter m_dateTimeFilter;
 		};
 	}
 }

@@ -4,6 +4,10 @@
 #include <string>
 #include <windows.h>
 
+#ifdef LOGGER_QT
+#include <QDate>
+#include <QTime>
+#endif
 
 namespace Log
 {
@@ -21,6 +25,9 @@ namespace Log
 		Date(const Date& other);
 
 		Date& operator=(const Date& other);
+#ifdef LOGGER_QT
+		Date& operator=(const QDate& other);
+#endif
 
 		bool operator<(const Date& other) const;
 		bool operator>(const Date& other) const;
@@ -35,8 +42,15 @@ namespace Log
 		int getMonth() const;
 		int getDay() const;
 
+		void normalize();
+		Date normalized() const;
+
 		std::string toString(Format format) const;
 
+		// Check if a year is a leap year
+		static bool isLeapYear(int year) {
+			return (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0);
+		}
 	private:
 		int m_year;
 		int m_month;
@@ -60,6 +74,10 @@ namespace Log
 		Time(const Time& other);
 
 		Time& operator=(const Time& other);
+#ifdef LOGGER_QT
+		Time& operator=(const QTime& other);
+#endif
+
 
 		bool operator<(const Time& other) const;
 		bool operator>(const Time& other) const;
@@ -74,6 +92,9 @@ namespace Log
 		int getMin() const;
 		int getSec() const;
 		int getMSec() const;
+
+		void normalize();
+		Time normalized() const;
 
 		std::string toString(Format format) const;
 
@@ -110,6 +131,7 @@ namespace Log
 			equal
 		};
 		
+		
 		DateTime();
 		DateTime(const DateTime& other);
 
@@ -128,12 +150,23 @@ namespace Log
 		const Time& getTime() const;
 		const Date& getDate() const;
 
+		void normalize();
+		DateTime normalized() const;
+
 		std::string toString(Format format) const;
 
 	private:
 		Date m_date;
 		Time m_time;
 	};
+
+	typedef struct
+	{
+		bool active;
+		DateTime min;
+		DateTime max;
+		DateTime::Range rangeType;
+	} DateTimeFilter;
 
 	DEFINE_ENUM_FLAG_OPERATORS(Time::Format);
 	DEFINE_ENUM_FLAG_OPERATORS(Date::Format);

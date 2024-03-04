@@ -13,6 +13,7 @@ namespace Log
         : QAbstractItemModel(parent) 
     {
     	m_dateTimeFormat = DateTime::Format::yearMonthDay | DateTime::Format::hourMinuteSecondMillisecond;
+        
     }
 
     void QLogMessageItemModel::setDateTimeFormat(DateTime::Format format)
@@ -188,6 +189,15 @@ namespace Log
         return true;
     }
 
+
+    void QLogMessageItemProxyModel::setDateTimeFilter(const DateTimeFilter& filter)
+    {
+        m_dateTimeFilter = filter;
+    }
+    const DateTimeFilter& QLogMessageItemProxyModel::getDateTimeFilter() const
+    {
+		return m_dateTimeFilter;
+    }
     void QLogMessageItemProxyModel::setDateTimeFilter(DateTime min, DateTime max, DateTime::Range rangeType)
     {
 		m_dateTimeFilter.min = min;

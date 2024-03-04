@@ -63,6 +63,8 @@ namespace Log
         void setContextVisibility(Logger::AbstractLogger::LoggerID loggerID, bool isVisible);
         bool getContextVisibility(Logger::AbstractLogger::LoggerID loggerID) const;
 
+        void setDateTimeFilter(const DateTimeFilter &filter);
+        const DateTimeFilter & getDateTimeFilter() const;
         void setDateTimeFilter(DateTime min, DateTime max, DateTime::Range rangeType);
         void clearDateTimeFilter();
         const DateTime & getDateTimeFilterMin() const;
@@ -81,13 +83,7 @@ namespace Log
         bool m_levelActivated[static_cast<int>(Level::__count)];
         std::unordered_map<Logger::AbstractLogger::LoggerID, bool> m_contextVisibility; // Key unique Logger id
        
-        struct DateTimeFilter
-        {
-            bool active;
-            DateTime min;
-            DateTime max;
-            DateTime::Range rangeType;
-        };
+        
         DateTimeFilter m_dateTimeFilter;
     };
 }
