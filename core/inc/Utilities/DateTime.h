@@ -39,6 +39,10 @@ namespace Log
 
 		void update();
 
+		void setYear(int year);
+		void setMonth(int month);
+		void setDay(int day);
+
 		int getYear() const;
 		int getMonth() const;
 		int getDay() const;
@@ -90,6 +94,11 @@ namespace Log
 
 		void update();
 
+		void setHour(int hour);
+		void setMin(int min);
+		void setSec(int sec);
+		void setMSec(int msec);
+
 		int getHour() const;
 		int getMin() const;
 		int getSec() const;
@@ -130,8 +139,11 @@ namespace Log
 			before,
 			after,
 			between,
-			equal
+			equal,
+
+			__count
 		};
+		static const std::string &getRangeStr(Range rangeType);
 		
 		
 		DateTime();
@@ -154,8 +166,13 @@ namespace Log
 
 		void update();
 
+		void setTime(const Time& time);
+		void setDate(const Date& date);
+
 		const Time& getTime() const;
 		const Date& getDate() const;
+
+		
 
 		void normalize();
 		DateTime normalized() const;
@@ -169,11 +186,31 @@ namespace Log
 
 	typedef struct
 	{
-		bool active;
+		bool active = false;
 		DateTime min;
 		DateTime max;
-		DateTime::Range rangeType;
+		DateTime::Range rangeType = DateTime::Range::between;
+
+		bool matches(const DateTime& dateTime) const
+		{
+			if (!active)
+				return true;
+			switch (rangeType)
+			{
+			case DateTime::Range::before:
+				return dateTime < min;
+			case DateTime::Range::after:
+				return dateTime > min;
+			case DateTime::Range::between:
+				return dateTime >= min && dateTime <= max;
+			case DateTime::Range::equal:
+				return dateTime == min;
+			default:
+				return false;
+			}
+		}
 	} DateTimeFilter;
+
 
 	DEFINE_ENUM_FLAG_OPERATORS(Time::Format);
 	DEFINE_ENUM_FLAG_OPERATORS(Date::Format);

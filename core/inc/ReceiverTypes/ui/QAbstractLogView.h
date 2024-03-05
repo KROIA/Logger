@@ -42,9 +42,12 @@ namespace Log
             void onFilterTextChangedSlot(const QString& text);
             void onCheckBoxStateChangedSlot(int state);
             
-            void onDateTimeFilterAll_checkBox_stateChanged(int state);
+            void onDateTimeFilterActivate_checkBox_stateChanged(int state);
             void onDateTimeFilterMin_changed(const DateTime& dateTime);
             void onDateTimeFilterMax_changed(const DateTime& dateTime);
+            void onDateTimeFilterMinNow_pushButton_clicked();
+            void onDateTimeFilterMaxNow_pushButton_clicked();
+            void onDateTimeFilterType_changed(int index);
 
         protected:
             struct ContextData

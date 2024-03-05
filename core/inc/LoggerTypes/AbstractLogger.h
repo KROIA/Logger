@@ -89,6 +89,11 @@ namespace Log
 					, isAlive(other.isAlive) 
 				{}
 			};
+			struct LoggerSnapshotData
+			{
+				LoggerMetaInfo metaInfo;
+				std::vector<Message::SnapshotData> messages;
+			};
 			std::shared_ptr<const LoggerMetaInfo> getMetaInfo() const;
 
 			// Signals

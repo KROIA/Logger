@@ -22,6 +22,7 @@ namespace Log
 		static const QIcon& getIconWarning();
 		static const QIcon& getIconError();
 		static const QIcon& getIconSearch();
+		static const QIcon& getIconTimeNow();
 	private:
 		Resources();
 		void initResources();

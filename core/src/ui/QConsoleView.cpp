@@ -49,7 +49,7 @@ namespace Log
 
 		void QConsoleView::onDateTimeFilterChanged(const DateTimeFilter& filter)
 		{
-			// Todo: implement
+			m_consoleWidget->setDateTimeFilter(filter);
 		}
 
 		void QConsoleView::onNewMessage(const Message& m)

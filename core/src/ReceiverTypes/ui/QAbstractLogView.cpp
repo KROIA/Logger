@@ -45,12 +45,49 @@ namespace Log
 			}
 			QObject::connect(ui->allContext_checkBox, &QCheckBox::stateChanged, this, &QAbstractLogView::onAllContextCheckBoxStateChanged);
 		
-			connect(ui->dateTimeFilterAll_checkBox, &QCheckBox::stateChanged, 
-				    this, &QAbstractLogView::onDateTimeFilterAll_checkBox_stateChanged);
+			ui->dateTimeFilterActivate_checkBox->setChecked(false);
+			connect(ui->dateTimeFilterActivate_checkBox, &QCheckBox::stateChanged, 
+				    this, &QAbstractLogView::onDateTimeFilterActivate_checkBox_stateChanged);
 			connect(ui->dateTimeFilterMin_dateTimeEdit, &DateTimeWidget::dateTimeChanged,
 					this, &QAbstractLogView::onDateTimeFilterMin_changed);
 			connect(ui->dateTimeFilterMax_dateTimeEdit, &DateTimeWidget::dateTimeChanged,
 				    this, &QAbstractLogView::onDateTimeFilterMax_changed);
+
+			connect(ui->dateTimeFilterMinNow_pushButton, &QPushButton::pressed,
+					this, &QAbstractLogView::onDateTimeFilterMinNow_pushButton_clicked);
+			connect(ui->dateTimeFilterMaxNow_pushButton, &QPushButton::pressed,
+					this, &QAbstractLogView::onDateTimeFilterMaxNow_pushButton_clicked);
+
+			{
+				QHBoxLayout* layout = new QHBoxLayout();
+				layout->setAlignment(Qt::AlignCenter);
+				layout->setMargin(0);
+				ui->dateTimeFilterMinNow_pushButton->setLayout(layout);
+				QLabel* nowLabel = new QLabel();
+				nowLabel->setPixmap(Resources::getIconTimeNow().pixmap(40, 30));
+				layout->addWidget(nowLabel);
+				ui->dateTimeFilterMinNow_pushButton->setFixedSize(40, 25);
+				ui->dateTimeFilterMinNow_pushButton->setText("");
+			}
+			{
+				QHBoxLayout* layout = new QHBoxLayout();
+				layout->setAlignment(Qt::AlignCenter);
+				layout->setMargin(0);
+				ui->dateTimeFilterMaxNow_pushButton->setLayout(layout);
+				QLabel* nowLabel = new QLabel();
+				nowLabel->setPixmap(Resources::getIconTimeNow().pixmap(40, 30));
+				layout->addWidget(nowLabel);
+				ui->dateTimeFilterMaxNow_pushButton->setFixedSize(40, 25);
+				ui->dateTimeFilterMaxNow_pushButton->setText("");
+			}
+
+			for(int i=0; i<DateTime::Range::__count; ++i)
+				ui->dateTimeFilterType_comboBox->addItem(DateTime::getRangeStr((DateTime::Range)i).c_str());
+			ui->dateTimeFilterType_comboBox->setCurrentIndex(DateTime::Range::between);
+			connect(ui->dateTimeFilterType_comboBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
+					this, &QAbstractLogView::onDateTimeFilterType_changed);
+
+			
 		}
 		QAbstractLogView::~QAbstractLogView()
 		{
@@ -131,15 +168,16 @@ namespace Log
 			}
 		}
 
-		void QAbstractLogView::onDateTimeFilterAll_checkBox_stateChanged(int state)
+		void QAbstractLogView::onDateTimeFilterActivate_checkBox_stateChanged(int state)
 		{
-			if (ui->dateTimeFilterAll_checkBox->isChecked())
+			if (ui->dateTimeFilterActivate_checkBox->isChecked())
 			{
 				ui->dateTimeFilterMax_dateTimeEdit->setEnabled(true);
 				ui->dateTimeFilterMin_dateTimeEdit->setEnabled(true);
 				m_dateTimeFilter.active = true;
 				m_dateTimeFilter.min = ui->dateTimeFilterMin_dateTimeEdit->getDateTime();
 				m_dateTimeFilter.max = ui->dateTimeFilterMax_dateTimeEdit->getDateTime();
+				m_dateTimeFilter.rangeType = (DateTime::Range)ui->dateTimeFilterType_comboBox->currentIndex();
 			}
 			else
 			{
@@ -151,11 +189,36 @@ namespace Log
 		}
 		void QAbstractLogView::onDateTimeFilterMin_changed(const DateTime& dateTime)
 		{
-
+			m_dateTimeFilter.min = ui->dateTimeFilterMin_dateTimeEdit->getDateTime();
+			if (m_dateTimeFilter.active)
+				onDateTimeFilterChanged(m_dateTimeFilter);
 		}
 		void QAbstractLogView::onDateTimeFilterMax_changed(const DateTime& dateTime)
 		{
+			m_dateTimeFilter.max = ui->dateTimeFilterMax_dateTimeEdit->getDateTime();
+			if (m_dateTimeFilter.active)
+				onDateTimeFilterChanged(m_dateTimeFilter);
+		}
+		void QAbstractLogView::onDateTimeFilterMinNow_pushButton_clicked()
+		{
+			ui->dateTimeFilterMin_dateTimeEdit->setNow();
+			m_dateTimeFilter.min = ui->dateTimeFilterMin_dateTimeEdit->getDateTime();
+			if (m_dateTimeFilter.active)
+				onDateTimeFilterChanged(m_dateTimeFilter);
+		}
+		void QAbstractLogView::onDateTimeFilterMaxNow_pushButton_clicked()
+		{
+			ui->dateTimeFilterMax_dateTimeEdit->setNow();
+			m_dateTimeFilter.max = ui->dateTimeFilterMax_dateTimeEdit->getDateTime();
+			if (m_dateTimeFilter.active)
+				onDateTimeFilterChanged(m_dateTimeFilter);
+		}
 
+		void QAbstractLogView::onDateTimeFilterType_changed(int index)
+		{
+			m_dateTimeFilter.rangeType = (DateTime::Range)index;
+			if (m_dateTimeFilter.active)
+				onDateTimeFilterChanged(m_dateTimeFilter);
 		}
 
 		void QAbstractLogView::setContentWidget(QWidget* widget)

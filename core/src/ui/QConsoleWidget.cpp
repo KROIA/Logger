@@ -62,6 +62,10 @@ namespace Log
             m_proxyModel->setContextVisibility(loggerID, isVisible);
             m_proxyModel->invalidate(); // force update the new filter
         }
+        void QConsoleWidget::setDateTimeFilter(const DateTimeFilter& filter)
+        {
+            m_proxyModel->setDateTimeFilter(filter);
+        }
 
         void QConsoleWidget::clear()
         {

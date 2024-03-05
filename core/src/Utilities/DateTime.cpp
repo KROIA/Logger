@@ -80,6 +80,19 @@ namespace Log
 		m_day = localTime.tm_mday;
 	}
 
+	void Date::setYear(int year)
+	{
+		m_year = year;
+	}
+	void Date::setMonth(int month)
+	{
+		m_month = month;
+	}
+	void Date::setDay(int day)
+	{
+		m_day = day;
+	}
+
 	int Date::getYear() const
 	{
 		return m_year;
@@ -246,6 +259,22 @@ namespace Log
 		m_sec = localTime.tm_sec;
 		m_ms = ms;
 	}
+	void Time::setHour(int hour)
+	{
+		m_hour = hour;
+	}
+	void Time::setMin(int min)
+	{
+		m_min = min;
+	}
+	void Time::setSec(int sec)
+	{
+		m_sec = sec;
+	}
+	void Time::setMSec(int msec)
+	{
+		m_ms = msec;
+	}
 
 	int Time::getHour() const
 	{
@@ -323,6 +352,28 @@ namespace Log
 		return time;
 	}
 
+
+	const std::string& DateTime::getRangeStr(Range rangeType)
+	{
+		static const std::string beforeStr = "Before";
+		static const std::string afterStr = "After";
+		static const std::string betweenStr = "Between";
+		static const std::string equalStr = "Equal";
+		static const std::string none = "";
+
+		switch (rangeType)
+		{
+		case Range::before:
+			return beforeStr;
+		case Range::after:
+			return afterStr;
+		case Range::between:
+			return betweenStr;
+		case Range::equal:
+			return equalStr;
+		}
+		return none;
+	}
 
 	DateTime::DateTime()
 	{
@@ -412,6 +463,15 @@ namespace Log
 		m_time.m_min = localTime.tm_min;
 		m_time.m_sec = localTime.tm_sec;
 		m_time.m_ms = ms;
+	}
+
+	void DateTime::setTime(const Time& time)
+	{
+		m_time = time;
+	}
+	void DateTime::setDate(const Date& date)
+	{
+		m_date = date;
 	}
 
 	const Time& DateTime::getTime() const

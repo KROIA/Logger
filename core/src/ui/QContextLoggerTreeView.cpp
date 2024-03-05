@@ -55,7 +55,7 @@ namespace Log
 		}
 		void QContextLoggerTreeView::onDateTimeFilterChanged(const DateTimeFilter& filter)
 		{
-			// Todo: implement
+			m_treeItem->setDateTimeFilter(filter);
 		}
 
 		void QContextLoggerTreeView::onNewMessage(const Message& m)

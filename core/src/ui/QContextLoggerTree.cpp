@@ -338,16 +338,20 @@ namespace Log
 				line->setBackgroundColor((int)HeaderPos::timestamp, contextColor);
 				line->setBackgroundColor((int)HeaderPos::message, contextColor);
 			}
-			unsigned int levelIndex = (unsigned int)m.getLevel();
-			if (levelIndex < static_cast<unsigned int>(Level::__count))
-			{
-				if (!root->m_levelVisibility[levelIndex])
-					line->setHidden(true);
-			}
+			
 
 			MessageData data;
 			data.item = line;
 			data.snapshot = m.createSnapshot();
+
+			unsigned int levelIndex = (unsigned int)m.getLevel();
+			if (levelIndex < static_cast<unsigned int>(Level::__count))
+			{
+				if (!root->m_levelVisibility[levelIndex])
+					data.setVisibilityFilter(MessageData::VisibilityBitMask::levelVisibility, false);
+			}
+			if (!root->m_dateTimeFilter.matches(data.snapshot.dateTime))
+				data.setVisibilityFilter(MessageData::VisibilityBitMask::dateTimeVisibility, false);
 
 			msgItems.push_back(data);
 			thisMessagesRoot->addChild(line);
@@ -433,36 +437,15 @@ namespace Log
 		}
 		void QContextLoggerTree::TreeData::updateDateTimeFilter(const DateTimeFilter& filter)
 		{
+			
 			if (filter.active)
 			{
 				for (size_t i = 0; i < msgItems.size(); ++i)
 				{
 					bool elementIsVisible = true;
 					MessageData &msgItem = msgItems[i];
-					switch (filter.rangeType)
-					{
-						case DateTime::Range::before:
-						{
-							elementIsVisible = msgItem.snapshot.dateTime < filter.min;
-							break;
-						}
-						case DateTime::Range::after:
-						{
-							elementIsVisible = msgItem.snapshot.dateTime > filter.min;
-							break;
-						}
-						case DateTime::Range::between:
-						{
-							elementIsVisible = msgItem.snapshot.dateTime < filter.min &&
-											   msgItem.snapshot.dateTime > filter.max;
-							break;
-						}
-						case DateTime::Range::equal:
-						{
-							elementIsVisible = msgItem.snapshot.dateTime == filter.min;
-							break;
-						}
-					}
+					elementIsVisible = filter.matches(msgItem.snapshot.dateTime);
+					//elementIsVisible = 0;
 					msgItem.setVisibilityFilter(MessageData::VisibilityBitMask::dateTimeVisibility, elementIsVisible);
 				}
 			}
@@ -473,6 +456,11 @@ namespace Log
 					msgItems[i].setVisibilityFilter(MessageData::VisibilityBitMask::dateTimeVisibility, true);
 				}
 			}
+		}
+		void QContextLoggerTree::TreeData::saveVisibleMessages(std::vector<Logger::AbstractLogger::LoggerSnapshotData>& list) const
+		{
+
+
 		}
 	}
 }

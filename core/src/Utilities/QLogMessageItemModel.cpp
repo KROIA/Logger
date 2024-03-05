@@ -193,6 +193,7 @@ namespace Log
     void QLogMessageItemProxyModel::setDateTimeFilter(const DateTimeFilter& filter)
     {
         m_dateTimeFilter = filter;
+        invalidate(); // force update the new filter
     }
     const DateTimeFilter& QLogMessageItemProxyModel::getDateTimeFilter() const
     {
@@ -247,30 +248,7 @@ namespace Log
         if(!getContextVisibility(data.loggerID))
             return false;
 
-        if (m_dateTimeFilter.active)
-        {
-            switch (m_dateTimeFilter.rangeType)
-            {
-                case DateTime::Range::before:
-					if(m_dateTimeFilter.min < data.dateTime)
-						return false;
-					break; 
-                case DateTime::Range::after:
-                    if(m_dateTimeFilter.min > data.dateTime)
-                        return false;
-                    break;
-                case DateTime::Range::between:
-                    if(m_dateTimeFilter.min > data.dateTime ||
-                        m_dateTimeFilter.max < data.dateTime)
-					    return false;
-                    break;
-                case DateTime::Range::equal:
-                    if(m_dateTimeFilter.min != data.dateTime)
-						return false;
-					break;
-            }
-        }
-		return true;
+        return m_dateTimeFilter.matches(data.dateTime);
     }
     bool QLogMessageItemProxyModel::lessThan(const QModelIndex& left,
         const QModelIndex& right) const

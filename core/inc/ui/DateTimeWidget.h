@@ -19,6 +19,7 @@ namespace Log
 			~DateTimeWidget();
 
 			void setDateTime(const DateTime& dateTime);
+			void setNow();
 			DateTime getDateTime() const;
 
 		signals:

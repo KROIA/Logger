@@ -96,6 +96,8 @@ namespace Log
 					TreeData *getParent() const;
 
 					void updateDateTimeFilter(const DateTimeFilter &filter);
+
+					void saveVisibleMessages(std::vector<Logger::AbstractLogger::LoggerSnapshotData>& list) const;
 			private:
 				void setupChildRoot();
 				void setupMessageRoot();
@@ -124,7 +126,11 @@ namespace Log
 						{
 							hideFilter |= 1 << mask;
 						}
-						item->setHidden(hideFilter == 0);
+						item->setHidden(hideFilter != 0);
+					}
+					bool isVisible() const
+					{
+						return hideFilter == 0;
 					}
 				};
 				std::shared_ptr<const Logger::AbstractLogger::LoggerMetaInfo> loggerMetaInfo;

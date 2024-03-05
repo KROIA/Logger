@@ -11,6 +11,8 @@ namespace Log
 		{
 			connect(this, &QDateTimeEdit::dateTimeChanged, 
 				    this, &DateTimeWidget::onDateTimeChanged);
+			setDateTime(DateTime());
+			setDisplayFormat("yyyy.MM.dd HH:mm:ss");
 		}
 
 		DateTimeWidget::~DateTimeWidget()
@@ -22,8 +24,15 @@ namespace Log
 			m_ignoreSignals = true;
 			m_dateTime = dateTime;
 			m_dateTime.normalize();
+			Time time = m_dateTime.getTime();
+			time.setMSec(0);
+			m_dateTime.setTime(time);
 			QDateTimeEdit::setDateTime(m_dateTime.toQDateTime());
 			m_ignoreSignals = false;
+		}
+		void DateTimeWidget::setNow()
+		{
+			setDateTime(DateTime());
 		}
 		DateTime DateTimeWidget::getDateTime() const
 		{
