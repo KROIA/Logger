@@ -30,6 +30,9 @@ namespace Log
             void onNewMessage(const Message& m);
             void clear();
 
+            void getSaveVisibleMessages(std::vector<Log::Message::SnapshotData>& list) const;
+
+
         private slots:
             void onAutoScrollTimerTimeout();
             void onVertialSliderMoved(int value);

@@ -32,10 +32,15 @@ namespace Log
             virtual void setDateTimeFormat(DateTime::Format format) = 0;
             virtual DateTime::Format getDateTimeFormat() const = 0;
 
+            virtual void getSaveVisibleMessages(std::vector<Logger::AbstractLogger::LoggerSnapshotData>& list) const = 0;
+            bool saveVisibleMessages(const std::string &outputFile) const;
+
+            std::vector< Logger::AbstractLogger::LoggerMetaInfo> getContexts() const;
 
         protected slots:
             virtual void onAllContextCheckBoxStateChanged(int state);
             virtual void on_clear_pushButton_clicked();
+            virtual void on_save_pushButton_clicked();
 
         private slots:
             void onLevelCheckBoxStateChangedSlot(int state);

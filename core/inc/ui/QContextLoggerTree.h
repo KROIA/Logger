@@ -53,6 +53,9 @@ namespace Log
 			DateTime::Range getDateTimeFilterRangeType() const;
 			bool isDateTimeFilterActive() const;
 
+			void getSaveVisibleMessages(std::vector<Logger::AbstractLogger::LoggerSnapshotData>& list) const;
+
+
 		public slots:
 			void setContextVisibility(Logger::AbstractLogger::LoggerID id, bool isVisible);
 			bool getContextVisibility(Logger::AbstractLogger::LoggerID id) const;
@@ -98,6 +101,7 @@ namespace Log
 					void updateDateTimeFilter(const DateTimeFilter &filter);
 
 					void saveVisibleMessages(std::vector<Logger::AbstractLogger::LoggerSnapshotData>& list) const;
+			
 			private:
 				void setupChildRoot();
 				void setupMessageRoot();

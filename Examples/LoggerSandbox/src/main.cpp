@@ -73,6 +73,8 @@ int main(int argc, char* argv[])
 	Log::Logger::ContextLogger logger1("TestLogger1");
 	Log::Logger::ContextLogger logger2("TestLogger2");
 	Log::Logger::AbstractLogger logger3("AbstractLogger");
+    logger1.setIcon(QIcon(":\\icons\\debug.png"));
+    logger2.setIcon(QIcon(":\\icons\\trace.png"));
 	logger1.setColor(Log::Color::orange);
 	logger2.setColor(Log::Color::cyan);
 	Log::UI::QContextLoggerTreeView* view = new Log::UI::QContextLoggerTreeView();

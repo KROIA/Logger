@@ -73,6 +73,7 @@ namespace Log
         bool isDateTimeFilterActive() const;
 
         void setSourceModel(QAbstractItemModel *sourceModel) override;
+        bool filterAcceptsRow(int sourceRow) const;
     protected:
         bool filterAcceptsRow(int sourceRow, const QModelIndex& sourceParent) const override;
         bool lessThan(const QModelIndex& left, const QModelIndex& right) const override;

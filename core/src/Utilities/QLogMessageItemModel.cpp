@@ -228,6 +228,11 @@ namespace Log
         return m_dateTimeFilter.active;
     }
 
+    bool QLogMessageItemProxyModel::filterAcceptsRow(int sourceRow) const
+    {
+        return filterAcceptsRow(sourceRow, QModelIndex());
+    }
+
     void QLogMessageItemProxyModel::setSourceModel(QAbstractItemModel* sourceModel)
     {
         QLogMessageItemModel * model = dynamic_cast<QLogMessageItemModel*>(sourceModel);

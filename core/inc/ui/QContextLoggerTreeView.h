@@ -22,6 +22,8 @@ namespace Log
             void setDateTimeFormat(DateTime::Format format) override;
             DateTime::Format getDateTimeFormat() const override;
 
+            void getSaveVisibleMessages(std::vector<Logger::AbstractLogger::LoggerSnapshotData>& list) const override;
+
         private slots:
 
         private:

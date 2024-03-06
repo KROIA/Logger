@@ -18,6 +18,11 @@ namespace Log
 		{
 			if (!m_parent)
 				getAllRootLoggers().push_back(this);
+			else
+			{
+				m_metaInfo.parentId = m_parent->getID();
+				m_sharedMetaInfo->parentId = m_parent->getID();
+			}
 		}
 
 		ContextLogger::ContextLogger(const std::string& name) 
@@ -37,6 +42,8 @@ namespace Log
 			, onContextDestroy("onContextDestroy")
 		{
 			m_childs.reserve(other.m_childs.size());
+			m_metaInfo.parentId = 0;
+			m_sharedMetaInfo->parentId = 0;
 			for (size_t i = 0; i < other.m_childs.size(); ++i)
 			{
 				m_childs.push_back(new ContextLogger(*other.m_childs[i]));

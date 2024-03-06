@@ -1,6 +1,7 @@
 #pragma once
 
 
+#include "LibraryInfo.h"
 
 // Logger Types
 #include "LoggerTypes/AbstractLogger.h"

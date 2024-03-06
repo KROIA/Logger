@@ -3,11 +3,14 @@
 #ifdef LOGGER_QT
 #include "ui_QAbstractLogView.h"
 #include "Utilities/Resources.h"
+#include "Utilities/Export.h"
 #include <QTreeWidget>
 #include <QMetaType>
 #include <QSplitter>
 #include <QCheckBox>
+#include <QFileDialog>
 #include "ui/DateTimeWidget.h"
+#include <fstream>
 
 
 namespace Log
@@ -64,9 +67,9 @@ namespace Log
 				layout->setMargin(0);
 				ui->dateTimeFilterMinNow_pushButton->setLayout(layout);
 				QLabel* nowLabel = new QLabel();
-				nowLabel->setPixmap(Resources::getIconTimeNow().pixmap(40, 30));
+				nowLabel->setPixmap(Resources::getIconReload().pixmap(20, 20));
 				layout->addWidget(nowLabel);
-				ui->dateTimeFilterMinNow_pushButton->setFixedSize(40, 25);
+				ui->dateTimeFilterMinNow_pushButton->setFixedSize(20, 20);
 				ui->dateTimeFilterMinNow_pushButton->setText("");
 			}
 			{
@@ -75,9 +78,9 @@ namespace Log
 				layout->setMargin(0);
 				ui->dateTimeFilterMaxNow_pushButton->setLayout(layout);
 				QLabel* nowLabel = new QLabel();
-				nowLabel->setPixmap(Resources::getIconTimeNow().pixmap(40, 30));
+				nowLabel->setPixmap(Resources::getIconReload().pixmap(20, 20));
 				layout->addWidget(nowLabel);
-				ui->dateTimeFilterMaxNow_pushButton->setFixedSize(40, 25);
+				ui->dateTimeFilterMaxNow_pushButton->setFixedSize(20, 20);
 				ui->dateTimeFilterMaxNow_pushButton->setText("");
 			}
 
@@ -92,6 +95,23 @@ namespace Log
 		QAbstractLogView::~QAbstractLogView()
 		{
 
+		}
+
+		bool QAbstractLogView::saveVisibleMessages(const std::string& outputFile) const
+		{
+			std::vector<Logger::AbstractLogger::LoggerSnapshotData> list;
+			getSaveVisibleMessages(list);
+			return Export::saveToFile(list, outputFile);
+		}
+
+		std::vector<Logger::AbstractLogger::LoggerMetaInfo> QAbstractLogView::getContexts() const
+		{
+			std::vector< Logger::AbstractLogger::LoggerMetaInfo> list;
+			for (const auto& context : m_contextData)
+			{
+				list.push_back(*context.second->loggerInfo);
+			}
+			return list;
 		}
 
 		void QAbstractLogView::onAllContextCheckBoxStateChanged(int state)
@@ -120,6 +140,13 @@ namespace Log
 					removeContext(context.first);
 				}
 			}
+		}
+		void QAbstractLogView::on_save_pushButton_clicked()
+		{
+			QString fileName = QFileDialog::getSaveFileName(this, tr("Save File"), "", tr("Log Files (*.log);;All Files (*)"));
+			if (fileName.isEmpty())
+				return;
+			saveVisibleMessages(fileName.toStdString());
 		}
 
 		void QAbstractLogView::onLevelCheckBoxStateChangedSlot(int state)
@@ -254,6 +281,12 @@ namespace Log
 				ContextData* data = new ContextData(logger.getMetaInfo(), new QCheckBox(this));
 				QPalette p = data->checkBox->palette();
 				data->checkBox->setAutoFillBackground(true);
+				const QIcon &icon = logger.getIcon();
+				if (!icon.isNull())
+				{
+					data->checkBox->setIcon(logger.getIcon());
+					data->checkBox->setIconSize(QSize(30, 30));
+				}
 
 				p.setColor(QPalette::Button, logger.getColor().toQColor());
 

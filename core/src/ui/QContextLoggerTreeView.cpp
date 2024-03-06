@@ -31,6 +31,10 @@ namespace Log
 		{
 			return m_treeItem->getDateTimeFormat();
 		}
+		void QContextLoggerTreeView::getSaveVisibleMessages(std::vector<Logger::AbstractLogger::LoggerSnapshotData>& list) const
+		{
+			m_treeItem->getSaveVisibleMessages(list);
+		}
 		void QContextLoggerTreeView::on_clear_pushButton_clicked()
 		{
 			QAbstractLogView::on_clear_pushButton_clicked();

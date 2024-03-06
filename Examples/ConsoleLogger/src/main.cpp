@@ -3,6 +3,7 @@
 int main(void)
 {
 	Log::Logger::ContextLogger context("context");
+	
 	Log::Logger::AbstractLogger context3("context3");
 	context.setColor(Log::Color::Console::Foreground::cyan);
 	//Log::Receiver::ConsolePlotter plotter;

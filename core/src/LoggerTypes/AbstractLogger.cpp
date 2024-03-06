@@ -14,6 +14,7 @@ namespace Log
 			: LoggerInterface()
 			, m_metaInfo(
 				++s_idCounter,
+				0,
 				name,
 				DateTime(),
 				Color::white,
@@ -161,7 +162,16 @@ namespace Log
 			return m_metaInfo.tabCount;
 		}
 
-		
+#ifdef LOGGER_QT
+		void AbstractLogger::setIcon(const QIcon& icon)
+		{
+			m_icon = icon;
+		}
+		const QIcon& AbstractLogger::getIcon() const
+		{
+			return m_icon;		
+		}
+#endif
 
 		void AbstractLogger::clear()
 		{

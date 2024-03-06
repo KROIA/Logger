@@ -71,6 +71,19 @@ namespace Log
         {
 			m_model->clear();
 		}
+        void QConsoleWidget::getSaveVisibleMessages(std::vector<Log::Message::SnapshotData>& list) const
+        {
+            int count = m_model->rowCount();
+            list.reserve(count);
+            for (int i = 0; i < count; ++i)
+            {
+                if (m_proxyModel->filterAcceptsRow(i))
+                {
+					const Message::SnapshotData& data = m_model->getElement(i);
+                    list.push_back(data);
+				}
+			}
+        }
 
         void QConsoleWidget::onAutoScrollTimerTimeout()
         {

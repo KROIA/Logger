@@ -285,6 +285,16 @@ The different color codes are
 	{
 		return m_b;
 	}
+	uint32_t Color::getRGB() const
+	{
+		return ((uint32_t)m_r << 16) | ((uint32_t)m_g << 8) | (uint32_t)m_b;
+	}
+	std::string Color::getRGBStr() const
+	{
+		char hex[8];
+		sprintf(hex, "#%02X%02X%02X", m_r, m_g, m_b);
+		return std::string(hex);
+	}
 
 #ifdef LOGGER_QT
 	QColor Color::toQColor() const

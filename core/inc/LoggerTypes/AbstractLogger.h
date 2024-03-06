@@ -7,6 +7,10 @@
 #include "LogColor.h"
 #include <memory>
 
+#ifdef LOGGER_QT
+#include <QIcon>
+#endif
+
 namespace Log
 {
 	namespace Logger
@@ -45,7 +49,10 @@ namespace Log
 			void tabOut() override;
 			unsigned int getTabCount() const override;
 
-			
+#ifdef LOGGER_QT
+			void setIcon(const QIcon& icon);
+			const QIcon& getIcon() const;
+#endif
 
 			virtual void clear();
 
@@ -57,6 +64,7 @@ namespace Log
 			struct LoggerMetaInfo
 			{
 				LoggerID id;
+				LoggerID parentId;
 				std::string name;
 				DateTime creationTime;
 				Color color;
@@ -65,6 +73,7 @@ namespace Log
 				bool isAlive;
 
 				LoggerMetaInfo(LoggerID id,
+					LoggerID parentID,
 					const std::string &name,
 					const DateTime &creationTime,
 					const Color &color,
@@ -72,6 +81,7 @@ namespace Log
 					bool enabled,
 					bool isAlive) 
 					: id(id)
+					, parentId(parentID)
 					, name(name)
 					, creationTime(creationTime)
 					, color(color)
@@ -81,6 +91,7 @@ namespace Log
 				{}
 				LoggerMetaInfo(const LoggerMetaInfo &other) 
 					: id(other.id)
+					, parentId(other.parentId)
 					, name(other.name)
 					, creationTime(other.creationTime)
 					, color(other.color)
@@ -93,6 +104,14 @@ namespace Log
 			{
 				LoggerMetaInfo metaInfo;
 				std::vector<Message::SnapshotData> messages;
+				LoggerSnapshotData(const LoggerMetaInfo& info)
+					: metaInfo(info)
+				{	}
+				LoggerSnapshotData(const LoggerMetaInfo& info,
+								   const std::vector<Message::SnapshotData>& msgs)
+					: metaInfo(info)
+					, messages(msgs)
+				{	}
 			};
 			std::shared_ptr<const LoggerMetaInfo> getMetaInfo() const;
 
@@ -105,11 +124,18 @@ namespace Log
 			virtual void logInternal(const Message& msg);
 
 			void emitNewMessage(const Message& msg);
-		private:
-			LoggerMetaInfo m_metaInfo;
 
+			LoggerMetaInfo m_metaInfo;
 			std::shared_ptr<LoggerMetaInfo> m_sharedMetaInfo;
+
 			std::vector<Message> m_messages;
+
+#ifdef LOGGER_QT
+			QIcon m_icon;
+#endif
+		private:
+			
+			
 
 
 			Signal<const Message&> onNewMessage;

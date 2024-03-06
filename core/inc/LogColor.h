@@ -43,6 +43,9 @@ namespace Log
 		uint8_t getGreen() const;
 		uint8_t getBlue() const;
 
+		uint32_t getRGB() const;
+		std::string getRGBStr() const;
+
 #ifdef LOGGER_QT
 		QColor toQColor() const;
 #endif

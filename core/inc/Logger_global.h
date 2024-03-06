@@ -1,10 +1,7 @@
 #pragma once
 
 #include <chrono>
-
-#define LOGGER_VERSION_MAJOR 0
-#define LOGGER_VERSION_MINOR 0
-#define LOGGER_VERSION_PATCH 0
+#include <string_view>
 
 #define LOGGER_QT
 

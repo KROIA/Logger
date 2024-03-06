@@ -43,9 +43,9 @@ namespace Log
 	{
 		return getIcon("magnifying-glass");
 	}
-	const QIcon& Resources::getIconTimeNow()
+	const QIcon& Resources::getIconReload()
 	{
-		return getIcon("time-now");
+		return getIcon("reload");
 	}
 
 
@@ -74,7 +74,7 @@ namespace Log
 			"warning", 
 			"error",
 			"magnifying-glass",
-			"time-now"
+			"reload"
 		};
 		for(const auto& name : iconNames)
 		{

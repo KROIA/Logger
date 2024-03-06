@@ -167,6 +167,13 @@ namespace Log
 		{
 			return m_dateTimeFilter.active;
 		}
+		void QContextLoggerTree::getSaveVisibleMessages(std::vector<Logger::AbstractLogger::LoggerSnapshotData>& list) const
+		{
+			for (auto& it : m_msgItems)
+			{
+				it.second->saveVisibleMessages(list);
+			}
+		}
 
 
 		void QContextLoggerTree::setContextVisibility(Logger::AbstractLogger::LoggerID id, bool isVisible)
@@ -459,8 +466,17 @@ namespace Log
 		}
 		void QContextLoggerTree::TreeData::saveVisibleMessages(std::vector<Logger::AbstractLogger::LoggerSnapshotData>& list) const
 		{
+			Logger::AbstractLogger::LoggerSnapshotData snapshot(*loggerMetaInfo);
+			snapshot.messages.reserve(msgItems.size());
 
-
+			for (size_t i = 0; i < msgItems.size(); ++i)
+			{
+				if (msgItems[i].isVisible())
+				{
+					snapshot.messages.push_back(msgItems[i].snapshot);
+				}
+			}
+			list.push_back(snapshot);
 		}
 	}
 }

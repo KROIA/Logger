@@ -6,6 +6,6 @@
         <file>icons/warning.png</file>
         <file>icons/error.png</file>
         <file>icons/magnifying-glass.png</file>
-        <file>icons/time-now.png</file>
+        <file>icons/reload.png</file>
     </qresource>
 </RCC>
