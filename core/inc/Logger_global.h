@@ -1,7 +1,6 @@
 #pragma once
 
 #include <chrono>
-#include <string_view>
 
 #define LOGGER_QT
 

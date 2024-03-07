@@ -1,7 +1,8 @@
 ﻿cmake_minimum_required(VERSION 3.15)
 
 project(Logger)
-set(PARALLEL_BUILD ON)
+set(PARALLEL_BUILD OFF)
+set(CMAKE_CXX_STANDARD 14)
 #
 # -----------------------------------------
 #
@@ -40,8 +41,8 @@ set(QT_LOCATOR_CMAKE "${CMAKE_CURRENT_SOURCE_DIR}/QtLocator.cmake")
 link_directories(${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 
 if(PARALLEL_BUILD)
-	set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} /MP)
-	set(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} /MP)
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /MP")
 endif()
 
 

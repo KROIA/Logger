@@ -184,7 +184,7 @@ namespace Log
 		Time m_time;
 	};
 
-	typedef struct
+	typedef struct DateTimeFilter
 	{
 		bool active = false;
 		DateTime min;

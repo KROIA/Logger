@@ -78,7 +78,17 @@ if(QT_ENABLE)
     FILE_DIRECTORIES(UI_FILES *.ui)    
     FILE_DIRECTORIES(RES_FILES *.qrc)    
 
-    qt5_wrap_cpp(CPP_MOC_FILES ${H_FILES})
+    # Identify headers containing Q_OBJECT macros
+    set(MOC_HEADERS "")
+    foreach(HEADER ${H_FILES})
+        file(READ ${H_FILES} HEADER_CONTENTS)
+        if(HEADER_CONTENTS MATCHES "Q_OBJECT")
+            list(APPEND MOC_HEADERS ${H_FILES})
+        endif()
+    endforeach()
+
+    # Use qt5_wrap_cpp to generate moc files for QObject classes
+    qt5_wrap_cpp(CPP_MOC_FILES ${MOC_HEADERS})
     qt5_wrap_ui(UIS_HDRS ${UI_FILES})
     qt5_add_resources(RESOURCE_FILES ${RES_FILES})
 
