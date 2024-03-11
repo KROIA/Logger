@@ -1,6 +1,6 @@
 #include "Utilities/QLogMessageItemModel.h"
 
-#ifdef LOGGER_QT
+#ifdef QT_WIDGETS_LIB
 #include <QBrush>
 #include <QFont>
 #include "LoggerTypes/AbstractLogger.h"
@@ -34,6 +34,7 @@ namespace Log
 
     int QLogMessageItemModel::columnCount(const QModelIndex& parent) const 
     {
+        LOGGER_UNUSED(parent);
         return (int)Column::__count; 
     }
 
@@ -235,6 +236,7 @@ namespace Log
 
     void QLogMessageItemProxyModel::setSourceModel(QAbstractItemModel* sourceModel)
     {
+        LOGGER_UNUSED(sourceModel);
         QLogMessageItemModel * model = dynamic_cast<QLogMessageItemModel*>(sourceModel);
         QSortFilterProxyModel::setSourceModel(sourceModel);
         if (model)
@@ -244,6 +246,7 @@ namespace Log
     }
     bool QLogMessageItemProxyModel::filterAcceptsRow(int sourceRow, const QModelIndex& sourceParent) const
     {
+        LOGGER_UNUSED(sourceParent);
         if (!m_sourceModel)
 			return false;
 		const Message::SnapshotData &data = m_sourceModel->getElement(sourceRow);

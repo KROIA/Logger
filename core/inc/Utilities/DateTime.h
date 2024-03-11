@@ -4,7 +4,7 @@
 #include <string>
 #include <windows.h>
 
-#ifdef LOGGER_QT
+#ifdef QT_WIDGETS_LIB
 #include <QDate>
 #include <QTime>
 #endif
@@ -25,7 +25,7 @@ namespace Log
 		Date(const Date& other);
 
 		Date& operator=(const Date& other);
-#ifdef LOGGER_QT
+#ifdef QT_WIDGETS_LIB
 		Date& operator=(const QDate& other);
 		QDate toQDate() const;
 #endif
@@ -79,7 +79,7 @@ namespace Log
 		Time(const Time& other);
 
 		Time& operator=(const Time& other);
-#ifdef LOGGER_QT
+#ifdef QT_WIDGETS_LIB
 		Time& operator=(const QTime& other);
 		QTime toQTime() const;
 #endif
@@ -151,7 +151,7 @@ namespace Log
 
 		DateTime& operator=(const DateTime& other);
 
-#ifdef LOGGER_QT
+#ifdef QT_WIDGETS_LIB
 		DateTime& operator=(const QDateTime& other);
 		QDateTime toQDateTime() const;
 #endif

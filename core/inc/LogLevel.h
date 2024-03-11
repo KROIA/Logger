@@ -4,7 +4,7 @@
 #include "LogColor.h"
 #include <string>
 
-#ifdef LOGGER_QT
+#ifdef QT_WIDGETS_LIB
 #include <QIcon>
 #endif
 
@@ -37,7 +37,7 @@ namespace Log
 	
 		const std::string& getLevelStr(Level l);
 
-#ifdef LOGGER_QT
+#ifdef QT_WIDGETS_LIB
 		const QIcon& getIcon(Level logLevel);
 #endif
 	}

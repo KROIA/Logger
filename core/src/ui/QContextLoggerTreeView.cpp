@@ -1,6 +1,6 @@
 #include "ui/QContextLoggerTreeView.h"
 
-#ifdef LOGGER_QT
+#ifdef QT_WIDGETS_LIB
 #include "ui_QAbstractLogView.h"
 #include <QTreeWidget>
 #include <QMetaType>

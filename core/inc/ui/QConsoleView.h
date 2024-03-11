@@ -1,7 +1,7 @@
 #pragma once
 #include "Logger_base.h"
 
-#ifdef LOGGER_QT
+#ifdef QT_WIDGETS_LIB
 #include "ui/QConsoleWidget.h"
 #include "ReceiverTypes/ui/QAbstractLogView.h"
 #include <QTreeWidget>

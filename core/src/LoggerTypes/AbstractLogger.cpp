@@ -162,7 +162,7 @@ namespace Log
 			return m_metaInfo.tabCount;
 		}
 
-#ifdef LOGGER_QT
+#ifdef QT_WIDGETS_LIB
 		void AbstractLogger::setIcon(const QIcon& icon)
 		{
 			m_icon = icon;

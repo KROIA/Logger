@@ -1,7 +1,7 @@
 #include "ui/DateTimeWidget.h"
 
 
-#ifdef LOGGER_QT
+#ifdef QT_WIDGETS_LIB
 namespace Log
 {
 	namespace UI

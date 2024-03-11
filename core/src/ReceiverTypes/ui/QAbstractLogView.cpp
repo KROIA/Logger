@@ -1,6 +1,6 @@
 #include "ReceiverTypes/ui/QAbstractLogView.h"
 
-#ifdef LOGGER_QT
+#ifdef QT_WIDGETS_LIB
 #include "ui_QAbstractLogView.h"
 #include "Utilities/Resources.h"
 #include "Utilities/Export.h"
@@ -197,6 +197,7 @@ namespace Log
 
 		void QAbstractLogView::onDateTimeFilterActivate_checkBox_stateChanged(int state)
 		{
+			LOGGER_UNUSED(state);
 			if (ui->dateTimeFilterActivate_checkBox->isChecked())
 			{
 				ui->dateTimeFilterMax_dateTimeEdit->setEnabled(true);
@@ -216,13 +217,13 @@ namespace Log
 		}
 		void QAbstractLogView::onDateTimeFilterMin_changed(const DateTime& dateTime)
 		{
-			m_dateTimeFilter.min = ui->dateTimeFilterMin_dateTimeEdit->getDateTime();
+			m_dateTimeFilter.min = dateTime;
 			if (m_dateTimeFilter.active)
 				onDateTimeFilterChanged(m_dateTimeFilter);
 		}
 		void QAbstractLogView::onDateTimeFilterMax_changed(const DateTime& dateTime)
 		{
-			m_dateTimeFilter.max = ui->dateTimeFilterMax_dateTimeEdit->getDateTime();
+			m_dateTimeFilter.max = dateTime;
 			if (m_dateTimeFilter.active)
 				onDateTimeFilterChanged(m_dateTimeFilter);
 		}
@@ -260,7 +261,7 @@ namespace Log
 		}
 		void QAbstractLogView::onUnsubscribed(Logger::AbstractLogger& logger)
 		{
-
+			LOGGER_UNUSED(logger);
 		}
 
 		void QAbstractLogView::onContextCreate(Logger::ContextLogger& logger)
@@ -269,7 +270,7 @@ namespace Log
 		}
 		void QAbstractLogView::onContextDestroy(Logger::AbstractLogger& logger)
 		{
-			
+			LOGGER_UNUSED(logger);
 		}
 		void QAbstractLogView::addContext(Logger::AbstractLogger& logger)
 		{
@@ -307,10 +308,13 @@ namespace Log
 
 		void QAbstractLogView::onLevelCheckBoxChanged(size_t index, Level level, bool isChecked)
 		{
-
+			LOGGER_UNUSED(index);
+			LOGGER_UNUSED(level);
+			LOGGER_UNUSED(isChecked);
 		}
 		void QAbstractLogView::onFilterTextChanged(size_t index, QLineEdit* lineEdit, const std::string& text)
 		{
+			LOGGER_UNUSED(lineEdit);
 			if (index > 0)
 				return;
 			for (auto& loggerData : m_contextData)
@@ -327,6 +331,8 @@ namespace Log
 		}
 		void QAbstractLogView::onContextCheckBoxChanged(ContextData const* context, bool isChecked)
 		{
+			LOGGER_UNUSED(context);
+			LOGGER_UNUSED(isChecked);
 			int checkedCount = 0;
 			for (auto& loggerData : m_contextData)
 			{
@@ -365,11 +371,11 @@ namespace Log
 		
 		void QAbstractLogView::onClear(Logger::AbstractLogger& logger)
 		{
-
+			LOGGER_UNUSED(logger);
 		}
 		void QAbstractLogView::onDelete(Logger::AbstractLogger& logger)
 		{
-
+			LOGGER_UNUSED(logger);
 		}
 		void QAbstractLogView::addContextRecursive(Logger::ContextLogger& logger)
 		{

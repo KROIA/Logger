@@ -1,7 +1,7 @@
 #pragma once
 #include "Logger_base.h"
 
-#ifdef LOGGER_QT
+#ifdef QT_WIDGETS_LIB
 #include "LoggerTypes/ContextLogger.h"
 #include "ui/QContextLoggerTree.h"
 #include "ReceiverTypes/ui/QAbstractLogView.h"

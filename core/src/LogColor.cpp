@@ -144,7 +144,7 @@ The different color codes are
 		if (g > 255) g = 255;
 		if (b > 255) b = 255;
 
-		return Color(r, g, b);
+		return Color((uint8_t)r, (uint8_t)g, (uint8_t)b);
 	}
 	Color& Color::operator+=(const Color& other)
 	{
@@ -155,9 +155,9 @@ The different color codes are
 		if (g > 255) g = 255;
 		if (b > 255) b = 255;
 
-		m_r = r;
-		m_g = g;
-		m_b = b;
+		m_r = (uint8_t)r;
+		m_g = (uint8_t)g;
+		m_b = (uint8_t)b;
 		return *this;
 	}
 	Color Color::operator-(const Color& other) const
@@ -169,7 +169,7 @@ The different color codes are
 		if (g < 0) g = 0;
 		if (b < 0) b = 0;
 
-		return Color(r, g, b);
+		return Color((uint8_t)r, (uint8_t)g, (uint8_t)b);
 	}
 	Color& Color::operator-=(const Color& other)
 	{
@@ -180,9 +180,9 @@ The different color codes are
 		if (g < 0) g = 0;
 		if (b < 0) b = 0;
 
-		m_r = r;
-		m_g = g;
-		m_b = b;
+		m_r = (uint8_t)r;
+		m_g = (uint8_t)g;
+		m_b = (uint8_t)b;
 		return *this;
 	}
 	Color& Color::operator*=(float x)
@@ -204,7 +204,7 @@ The different color codes are
 		if (g < 0) g = 0; else if (g > 255) g = 255;
 		if (b < 0) b = 0; else if (b > 255) b = 255;
 
-		return Color(r, g, b);
+		return Color((uint8_t)r, (uint8_t)g, (uint8_t)b);
 	
 	}
 	Color& Color::operator/=(float x)
@@ -227,7 +227,7 @@ The different color codes are
 		if (g < 0) g = 0; else if (g > 255) g = 255;
 		if (b < 0) b = 0; else if (b > 255) b = 255;
 
-		return Color(r, g, b);
+		return Color((uint8_t)r, (uint8_t)g, (uint8_t)b);
 	
 	}
 
@@ -292,11 +292,11 @@ The different color codes are
 	std::string Color::getRGBStr() const
 	{
 		char hex[8];
-		sprintf(hex, "#%02X%02X%02X", m_r, m_g, m_b);
+		sprintf_s(hex, "#%02X%02X%02X", m_r, m_g, m_b);
 		return std::string(hex);
 	}
 
-#ifdef LOGGER_QT
+#ifdef QT_WIDGETS_LIB
 	QColor Color::toQColor() const
 	{
 		if(!s_isDarkMode)
@@ -352,6 +352,6 @@ The different color codes are
 		if (g < 0) g = 0; else if (g > 255) g = 255;
 		if (b < 0) b = 0; else if (b > 255) b = 255;
 
-		return Color(r, g, b);
+		return Color((uint8_t)r, (uint8_t)g, (uint8_t)b);
 	}
 }

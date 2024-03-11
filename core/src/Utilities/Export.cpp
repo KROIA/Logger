@@ -1,14 +1,13 @@
 #include "Utilities/Export.h"
 #include <fstream>
 
-#include "LibraryInfo.h"
+#include "Logger_info.h"
 
 namespace Log
 {
 	bool Export::saveToFile(const std::vector<Logger::AbstractLogger::LoggerSnapshotData>& list, const std::string& file)
 	{
 		Log::DateTime::Format timeFormat = Log::DateTime::Format::yearMonthDay | Log::DateTime::Format::hourMinuteSecondMillisecond;
-		bool compact = false;
 
 		std::ofstream out(file);
 		if (!out.is_open())

@@ -35,11 +35,11 @@ namespace Log
 
 		void ConsoleContextPlotter::onContextCreate(Logger::ContextLogger& logger)
 		{
-
+			LOGGER_UNUSED(logger);
 		}
 		void ConsoleContextPlotter::onContextDestroy(Logger::AbstractLogger& logger)
 		{
-
+			LOGGER_UNUSED(logger);
 		}
 
 		void ConsoleContextPlotter::onNewSubscribed(Logger::AbstractLogger& logger)
@@ -52,7 +52,7 @@ namespace Log
 		}
 		void ConsoleContextPlotter::onUnsubscribed(Logger::AbstractLogger& logger)
 		{
-
+			LOGGER_UNUSED(logger);
 		}
 
 		void ConsoleContextPlotter::onNewMessage(const Message& m)
@@ -61,11 +61,11 @@ namespace Log
 		}
 		void ConsoleContextPlotter::onClear(Logger::AbstractLogger& logger)
 		{
-
+			LOGGER_UNUSED(logger);
 		}
 		void ConsoleContextPlotter::onDelete(Logger::AbstractLogger& loggerToDestroy)
 		{
-
+			LOGGER_UNUSED(loggerToDestroy);
 		}
 
 
@@ -91,10 +91,10 @@ namespace Log
 			wOldColorAttrs = csbiInfo.wAttributes;
 
 
-			int contextColor = Color::white.getConsoleValue();
+			WORD contextColor = (WORD)Color::white.getConsoleValue();
 			if (logger)
-				contextColor = logger->getColor().getConsoleValue();
-			int color = msg.getColor().getConsoleValue();
+				contextColor = (WORD)logger->getColor().getConsoleValue();
+			WORD color = (WORD)msg.getColor().getConsoleValue();
 
 			cout << msg.getDateTime().toString(m_dateTimeFormat) << "  ";
 			SetConsoleTextAttribute(h, contextColor);

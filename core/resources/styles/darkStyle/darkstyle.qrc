@@ -1,0 +1,9 @@
+<RCC>
+    <qresource prefix="/styles/darkstyle">
+        <file>darkstyle.qss</file>
+        <file>icons/arrow-right.png</file>
+        <file>icons/arrow-left.png</file>
+        <file>icons/arrow-up.png</file>
+        <file>icons/arrow-down.png</file>
+    </qresource>
+</RCC>

@@ -20,7 +20,7 @@ namespace Log
 			str = "Unknown debug level: " + std::to_string(l);
 			return str;
 		}
-#ifdef LOGGER_QT
+#ifdef QT_WIDGETS_LIB
 		const QIcon& getIcon(Level logLevel)
 		{
 			switch (logLevel)

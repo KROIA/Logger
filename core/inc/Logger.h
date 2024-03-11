@@ -1,7 +1,7 @@
 #pragma once
 
 
-#include "LibraryInfo.h"
+#include "Logger_info.h"
 
 // Logger Types
 #include "LoggerTypes/AbstractLogger.h"
@@ -18,3 +18,4 @@
 
 // Utilities
 #include "Utilities/LogProfiler.h"
+#include "Utilities/Resources.h"

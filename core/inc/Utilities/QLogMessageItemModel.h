@@ -1,7 +1,7 @@
 #pragma once
 #include "Logger_base.h"
 
-#ifdef LOGGER_QT
+#ifdef QT_WIDGETS_LIB
 #include <QAbstractItemModel>
 #include <QVariant>
 #include <QSortFilterProxyModel>

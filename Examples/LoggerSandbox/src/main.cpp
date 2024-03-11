@@ -47,23 +47,8 @@ int main(int argc, char* argv[])
     qApp->setPalette(darkPalette);*/
 
     // Apply a dark stylesheet for the application
-    QFile styleFile("E:\\Dokumente\\Visual Studio 2022\\Projects\\Logger\\bin\\styles\\darkstyle.qss"); // Load stylesheet from resources
-    if (styleFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        QTextStream stream(&styleFile);
-        qApp->setStyleSheet(stream.readAll());
-        styleFile.close();
-    }
-    else {
-        QFile styleFile("D:\\Users\\Alex\\Dokumente\\SoftwareProjects\\Logger\\bin\\styles\\darkstyle.qss"); // Load stylesheet from resources
-        if (styleFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
-            QTextStream stream(&styleFile);
-            qApp->setStyleSheet(stream.readAll());
-            styleFile.close();
-        }
-        else {
-            qDebug() << "Failed to load stylesheet."; 
-        }
-    }
+  
+    qApp->setStyleSheet(Log::Resources::getDarkStylesheet());
     Log::Color::setDarkMode(true);
 
     int count = 0;

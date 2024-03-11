@@ -1,6 +1,6 @@
 #include "ui/QConsoleWidget.h"
 
-#ifdef LOGGER_QT
+#ifdef QT_WIDGETS_LIB
 #include <QHeaderView>
 #include <QScrollBar>
 

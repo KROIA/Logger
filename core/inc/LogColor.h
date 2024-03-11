@@ -2,7 +2,7 @@
 
 #include "Logger_base.h"
 
-#ifdef LOGGER_QT
+#ifdef QT_WIDGETS_LIB
 #include <QColor>
 #endif
 
@@ -46,7 +46,7 @@ namespace Log
 		uint32_t getRGB() const;
 		std::string getRGBStr() const;
 
-#ifdef LOGGER_QT
+#ifdef QT_WIDGETS_LIB
 		QColor toQColor() const;
 #endif
 

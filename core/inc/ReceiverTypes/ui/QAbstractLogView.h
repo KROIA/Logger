@@ -3,7 +3,7 @@
 #include "LoggerTypes/ContextLogger.h"
 #include "ui/QContextLoggerTree.h"
 
-#ifdef LOGGER_QT
+#ifdef QT_WIDGETS_LIB
 #include "ReceiverTypes/ui/QAbstractLogView.h"
 #include <QWidget>
 #include <QTreeWidget>

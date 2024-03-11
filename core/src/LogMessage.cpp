@@ -1,13 +1,8 @@
 #include "LogMessage.h"
 #include "LoggerTypes/AbstractLogger.h"
+#include <algorithm>
 namespace Log
 {
-
-	
-
-
-	
-
 	Message::Message(const std::string& msg)
 		: m_message(msg)
 		, m_context(nullptr)

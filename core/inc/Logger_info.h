@@ -2,9 +2,7 @@
 #include "Logger_base.h"
 #include <sstream>
 
-#define BUILD_TYPE_DEBUG 0
-#define BUILD_TYPE_RELEASE 1
-
+class QWidget;
 
 namespace Log
 {
@@ -44,12 +42,17 @@ namespace Log
 #endif
 
 		// Build type
+		enum class BuildType
+		{
+			debug,
+			release
+		};
 #ifdef NDEBUG
 		static constexpr const char* buildTypeStr		= "Release";
-		static constexpr const int   buildType			= BUILD_TYPE_RELEASE;
+		static constexpr const BuildType buildType		= BuildType::release;
 #else
 		static constexpr const char* buildTypeStr		= "Debug";
-		static constexpr const int   buildType			= BUILD_TYPE_DEBUG;
+		static constexpr const BuildType buildType		= BuildType::debug;
 #endif
 
 		static const std::string& versionStr()
@@ -69,5 +72,11 @@ namespace Log
 
 		static void printInfo();
 		static void printInfo(std::ostream& stream);
+
+		// This function is only available when QT_ENABLE was set to ON in the CMakeLists.txt and
+		// QT_MODULES contains the value "Widgets"
+		// It creates a widget with the library information
+		// No button is created to close the widget
+		static QWidget *createInfoWidget(QWidget* parent = nullptr);
 	};
 }

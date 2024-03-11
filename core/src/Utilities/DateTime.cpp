@@ -1,6 +1,6 @@
 #include "Utilities/DateTime.h"
 #include <chrono>
-#include <ctime>
+#include <time.h>
 
 namespace Log
 {
@@ -23,7 +23,7 @@ namespace Log
 		m_day = other.m_day;
 		return *this;
 	}
-#ifdef LOGGER_QT
+#ifdef QT_WIDGETS_LIB
 	Date& Date::operator=(const QDate& other)
 	{
 		m_year = other.year();
@@ -73,7 +73,8 @@ namespace Log
 	void Date::update()
 	{
 		std::time_t now = std::time(nullptr);
-		std::tm localTime = *std::localtime(&now);
+		std::tm localTime;
+		localtime_s(&localTime, &now);
 
 		m_year = localTime.tm_year + 1900;
 		m_month = localTime.tm_mon + 1;
@@ -182,7 +183,7 @@ namespace Log
 		return *this;
 	
 	}
-#ifdef LOGGER_QT
+#ifdef QT_WIDGETS_LIB
 	Time& Time::operator=(const QTime& other)
 	{
 		m_hour = other.hour();
@@ -244,7 +245,8 @@ namespace Log
 	void Time::update()
 	{
 		std::time_t now = std::time(nullptr);
-		std::tm localTime = *std::localtime(&now);
+		std::tm localTime;
+		localtime_s(&localTime, &now);
 
 		// Get the current time with milliseconds
 #ifdef _MSC_VER 
@@ -394,7 +396,7 @@ namespace Log
 	
 	}
 
-#ifdef LOGGER_QT
+#ifdef QT_WIDGETS_LIB
 	DateTime& DateTime::operator=(const QDateTime& other)
 	{
 		m_date = other.date();
@@ -445,7 +447,8 @@ namespace Log
 	void DateTime::update()
 	{
 		std::time_t now = std::time(nullptr);
-		std::tm localTime = *std::localtime(&now);
+		std::tm localTime;
+		localtime_s(&localTime, &now);
 
 		// Get the current time with milliseconds
 #ifdef _MSC_VER 

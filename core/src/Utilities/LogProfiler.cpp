@@ -12,6 +12,8 @@ namespace Log
     {
 #ifdef LOGGER_PROFILING
         profiler::dumpBlocksToFile(profileFilePath.c_str());
+#else
+        LOGGER_UNUSED(profileFilePath);
 #endif
     }
 }

@@ -1,6 +1,6 @@
 #include "ui/QContextLoggerTree.h"
-
-#ifdef LOGGER_QT
+#include <algorithm>
+#ifdef QT_WIDGETS_LIB
 
 namespace Log
 {
@@ -79,7 +79,7 @@ namespace Log
 			}
 			if (parentLogger)
 			{
-				auto& parentIt = m_msgItems.find(parentLogger->getID());
+				const auto& parentIt = m_msgItems.find(parentLogger->getID());
 				if (parentIt == m_msgItems.end())
 				{
 					TreeData* treeData = new TreeData(this, newContext);
@@ -96,7 +96,7 @@ namespace Log
 		}
 		void QContextLoggerTree::removeContext(Logger::AbstractLogger::LoggerID id)
 		{
-			auto& it = m_msgItems.find(id);
+			const auto& it = m_msgItems.find(id);
 			if (it == m_msgItems.end())
 				return;
 
@@ -106,7 +106,7 @@ namespace Log
 		}
 		void QContextLoggerTree::onNewMessage(const Message& m)
 		{
-			auto &it = m_msgItems.find(m.getContext()->getID());
+			const auto &it = m_msgItems.find(m.getContext()->getID());
 			if (it == m_msgItems.end())
 				return;
 			TreeData* treeData = it->second;
@@ -178,7 +178,7 @@ namespace Log
 
 		void QContextLoggerTree::setContextVisibility(Logger::AbstractLogger::LoggerID id, bool isVisible)
 		{
-			auto& it = m_msgItems.find(id);
+			const auto& it = m_msgItems.find(id);
 			if (it == m_msgItems.end())
 				return;
 			TreeData* treeData = it->second;
@@ -186,7 +186,7 @@ namespace Log
 		}
 		bool QContextLoggerTree::getContextVisibility(Logger::AbstractLogger::LoggerID id) const
 		{
-			auto& it = m_msgItems.find(id);
+			const auto& it = m_msgItems.find(id);
 			if (it == m_msgItems.end())
 				return false;
 			TreeData* treeData = it->second;
@@ -280,13 +280,13 @@ namespace Log
 			}
 			if (parent)
 			{
-				auto& it = std::find(parent->children.begin(), parent->children.end(), this);
+				const auto& it = std::find(parent->children.begin(), parent->children.end(), this);
 				if (it != parent->children.end())
 					parent->children.erase(it);
 			}
 			if (root)
 			{
-				auto& it = root->m_msgItems.find(loggerMetaInfo->id);
+				const auto& it = root->m_msgItems.find(loggerMetaInfo->id);
 				if (it != root->m_msgItems.end())
 					root->m_msgItems.erase(it);
 			}
@@ -301,17 +301,17 @@ namespace Log
 			QColor contextColor = loggerMetaInfo->color.toQColor();
 			childRoot->setData((int)HeaderPos::contextName, Qt::DisplayRole, loggerMetaInfo->name.c_str());
 			childRoot->setData((int)HeaderPos::timestamp, Qt::DisplayRole, loggerMetaInfo->creationTime.toString(root->m_timeFormat).c_str());
-			childRoot->setBackgroundColor((int)HeaderPos::contextName, contextColor);
-			childRoot->setBackgroundColor((int)HeaderPos::timestamp, contextColor);
-			childRoot->setBackgroundColor((int)HeaderPos::message, contextColor);
+			childRoot->setBackground((int)HeaderPos::contextName, contextColor);
+			childRoot->setBackground((int)HeaderPos::timestamp, contextColor);
+			childRoot->setBackground((int)HeaderPos::message, contextColor);
 		}
 		void QContextLoggerTree::TreeData::setupMessageRoot()
 		{
 			QColor contextColor = loggerMetaInfo->color.toQColor();
 			thisMessagesRoot->setData((int)HeaderPos::contextName, Qt::DisplayRole, "Messages");
-			thisMessagesRoot->setBackgroundColor((int)HeaderPos::contextName, contextColor);
-			thisMessagesRoot->setBackgroundColor((int)HeaderPos::timestamp, contextColor);
-			thisMessagesRoot->setBackgroundColor((int)HeaderPos::message, contextColor);
+			thisMessagesRoot->setBackground((int)HeaderPos::contextName, contextColor);
+			thisMessagesRoot->setBackground((int)HeaderPos::timestamp, contextColor);
+			thisMessagesRoot->setBackground((int)HeaderPos::message, contextColor);
 		}
 		void QContextLoggerTree::TreeData::updateDateTime()
 		{
@@ -333,7 +333,7 @@ namespace Log
 			line->setData((int)HeaderPos::message, Qt::DisplayRole, m.getText().c_str());
 
 			line->setIcon((int)HeaderPos::contextName, Utilities::getIcon(m.getLevel()));
-			line->setTextColor((int)HeaderPos::message, m.getColor().toQColor());
+			line->setForeground((int)HeaderPos::message, m.getColor().toQColor());
 			QFont font = line->font((int)HeaderPos::message);
 			font.setBold(true);
 			line->setFont((int)HeaderPos::message, font);
@@ -341,9 +341,9 @@ namespace Log
 			if (m.getContext())
 			{
 				QColor contextColor = (m.getContext()->getColor() * 0.5).toQColor();
-				line->setBackgroundColor((int)HeaderPos::contextName, contextColor);
-				line->setBackgroundColor((int)HeaderPos::timestamp, contextColor);
-				line->setBackgroundColor((int)HeaderPos::message, contextColor);
+				line->setBackground((int)HeaderPos::contextName, contextColor);
+				line->setBackground((int)HeaderPos::timestamp, contextColor);
+				line->setBackground((int)HeaderPos::message, contextColor);
 			}
 			
 

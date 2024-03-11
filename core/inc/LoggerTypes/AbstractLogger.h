@@ -7,7 +7,7 @@
 #include "LogColor.h"
 #include <memory>
 
-#ifdef LOGGER_QT
+#ifdef QT_WIDGETS_LIB
 #include <QIcon>
 #endif
 
@@ -49,7 +49,7 @@ namespace Log
 			void tabOut() override;
 			unsigned int getTabCount() const override;
 
-#ifdef LOGGER_QT
+#ifdef QT_WIDGETS_LIB
 			void setIcon(const QIcon& icon);
 			const QIcon& getIcon() const;
 #endif
@@ -130,7 +130,7 @@ namespace Log
 
 			std::vector<Message> m_messages;
 
-#ifdef LOGGER_QT
+#ifdef QT_WIDGETS_LIB
 			QIcon m_icon;
 #endif
 		private:
