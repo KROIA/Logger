@@ -1,18 +1,28 @@
 #pragma once
 
-#include <chrono>
+/// USER_SECTION_START 1
 
+/// USER_SECTION_END
+
+#include <chrono>
+// Params
+// <LIBRARY NAME SHORT>=LOGGER 
+//
 #ifndef BUILD_STATIC
-#pragma message("LIBRARY_NAME_LIB is a shared library")
+#pragma message("LOGGER_LIB is a shared library")
 # if defined(LOGGER_LIB)
 #  define LOGGER_EXPORT __declspec(dllexport)
 # else
 #  define LOGGER_EXPORT __declspec(dllimport)
 # endif
 #else 
-#pragma message("LIBRARY_NAME_LIB is a static library")
+#pragma message("LOGGER_LIB is a static library")
 # define LOGGER_EXPORT
 #endif
+
+/// USER_SECTION_START 2
+
+/// USER_SECTION_END
 
 #ifdef QT_ENABLED
 #pragma message("QT is enabled")
@@ -20,6 +30,10 @@
 #pragma message("QT_WIDGETS is enabled")
 #endif
 #endif
+
+/// USER_SECTION_START 3
+
+/// USER_SECTION_END
 
 // MSVC Compiler
 #ifdef _MSC_VER 
@@ -30,10 +44,11 @@ typedef std::chrono::system_clock::time_point TimePoint;
 #endif
 
 
-
-
-
 #define LOGGER_UNUSED(x) (void)x;
+
+/// USER_SECTION_START 4
+
+/// USER_SECTION_END
 
 #if defined(LOGGER_LIB)
 #pragma warning (error : 4715) // not all control paths return a value shuld be an error instead of a warning
@@ -48,3 +63,7 @@ typedef std::chrono::system_clock::time_point TimePoint;
 #pragma warning (error : 4996) // unsafe function calls
 #pragma warning (error : 4018) // signed/unsigned mismatch
 #endif
+
+/// USER_SECTION_START 5
+
+/// USER_SECTION_END

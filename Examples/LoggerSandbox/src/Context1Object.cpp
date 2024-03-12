@@ -16,5 +16,3 @@ Context1Object::~Context1Object()
 {
 
 }
-
-
