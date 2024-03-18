@@ -33,7 +33,7 @@ int main(int argc, char* argv[])
 	Test::printResults(results);
 
 #ifdef QT_WIDGETS_ENABLED
-	QWidget* widget = EcoSystem::LibraryInfo::createInfoWidget();
+	QWidget* widget = Log::LibraryInfo::createInfoWidget();
 	if (widget)
 		widget->show();
 #endif
