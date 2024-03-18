@@ -1,5 +1,4 @@
 ## description: simple library to create log files and UI based logging systems
-cmake_minimum_required(VERSION 3.1.0)
 include(FetchContent)
 
 # Define the git repository and tag to download from
