@@ -6,16 +6,16 @@
 
 // Debugging
 #ifdef NDEBUG
-#define LOGGER_CONSOLE(msg)
-#define LOGGER_CONSOLE_FUNCTION(msg)
+	#define LOGGER_CONSOLE(msg)
+	#define LOGGER_CONSOLE_FUNCTION(msg)
 #else
-#include <iostream>
+	#include <iostream>
 
-#define LOGGER_DEBUG
-#define LOGGER_CONSOLE_STREAM std::cout
+	#define LOGGER_DEBUG
+	#define LOGGER_CONSOLE_STREAM std::cout
 
-#define LOGGER_CONSOLE(msg) LOGGER_CONSOLE_STREAM << msg;
-#define LOGGER_CONSOLE_FUNCTION(msg) LOGGER_CONSOLE_STREAM << __PRETTY_FUNCTION__ << " " << msg;
+	#define LOGGER_CONSOLE(msg) LOGGER_CONSOLE_STREAM << msg;
+	#define LOGGER_CONSOLE_FUNCTION(msg) LOGGER_CONSOLE_STREAM << __PRETTY_FUNCTION__ << " " << msg;
 #endif
 
 /// USER_SECTION_START 2
@@ -23,33 +23,33 @@
 /// USER_SECTION_END
 
 #ifdef LOGGER_PROFILING
-#include "easy/profiler.h"
-#include <easy/arbitrary_value.h> // EASY_VALUE, EASY_ARRAY are defined here
+	#include "easy/profiler.h"
+	#include <easy/arbitrary_value.h> // EASY_VALUE, EASY_ARRAY are defined here
 
-#define LOGGER_PROFILING_BLOCK_C(text, color) EASY_BLOCK(text, color)
-#define LOGGER_PROFILING_NONSCOPED_BLOCK_C(text, color) EASY_NONSCOPED_BLOCK(text, color)
-#define LOGGER_PROFILING_END_BLOCK EASY_END_BLOCK
-#define LOGGER_PROFILING_FUNCTION_C(color) EASY_FUNCTION(color)
-#define LOGGER_PROFILING_BLOCK(text, colorStage) LOGGER_PROFILING_BLOCK_C(text,profiler::colors::  colorStage)
-#define LOGGER_PROFILING_NONSCOPED_BLOCK(text, colorStage) LOGGER_PROFILING_NONSCOPED_BLOCK_C(text,profiler::colors::  colorStage)
-#define LOGGER_PROFILING_FUNCTION(colorStage) LOGGER_PROFILING_FUNCTION_C(profiler::colors:: colorStage)
-#define LOGGER_PROFILING_THREAD(name) EASY_THREAD(name)
+	#define LOGGER_PROFILING_BLOCK_C(text, color) EASY_BLOCK(text, color)
+	#define LOGGER_PROFILING_NONSCOPED_BLOCK_C(text, color) EASY_NONSCOPED_BLOCK(text, color)
+	#define LOGGER_PROFILING_END_BLOCK EASY_END_BLOCK
+	#define LOGGER_PROFILING_FUNCTION_C(color) EASY_FUNCTION(color)
+	#define LOGGER_PROFILING_BLOCK(text, colorStage) LOGGER_PROFILING_BLOCK_C(text,profiler::colors::  colorStage)
+	#define LOGGER_PROFILING_NONSCOPED_BLOCK(text, colorStage) LOGGER_PROFILING_NONSCOPED_BLOCK_C(text,profiler::colors::  colorStage)
+	#define LOGGER_PROFILING_FUNCTION(colorStage) LOGGER_PROFILING_FUNCTION_C(profiler::colors:: colorStage)
+	#define LOGGER_PROFILING_THREAD(name) EASY_THREAD(name)
 
-#define LOGGER_PROFILING_VALUE(name, value) EASY_VALUE(name, value)
-#define LOGGER_PROFILING_TEXT(name, value) EASY_TEXT(name, value)
+	#define LOGGER_PROFILING_VALUE(name, value) EASY_VALUE(name, value)
+	#define LOGGER_PROFILING_TEXT(name, value) EASY_TEXT(name, value)
 
 #else
-#define LOGGER_PROFILING_BLOCK_C(text, color)
-#define LOGGER_PROFILING_NONSCOPED_BLOCK_C(text, color)
-#define LOGGER_PROFILING_END_BLOCK
-#define LOGGER_PROFILING_FUNCTION_C(color)
-#define LOGGER_PROFILING_BLOCK(text, colorStage)
-#define LOGGER_PROFILING_NONSCOPED_BLOCK(text, colorStage)
-#define LOGGER_PROFILING_FUNCTION(colorStage)
-#define LOGGER_PROFILING_THREAD(name)
+	#define LOGGER_PROFILING_BLOCK_C(text, color)
+	#define LOGGER_PROFILING_NONSCOPED_BLOCK_C(text, color)
+	#define LOGGER_PROFILING_END_BLOCK
+	#define LOGGER_PROFILING_FUNCTION_C(color)
+	#define LOGGER_PROFILING_BLOCK(text, colorStage)
+	#define LOGGER_PROFILING_NONSCOPED_BLOCK(text, colorStage)
+	#define LOGGER_PROFILING_FUNCTION(colorStage)
+	#define LOGGER_PROFILING_THREAD(name)
 
-#define LOGGER_PROFILING_VALUE(name, value)
-#define LOGGER_PROFILING_TEXT(name, value)
+	#define LOGGER_PROFILING_VALUE(name, value)
+	#define LOGGER_PROFILING_TEXT(name, value)
 #endif
 
 // Special expantion tecniques are required to combine the color name
