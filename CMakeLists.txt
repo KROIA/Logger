@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 ## USER_SECTION_START 1
-cmake_minimum_required(VERSION 3.20)
+
 ## USER_SECTION_END
 
 
@@ -74,6 +74,16 @@ set(COMPILE_EXAMPLES ON)						# <AUTO_REPLACED>
 set(COMPILE_UNITTESTS ON)						# <AUTO_REPLACED> 
 
 ## USER_SECTION_START 3
+
+## USER_SECTION_END
+
+# --------------------------------------------------------------------------------
+# -------------------- Dependencies ----------------------------------------------
+# --------------------------------------------------------------------------------
+
+set(QT_INSTALL_BASE "C:\\Qt")
+
+## USER_SECTION_START 7
 
 ## USER_SECTION_END
 

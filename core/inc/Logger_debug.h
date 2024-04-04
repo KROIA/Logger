@@ -1,4 +1,5 @@
 #pragma once
+#include "Logger_global.h"
 
 /// USER_SECTION_START 1
 
@@ -73,6 +74,18 @@
 #define LOGGER_COLOR_STAGE_12 A200 
 #define LOGGER_COLOR_STAGE_13 A400 
 #define LOGGER_COLOR_STAGE_14 A700 
+
+namespace Log
+{
+	class LOGGER_EXPORT Profiler
+	{
+	public:
+		// Implementation defined in LibraryName_info.cpp to save files.
+		static void start();
+		static void stop();
+		static void stop(const char* profilerOutputFile);
+	};
+}
 
 
 // General

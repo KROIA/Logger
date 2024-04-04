@@ -1,4 +1,5 @@
 #include "Logger_info.h"
+#include "Logger_debug.h"
 
 /// USER_SECTION_START 1
 
@@ -88,6 +89,27 @@ namespace Log
 		return nullptr;
 	}
 #endif
+
+	// Implementation of the Profiler start/stop functions
+	void Profiler::start()
+	{
+#ifdef LOGGER_PROFILING
+		EASY_PROFILER_ENABLE;
+#endif
+	}
+	void Profiler::stop()
+	{
+		stop("profile.prof");
+	}
+	void Profiler::stop(const char* profilerOutputFile)
+	{
+#ifdef LOGGER_PROFILING
+		profiler::dumpBlocksToFile(profilerOutputFile);
+#else
+		(void)profilerOutputFile;
+#endif
+	}
+
 
 /// USER_SECTION_START 4
 

@@ -21,7 +21,6 @@
 #include "ui/QConsoleView.h"
 
 // Utilities
-#include "Utilities/LogProfiler.h"
 #include "Utilities/Resources.h"
 
 /// USER_SECTION_END
