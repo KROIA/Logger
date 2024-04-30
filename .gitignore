@@ -40,7 +40,6 @@ build
 UnitTests/bin
 doxygen
 out
-dependencies
 include
 lib
 
