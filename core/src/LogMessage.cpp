@@ -286,7 +286,10 @@ namespace Log
 
 	void Message::normalizeMessage()
 	{
-		while(m_message.find_last_of("\n") == m_message.size() - 1)
+		while ( m_message.find_last_of("\n") == m_message.size() - 1 && 
+				m_message.size() > 0)
+		{
 			m_message.erase(m_message.size() - 1, 1);
+		}
 	}
 }
