@@ -70,9 +70,9 @@ namespace Log
 
 
 	Resources::Resources()
-		: m_imageFilePath(":/icons/")
+		: m_imageFilePath(":Logger/icons/")
 		, m_imageFileEnding(".png")
-		, m_styleFilePath(":/styles/")
+		, m_styleFilePath(":Logger/styles/")
 		, m_styleFileEnding(".qss")
 	{
 		initResources();
@@ -82,8 +82,8 @@ namespace Log
 	void Resources::initResources()
 	{
 		// name of the resource file = "icons.qrc"
-		Q_INIT_RESOURCE(icons);
-		Q_INIT_RESOURCE(darkstyle);
+		Q_INIT_RESOURCE(LoggerIcons);
+		Q_INIT_RESOURCE(LoggerDarkstyle);
 	}
 	void Resources::loadIcons()
 	{

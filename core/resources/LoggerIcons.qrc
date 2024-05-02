@@ -1,5 +1,5 @@
 <RCC>
-    <qresource prefix="/">
+    <qresource prefix="Logger/">
         <file>icons/trace.png</file>
         <file>icons/debug.png</file>
         <file>icons/info.png</file>

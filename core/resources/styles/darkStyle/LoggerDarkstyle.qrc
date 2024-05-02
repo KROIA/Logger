@@ -1,5 +1,5 @@
 <RCC>
-    <qresource prefix="/styles/darkstyle">
+    <qresource prefix="Logger/styles/darkstyle">
         <file>darkstyle.qss</file>
         <file>icons/arrow-right.png</file>
         <file>icons/arrow-left.png</file>
