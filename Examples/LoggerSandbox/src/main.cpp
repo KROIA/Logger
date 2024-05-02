@@ -90,13 +90,14 @@ int main(int argc, char* argv[])
         // worker lambda
         auto worker = [m_workerThread, &logger2]()
             {
+                
                 Log::Logger::ContextLogger* context = logger2.createContext("Utilities::executeCommand");
                 
 
                 for(int i = 0; i < 2; i++)
                 {
                     std::this_thread::sleep_for(std::chrono::seconds(1));
-                    context->log(Log::Level::info, Log::Color::green, "Hallo");
+                    context->log(Log::Level::info, Log::Color::green, "Hallo\n\n\n");
                 }
                 
 

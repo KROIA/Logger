@@ -8,6 +8,7 @@
 #include <QTimer>
 #include "ReceiverTypes/ContextReceiver.h"
 #include "LogLevel.h"
+#include <QDebug>
 
 
 namespace Log

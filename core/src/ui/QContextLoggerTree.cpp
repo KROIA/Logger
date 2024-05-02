@@ -1,5 +1,6 @@
 #include "ui/QContextLoggerTree.h"
 #include <algorithm>
+
 #ifdef QT_WIDGETS_LIB
 
 namespace Log
@@ -10,6 +11,11 @@ namespace Log
 			: QWidget(parent)
 			, m_treeWidget(parent)
 		{
+			for(int i = 0; i < sizeof(m_levelVisibility) / sizeof(m_levelVisibility[0]); ++i)
+			{
+				m_levelVisibility[i] = true;
+			}
+
 			m_dateTimeFilter.active = false;
 			m_timeFormat = DateTime::Format::yearMonthDay | DateTime::Format::hourMinuteSecondMillisecond;
 			m_updateTimer.setInterval(100);

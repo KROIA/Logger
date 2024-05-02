@@ -7,6 +7,7 @@
 #include "ReceiverTypes/ui/QAbstractLogView.h"
 #include <QTreeWidget>
 #include <QTreeView>
+#include <QMutex>
 
 namespace Log 
 {
@@ -39,6 +40,7 @@ namespace Log
 
             QTreeWidget* m_treeWidget;
             Receiver::QContextLoggerTree* m_treeItem;
+            mutable QMutex m_mutex;
         };
     }
 }

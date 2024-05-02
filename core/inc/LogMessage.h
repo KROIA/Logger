@@ -95,6 +95,7 @@ namespace Log
 		DateTime m_dateTime;
 		
 	private:
+		void normalizeMessage();
 
 		static LevelColors s_levelColors; // Initialized in LogColor.cpp
 	};

@@ -11,7 +11,7 @@ namespace Log
 		, m_useCustomColor(false)
 		, m_tabCount(0)
 	{
-
+		normalizeMessage();
 	}
 	Message::Message(const std::string& msg, Level level)
 		: m_message(msg)
@@ -21,7 +21,7 @@ namespace Log
 		, m_useCustomColor(false)
 		, m_tabCount(0)
 	{
-
+		normalizeMessage();
 	}
 	Message::Message(const std::string& msg, Level level, const Color& col)
 		: m_message(msg)
@@ -31,7 +31,7 @@ namespace Log
 		, m_useCustomColor(true)
 		, m_tabCount(0)
 	{
-
+		normalizeMessage();
 	}
 	Message::Message(const char* msg)
 		: m_message(msg)
@@ -41,7 +41,7 @@ namespace Log
 		, m_useCustomColor(false)
 		, m_tabCount(0)
 	{
-
+		normalizeMessage();
 	}
 	Message::Message(const char* msg, Level level)
 		: m_message(msg)
@@ -51,7 +51,7 @@ namespace Log
 		, m_useCustomColor(false)
 		, m_tabCount(0)
 	{
-
+		normalizeMessage();
 	}
 	Message::Message(const char* msg, Level level, const Color& col)
 		: m_message(msg)
@@ -61,7 +61,7 @@ namespace Log
 		, m_useCustomColor(true)
 		, m_tabCount(0)
 	{
-
+		normalizeMessage();
 	}
 
 	Message::Message(const Message& other)
@@ -83,6 +83,7 @@ namespace Log
 	Message& Message::operator=(const std::string& text)
 	{
 		m_message = text;
+		normalizeMessage();
 		return *this;
 	}
 	Message& Message::operator=(const Message& other)
@@ -103,6 +104,7 @@ namespace Log
 	Message& Message::operator+=(const Message& other)
 	{
 		m_message += other.m_message;
+		normalizeMessage();
 		return *this;
 	}
 
@@ -138,10 +140,12 @@ namespace Log
 	void Message::setText(const std::string& text)
 	{
 		m_message = text;
+		normalizeMessage();
 	}
 	void Message::setText(const char* text)
 	{
-		m_message.assign(text);
+		m_message = std::string(text);
+		normalizeMessage();
 	}
 	const std::string& Message::getText() const
 	{
@@ -278,5 +282,11 @@ namespace Log
 		data.tabCount = m_tabCount;
 		data.dateTime = m_dateTime;
 		return data;
+	}
+
+	void Message::normalizeMessage()
+	{
+		while(m_message.find_last_of("\n") == m_message.size() - 1)
+			m_message.erase(m_message.size() - 1, 1);
 	}
 }
