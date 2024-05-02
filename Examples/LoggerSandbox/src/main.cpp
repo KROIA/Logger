@@ -10,6 +10,7 @@
 #include <QDebug>
 #include <QFile>
 #include <QTimer>
+#include <QThread>
 
 #include "ui/DateTimeWidget.h"
 
@@ -80,9 +81,39 @@ int main(int argc, char* argv[])
 	view->attachLogger(logger2);
 	view->attachLogger(logger3);
 
+    QTimer singleShotTimer;
+    singleShotTimer.setSingleShot(true);
+    QObject::connect(&singleShotTimer, &QTimer::timeout, [&]()
+    {
+        // Create a QThread that calls the heavy commands
+        QThread* m_workerThread = new QThread;
+        // worker lambda
+        auto worker = [m_workerThread, &logger2]()
+            {
+                Log::Logger::ContextLogger* context = logger2.createContext("Utilities::executeCommand");
+                
+
+                for(int i = 0; i < 2; i++)
+                {
+                    std::this_thread::sleep_for(std::chrono::seconds(1));
+                    context->log(Log::Level::info, Log::Color::green, "Hallo");
+                }
+                
+
+              
+                context->deleteLater();
+                
+                m_workerThread->exit();
+            };
+        // move worker to thread
+        QObject::connect(m_workerThread, &QThread::started, worker);
+        // delete after thread is finished
+        QObject::connect(m_workerThread, &QThread::finished, m_workerThread, &QObject::deleteLater);
+        m_workerThread->start();
+    });
+    singleShotTimer.start(100);
     
 	
-
 	app.exec();
 	getchar();
 	return 0;

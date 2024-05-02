@@ -90,6 +90,8 @@ namespace Log
 			connect(ui->dateTimeFilterType_comboBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
 					this, &QAbstractLogView::onDateTimeFilterType_changed);
 
+
+			connect(this, &QAbstractLogView::newContextAdded, this, &QAbstractLogView::onNewContextAdded, Qt::QueuedConnection);
 			
 		}
 		QAbstractLogView::~QAbstractLogView()
@@ -249,6 +251,49 @@ namespace Log
 				onDateTimeFilterChanged(m_dateTimeFilter);
 		}
 
+		void QAbstractLogView::onNewContextAdded(QPrivateSignal*)
+		{
+			std::unordered_map<Logger::AbstractLogger::LoggerID, NewContextQueueData> newContextQueue;
+			{
+				QMutexLocker lock(&m_newContextQueueMutex);
+				newContextQueue = std::move(m_newContextQueue);
+				m_newContextQueue.clear();
+			}
+			for (const auto& context : newContextQueue)
+			{
+				const NewContextQueueData& queueData = context.second;
+				attachLogger(*queueData.logger);
+				if (m_autoCreateNewCheckBoxForNewContext)
+				{
+					
+					ContextData* data = new ContextData(queueData.logger->getMetaInfo(), new QCheckBox(this));
+					QPalette p = data->checkBox->palette();
+					data->checkBox->setAutoFillBackground(true);
+					const QIcon& icon = queueData.logger->getIcon();
+					if (!icon.isNull())
+					{
+						data->checkBox->setIcon(icon);
+						data->checkBox->setIconSize(QSize(30, 30));
+					}
+
+					p.setColor(QPalette::Button, queueData.logger->getColor().toQColor());
+
+					data->checkBox->setPalette(p);
+					QObject::connect(data->checkBox, &QCheckBox::stateChanged,
+						this, &QAbstractLogView::onCheckBoxStateChangedSlot);
+					m_contextData[queueData.logger->getID()] = data;
+					onNewContextCheckBoxCreated(data);
+				}
+				const auto& messages = queueData.logger->getMessages();
+
+				for (const auto& message : messages)
+				{
+					onNewMessage(message);
+				}
+			}
+			
+		}
+
 		void QAbstractLogView::setContentWidget(QWidget* widget)
 		{
 			ui->content_frame->layout()->addWidget(widget);
@@ -274,35 +319,14 @@ namespace Log
 		}
 		void QAbstractLogView::addContext(Logger::AbstractLogger& logger)
 		{
-			attachLogger(logger);
-			if (m_autoCreateNewCheckBoxForNewContext)
 			{
-				if (m_contextData.find(logger.getID()) != m_contextData.end())
+				QMutexLocker lock(&m_newContextQueueMutex);
+				if (m_newContextQueue.find(logger.getID()) != m_newContextQueue.end())
 					return;
-				ContextData* data = new ContextData(logger.getMetaInfo(), new QCheckBox(this));
-				QPalette p = data->checkBox->palette();
-				data->checkBox->setAutoFillBackground(true);
-				const QIcon &icon = logger.getIcon();
-				if (!icon.isNull())
-				{
-					data->checkBox->setIcon(logger.getIcon());
-					data->checkBox->setIconSize(QSize(30, 30));
-				}
 
-				p.setColor(QPalette::Button, logger.getColor().toQColor());
-
-				data->checkBox->setPalette(p);
-				QObject::connect(data->checkBox, &QCheckBox::stateChanged,
-					this, &QAbstractLogView::onCheckBoxStateChangedSlot);
-				m_contextData[logger.getID()] = data;
-				onNewContextCheckBoxCreated(data);
+				m_newContextQueue.insert({ logger.getID(), NewContextQueueData(logger) });
 			}
-			const auto &messages = logger.getMessages();
-
-			for (const auto& message : messages)
-			{
-				onNewMessage(message);
-			}
+			emit newContextAdded(0);			
 		}
 
 
@@ -364,7 +388,7 @@ namespace Log
 			ContextData* data = it->second;
 			onContextCheckBoxDestroyed(data);
 			m_contextData.erase(it);
-			delete data->checkBox;
+			data->checkBox->deleteLater();
 			delete data;
 		}
 

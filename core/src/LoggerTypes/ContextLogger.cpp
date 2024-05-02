@@ -106,7 +106,7 @@ namespace Log
 			{
 				childs[i]->destroyAllContext();
 				emitRecursive_onContextDestroy(*childs[i]);
-				delete childs[i];
+				childs[i]->deleteLater();
 			}
 		}
 		void ContextLogger::destroyContext(ContextLogger* child)
@@ -117,7 +117,7 @@ namespace Log
 			m_childs.erase(it);
 			child->destroyAllContext();
 			emitRecursive_onContextDestroy(*child);
-			delete child;
+			child->deleteLater();
 		}
 
 		std::vector<ContextLogger*>& ContextLogger::getAllRootLoggers()

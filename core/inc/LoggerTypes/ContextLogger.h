@@ -2,6 +2,7 @@
 
 #include "AbstractLogger.h"
 #include <vector>
+#include <QObject>
 #include "Utilities/Signal.h"
 
 
@@ -9,8 +10,9 @@ namespace Log
 {
 	namespace Logger
 	{
-		class LOGGER_EXPORT ContextLogger : public AbstractLogger
+		class LOGGER_EXPORT ContextLogger : public QObject, public AbstractLogger
 		{
+			Q_OBJECT
 			ContextLogger(const std::string& name, ContextLogger* parent);
 		public:
 			ContextLogger(const std::string& name = "");

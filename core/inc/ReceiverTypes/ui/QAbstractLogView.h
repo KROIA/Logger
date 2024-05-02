@@ -12,6 +12,7 @@
 #include <unordered_map>
 #include "LoggerTypes/ContextLogger.h"
 #include "ReceiverTypes/ContextReceiver.h"
+#include <QMutex>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class QAbstractLogView; }
@@ -42,6 +43,9 @@ namespace Log
             virtual void on_clear_pushButton_clicked();
             virtual void on_save_pushButton_clicked();
 
+        signals:
+            void newContextAdded(QPrivateSignal*);
+
         private slots:
             void onLevelCheckBoxStateChangedSlot(int state);
             void onFilterTextChangedSlot(const QString& text);
@@ -53,6 +57,8 @@ namespace Log
             void onDateTimeFilterMinNow_pushButton_clicked();
             void onDateTimeFilterMaxNow_pushButton_clicked();
             void onDateTimeFilterType_changed(int index);
+
+            void onNewContextAdded(QPrivateSignal*);
 
         protected:
             struct ContextData
@@ -108,6 +114,45 @@ namespace Log
 
             bool m_autoCreateNewCheckBoxForNewContext = false;
             bool m_ignoreAllContextCheckBox_signals = false;
+
+            struct NewContextQueueData
+            {
+                Logger::AbstractLogger *logger = nullptr;
+
+                NewContextQueueData(Logger::AbstractLogger& logger)
+					: logger(&logger)
+				{	
+                }
+
+                NewContextQueueData(const NewContextQueueData& other)
+					: logger(other.logger)
+				{	
+                }
+                NewContextQueueData(const NewContextQueueData&& other) noexcept
+                    : logger(other.logger)
+                {   
+                }
+                
+                NewContextQueueData &operator=(const NewContextQueueData& other)
+				{
+                    if (logger == other.logger)
+                        return *this;
+                    logger = other.logger;
+					return *this;
+				}
+
+                void onContextDestroy(Logger::AbstractLogger& logger)
+                {
+					if (this->logger == &logger)
+					{
+						this->logger = nullptr;
+					}
+				}
+
+            };
+
+            QMutex m_newContextQueueMutex;
+            std::unordered_map<Logger::AbstractLogger::LoggerID, NewContextQueueData> m_newContextQueue;
         };
     }
 }
