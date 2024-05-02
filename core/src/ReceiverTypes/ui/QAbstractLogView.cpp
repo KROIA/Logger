@@ -24,7 +24,7 @@ namespace Log
 		{
 			ui->setupUi(this);
 			ui->context_scrollAreaWidgetContents->layout()->setAlignment(Qt::AlignTop);
-			ui->searchIcon_label->setPixmap(Resources::getIconSearch().pixmap(16,16));
+			ui->searchIcon_label->setPixmap(Resources::getIconSearch().pixmap(16, 16));
 
 			m_autoCreateNewCheckBoxForNewContext = true;
 			m_filterTextEdits = { ui->contextFilter_lineEdit };
@@ -47,19 +47,19 @@ namespace Log
 					ui->logLevel_frame->layout()->addWidget(checkBox);
 			}
 			QObject::connect(ui->allContext_checkBox, &QCheckBox::stateChanged, this, &QAbstractLogView::onAllContextCheckBoxStateChanged);
-		
+
 			ui->dateTimeFilterActivate_checkBox->setChecked(false);
-			connect(ui->dateTimeFilterActivate_checkBox, &QCheckBox::stateChanged, 
-				    this, &QAbstractLogView::onDateTimeFilterActivate_checkBox_stateChanged);
+			connect(ui->dateTimeFilterActivate_checkBox, &QCheckBox::stateChanged,
+				this, &QAbstractLogView::onDateTimeFilterActivate_checkBox_stateChanged);
 			connect(ui->dateTimeFilterMin_dateTimeEdit, &DateTimeWidget::dateTimeChanged,
-					this, &QAbstractLogView::onDateTimeFilterMin_changed);
+				this, &QAbstractLogView::onDateTimeFilterMin_changed);
 			connect(ui->dateTimeFilterMax_dateTimeEdit, &DateTimeWidget::dateTimeChanged,
-				    this, &QAbstractLogView::onDateTimeFilterMax_changed);
+				this, &QAbstractLogView::onDateTimeFilterMax_changed);
 
 			connect(ui->dateTimeFilterMinNow_pushButton, &QPushButton::pressed,
-					this, &QAbstractLogView::onDateTimeFilterMinNow_pushButton_clicked);
+				this, &QAbstractLogView::onDateTimeFilterMinNow_pushButton_clicked);
 			connect(ui->dateTimeFilterMaxNow_pushButton, &QPushButton::pressed,
-					this, &QAbstractLogView::onDateTimeFilterMaxNow_pushButton_clicked);
+				this, &QAbstractLogView::onDateTimeFilterMaxNow_pushButton_clicked);
 
 			{
 				QHBoxLayout* layout = new QHBoxLayout();
@@ -84,15 +84,15 @@ namespace Log
 				ui->dateTimeFilterMaxNow_pushButton->setText("");
 			}
 
-			for(int i=0; i<DateTime::Range::__count; ++i)
+			for (int i = 0; i < DateTime::Range::__count; ++i)
 				ui->dateTimeFilterType_comboBox->addItem(DateTime::getRangeStr((DateTime::Range)i).c_str());
 			ui->dateTimeFilterType_comboBox->setCurrentIndex(DateTime::Range::between);
 			connect(ui->dateTimeFilterType_comboBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
-					this, &QAbstractLogView::onDateTimeFilterType_changed);
+				this, &QAbstractLogView::onDateTimeFilterType_changed);
 
 
 			connect(this, &QAbstractLogView::newContextAdded, this, &QAbstractLogView::onNewContextAdded, Qt::QueuedConnection);
-			
+
 		}
 		QAbstractLogView::~QAbstractLogView()
 		{
@@ -135,9 +135,9 @@ namespace Log
 		void QAbstractLogView::on_clear_pushButton_clicked()
 		{
 			auto copy = m_contextData;
-			for(auto& context : copy)
+			for (auto& context : copy)
 			{
-				if(!context.second->loggerInfo->isAlive)
+				if (!context.second->loggerInfo->isAlive)
 				{
 					removeContext(context.first);
 				}
@@ -265,7 +265,7 @@ namespace Log
 				attachLogger(*queueData.logger);
 				if (m_autoCreateNewCheckBoxForNewContext)
 				{
-					
+
 					ContextData* data = new ContextData(queueData.logger->getMetaInfo(), new QCheckBox(this));
 					QPalette p = data->checkBox->palette();
 					data->checkBox->setAutoFillBackground(true);
@@ -291,7 +291,7 @@ namespace Log
 					onNewMessage(message);
 				}
 			}
-			
+
 		}
 
 		void QAbstractLogView::setContentWidget(QWidget* widget)
@@ -311,7 +311,7 @@ namespace Log
 
 		void QAbstractLogView::onContextCreate(Logger::ContextLogger& logger)
 		{
-			addContext(logger);		
+			addContext(logger);
 		}
 		void QAbstractLogView::onContextDestroy(Logger::AbstractLogger& logger)
 		{
@@ -324,9 +324,21 @@ namespace Log
 				if (m_newContextQueue.find(logger.getID()) != m_newContextQueue.end())
 					return;
 
+				Logger::ContextLogger* contextLogger = dynamic_cast<Logger::ContextLogger*>(&logger);
+				if (contextLogger)
+				{
+					contextLogger->connect_onContextDestroy_slot([this](Logger::AbstractLogger& l) {
+						QMutexLocker lock(&m_newContextQueueMutex);
+						const auto& it = m_newContextQueue.find(l.getID());
+						if (it != m_newContextQueue.end())
+						{
+							m_newContextQueue.erase(it);
+						}
+						});
+				}
 				m_newContextQueue.insert({ logger.getID(), NewContextQueueData(logger) });
 			}
-			emit newContextAdded(0);			
+			emit newContextAdded(0);
 		}
 
 
@@ -392,13 +404,23 @@ namespace Log
 			delete data;
 		}
 
-		
+
 		void QAbstractLogView::onClear(Logger::AbstractLogger& logger)
 		{
 			LOGGER_UNUSED(logger);
 		}
 		void QAbstractLogView::onDelete(Logger::AbstractLogger& logger)
 		{
+			{
+				// Remove the logger from the new context queue if it exists
+				QMutexLocker lock(&m_newContextQueueMutex);
+				const auto& it = m_newContextQueue.find(logger.getID());
+				if (it != m_newContextQueue.end())
+				{
+					m_newContextQueue.erase(it);
+					return;
+				}
+			}
 			detachLogger(logger);
 		}
 		void QAbstractLogView::addContextRecursive(Logger::ContextLogger& logger)
