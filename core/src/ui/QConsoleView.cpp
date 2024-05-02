@@ -14,6 +14,7 @@ namespace Log
 		QConsoleView::QConsoleView(QWidget* parent)
 			: QAbstractLogView(parent)
 		{
+			setWindowTitle("Console");
 			m_consoleWidget = new QConsoleWidget(this);
 			setContentWidget(m_consoleWidget);
 		}

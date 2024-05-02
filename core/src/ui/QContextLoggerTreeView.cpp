@@ -14,6 +14,7 @@ namespace Log
 		QContextLoggerTreeView::QContextLoggerTreeView(QWidget* parent)
 			: QAbstractLogView(parent)
 		{
+			setWindowTitle("Console tree view");
 			m_treeWidget = new QTreeWidget();
 			setContentWidget(m_treeWidget);
 			m_treeItem = new Receiver::QContextLoggerTree(m_treeWidget);
