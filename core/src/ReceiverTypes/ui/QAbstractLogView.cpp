@@ -399,7 +399,7 @@ namespace Log
 		}
 		void QAbstractLogView::onDelete(Logger::AbstractLogger& logger)
 		{
-			LOGGER_UNUSED(logger);
+			detachLogger(logger);
 		}
 		void QAbstractLogView::addContextRecursive(Logger::ContextLogger& logger)
 		{
