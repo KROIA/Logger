@@ -6,6 +6,7 @@
 #include "Utilities/Signal.h"
 #include "LogColor.h"
 #include <memory>
+#include <unordered_map>
 
 #ifdef QT_WIDGETS_LIB
 #include <QIcon>
