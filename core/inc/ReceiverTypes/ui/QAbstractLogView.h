@@ -36,7 +36,7 @@ namespace Log
             virtual void getSaveVisibleMessages(std::vector<Logger::AbstractLogger::LoggerSnapshotData>& list) const = 0;
             bool saveVisibleMessages(const std::string &outputFile) const;
 
-            std::vector< Logger::AbstractLogger::LoggerMetaInfo> getContexts() const;
+            std::vector< Logger::AbstractLogger::MetaInfo> getContexts() const;
 
         protected slots:
             virtual void onAllContextCheckBoxStateChanged(int state);
@@ -64,9 +64,9 @@ namespace Log
             struct ContextData
             {
                 QCheckBox* checkBox;
-                std::shared_ptr<const Logger::AbstractLogger::LoggerMetaInfo> loggerInfo;
+                std::shared_ptr<const Logger::AbstractLogger::MetaInfo> loggerInfo;
 
-                ContextData(std::shared_ptr<const Logger::AbstractLogger::LoggerMetaInfo> loggerInfo,
+                ContextData(std::shared_ptr<const Logger::AbstractLogger::MetaInfo> loggerInfo,
                     QCheckBox* checkBox)
                     : checkBox(checkBox)
                     , loggerInfo(loggerInfo)

@@ -37,6 +37,8 @@ namespace Log
             m_autoScrollTimer.setInterval(100);
             connect(&m_autoScrollTimer, &QTimer::timeout, this, &QConsoleWidget::onAutoScrollTimerTimeout);
             m_autoScrollTimer.start();
+
+            connect(this, &QConsoleWidget::messageQueued, this, &QConsoleWidget::onMessageQueued, Qt::QueuedConnection);
         }
         QConsoleWidget::~QConsoleWidget()
         {
@@ -100,10 +102,27 @@ namespace Log
 
         void QConsoleWidget::onNewMessage(const Message& m)
         {
-            m_model->addLog(m);
-            int count = QString::fromStdString(m.getText()).count('\n');
-            if(count > 0) // Ajust row height if message has multiple lines
-				setRowHeight(m_model->rowCount()-1, verticalHeader()->defaultSectionSize()*count);
+            QMutexLocker locker(&m_mutex);
+            m_messageQueue.push_back(m);
+            emit messageQueued(nullptr);
+        }
+
+        void QConsoleWidget::onMessageQueued(QPrivateSignal*)
+        {
+            std::vector<Message> cpy;
+            {
+                QMutexLocker locker(&m_mutex);
+                cpy = m_messageQueue;
+                m_messageQueue.clear();
+            }
+            QMutexLocker locker(&m_mutex);
+            for (auto& m : cpy)
+            {
+                m_model->addLog(m);
+                int count = QString::fromStdString(m.getText()).count('\n');
+                if (count > 0) // Ajust row height if message has multiple lines
+                    setRowHeight(m_model->rowCount() - 1, verticalHeader()->defaultSectionSize() * count);
+            }
         }
     }
 }

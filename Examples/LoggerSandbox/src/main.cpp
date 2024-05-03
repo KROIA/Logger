@@ -66,6 +66,7 @@ int main(int argc, char* argv[])
 	Log::UI::QContextLoggerTreeView* view = new Log::UI::QContextLoggerTreeView();
 	view->show();
 
+
     Log::UI::QConsoleView* console = new Log::UI::QConsoleView();
     console->attachLogger(logger1);
     console->attachLogger(logger2);

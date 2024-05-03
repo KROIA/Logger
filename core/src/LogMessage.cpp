@@ -265,11 +265,15 @@ namespace Log
 	{
 		SnapshotData data;
 		data.message = m_message;
-		if (m_context)
+		std::shared_ptr<Logger::AbstractLogger::MetaInfo> metaInfo = Logger::AbstractLogger::getMetaInfo(m_context);
+		if (metaInfo.get())
 		{
-			data.contextName = m_context ? m_context->getName() : "";
-			data.loggerID = m_context->getID();
-			data.contextColor = m_context->getColor();
+			if (metaInfo.get()->isAlive)
+			{
+				data.contextName = m_context ? m_context->getName() : "";
+				data.loggerID = m_context->getID();
+				data.contextColor = m_context->getColor();
+			}
 		}
 		else
 		{

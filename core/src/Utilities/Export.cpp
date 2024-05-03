@@ -26,7 +26,7 @@ namespace Log
 		for (size_t i = 0; i < list.size(); i++)
 		{
 			const Logger::AbstractLogger::LoggerSnapshotData &data = list[i];
-			const Logger::AbstractLogger::LoggerMetaInfo &metaInfo = data.metaInfo;
+			const Logger::AbstractLogger::MetaInfo &metaInfo = data.metaInfo;
 			const std::vector<Message::SnapshotData> &messages = data.messages;
 
 

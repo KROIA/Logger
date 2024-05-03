@@ -18,6 +18,8 @@ namespace Log
 			m_treeWidget = new QTreeWidget();
 			setContentWidget(m_treeWidget);
 			m_treeItem = new Receiver::QContextLoggerTree(m_treeWidget);
+
+			connect(this, &QContextLoggerTreeView::messageQueued, this, &QContextLoggerTreeView::onMessageQueued, Qt::QueuedConnection);
 		}
 		QContextLoggerTreeView::~QContextLoggerTreeView()
 		{
@@ -69,7 +71,20 @@ namespace Log
 		void QContextLoggerTreeView::onNewMessage(const Message& m)
 		{
 			QMutexLocker locker(&m_mutex);
-			m_treeItem->onNewMessage(m);
+			m_messageQueue.push_back(m);
+			emit messageQueued(nullptr);
+		}
+		void QContextLoggerTreeView::onMessageQueued(QPrivateSignal*)
+		{
+			std::vector<Message> cpy;
+			{
+				QMutexLocker locker(&m_mutex);
+				cpy = m_messageQueue;
+				m_messageQueue.clear();
+			}
+			QMutexLocker locker(&m_mutex);
+			for (auto& m : cpy)
+				m_treeItem->onNewMessage(m);
 		}
 	}
 }

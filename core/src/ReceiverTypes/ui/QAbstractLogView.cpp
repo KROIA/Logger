@@ -106,9 +106,9 @@ namespace Log
 			return Export::saveToFile(list, outputFile);
 		}
 
-		std::vector<Logger::AbstractLogger::LoggerMetaInfo> QAbstractLogView::getContexts() const
+		std::vector<Logger::AbstractLogger::MetaInfo> QAbstractLogView::getContexts() const
 		{
-			std::vector< Logger::AbstractLogger::LoggerMetaInfo> list;
+			std::vector< Logger::AbstractLogger::MetaInfo> list;
 			for (const auto& context : m_contextData)
 			{
 				list.push_back(*context.second->loggerInfo);

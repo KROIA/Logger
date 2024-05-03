@@ -61,10 +61,19 @@ namespace Log
 
 			LoggerID getID() const;
 
-			struct LoggerMetaInfo
+			
+			
+
+			// Signals
+			DECLARE_SIGNAL_CONNECT_DISCONNECT(onNewMessage, const Message&);
+			DECLARE_SIGNAL_CONNECT_DISCONNECT(onClear, AbstractLogger&);
+			DECLARE_SIGNAL_CONNECT_DISCONNECT(onDelete, AbstractLogger&);
+
+
+			struct MetaInfo
 			{
-				LoggerID id;
-				LoggerID parentId;
+				AbstractLogger::LoggerID id;
+				AbstractLogger::LoggerID parentId;
 				std::string name;
 				DateTime creationTime;
 				Color color;
@@ -72,14 +81,14 @@ namespace Log
 				bool enabled;
 				bool isAlive;
 
-				LoggerMetaInfo(LoggerID id,
+				MetaInfo(LoggerID id,
 					LoggerID parentID,
-					const std::string &name,
-					const DateTime &creationTime,
-					const Color &color,
+					const std::string& name,
+					const DateTime& creationTime,
+					const Color& color,
 					unsigned int tabCount,
 					bool enabled,
-					bool isAlive) 
+					bool isAlive)
 					: id(id)
 					, parentId(parentID)
 					, name(name)
@@ -87,9 +96,9 @@ namespace Log
 					, color(color)
 					, tabCount(tabCount)
 					, enabled(enabled)
-					, isAlive(isAlive) 
+					, isAlive(isAlive)
 				{}
-				LoggerMetaInfo(const LoggerMetaInfo &other) 
+				MetaInfo(const MetaInfo& other)
 					: id(other.id)
 					, parentId(other.parentId)
 					, name(other.name)
@@ -97,36 +106,35 @@ namespace Log
 					, color(other.color)
 					, tabCount(other.tabCount)
 					, enabled(other.enabled)
-					, isAlive(other.isAlive) 
+					, isAlive(other.isAlive)
 				{}
 			};
+
 			struct LoggerSnapshotData
 			{
-				LoggerMetaInfo metaInfo;
+				MetaInfo metaInfo;
 				std::vector<Message::SnapshotData> messages;
-				LoggerSnapshotData(const LoggerMetaInfo& info)
+				LoggerSnapshotData(const MetaInfo& info)
 					: metaInfo(info)
 				{	}
-				LoggerSnapshotData(const LoggerMetaInfo& info,
-								   const std::vector<Message::SnapshotData>& msgs)
+				LoggerSnapshotData(const MetaInfo& info,
+					const std::vector<Message::SnapshotData>& msgs)
 					: metaInfo(info)
 					, messages(msgs)
 				{	}
 			};
-			std::shared_ptr<const LoggerMetaInfo> getMetaInfo() const;
 
-			// Signals
-			DECLARE_SIGNAL_CONNECT_DISCONNECT(onNewMessage, const Message&);
-			DECLARE_SIGNAL_CONNECT_DISCONNECT(onClear, AbstractLogger&);
-			DECLARE_SIGNAL_CONNECT_DISCONNECT(onDelete, AbstractLogger&);
+
+			std::shared_ptr<const MetaInfo> getMetaInfo() const;
+			static std::shared_ptr<MetaInfo> getMetaInfo(const AbstractLogger* logger);
 
 		protected:
 			virtual void logInternal(const Message& msg);
 
 			void emitNewMessage(const Message& msg);
 
-			LoggerMetaInfo m_metaInfo;
-			std::shared_ptr<LoggerMetaInfo> m_sharedMetaInfo;
+			MetaInfo m_metaInfo;
+			std::shared_ptr<MetaInfo> m_sharedMetaInfo;
 
 			std::vector<Message> m_messages;
 
@@ -136,13 +144,17 @@ namespace Log
 		private:
 			
 			
-
+			
 
 			Signal<const Message&> onNewMessage;
 			Signal<AbstractLogger&> onClear;
 			Signal<AbstractLogger&> onDelete;
 
-			static LoggerID s_idCounter;
+			static LoggerID &getIDCounter();
+			static std::unordered_map<const AbstractLogger*, std::shared_ptr<MetaInfo>>& getLoggerMap();
 		};
+
+		
+		
 	}
 }

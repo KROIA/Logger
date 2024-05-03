@@ -138,7 +138,7 @@ namespace Log
 						return hideFilter == 0;
 					}
 				};
-				std::shared_ptr<const Logger::AbstractLogger::LoggerMetaInfo> loggerMetaInfo;
+				std::shared_ptr<const Logger::AbstractLogger::MetaInfo> MetaInfo;
 				std::vector<MessageData> msgItems;
 				std::vector<TreeData*> children;
 				TreeData *parent = nullptr;

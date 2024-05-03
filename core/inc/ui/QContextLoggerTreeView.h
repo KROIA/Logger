@@ -25,7 +25,11 @@ namespace Log
 
             void getSaveVisibleMessages(std::vector<Logger::AbstractLogger::LoggerSnapshotData>& list) const override;
 
+        signals:
+                void messageQueued(QPrivateSignal*);
         private slots:
+
+            void onMessageQueued(QPrivateSignal*);
 
         private:
             void on_clear_pushButton_clicked() override;
@@ -41,7 +45,11 @@ namespace Log
             QTreeWidget* m_treeWidget;
             Receiver::QContextLoggerTree* m_treeItem;
             mutable QMutex m_mutex;
+
+            
+            std::vector<Message> m_messageQueue;
         };
+        
     }
 }
 #endif

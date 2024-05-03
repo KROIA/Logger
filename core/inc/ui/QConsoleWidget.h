@@ -8,6 +8,7 @@
 #include <QStyledItemDelegate>
 #include <QTimer>
 #include "Utilities/QLogMessageItemModel.h"
+#include <QMutex>
 
 namespace Log
 {
@@ -32,8 +33,12 @@ namespace Log
 
             void getSaveVisibleMessages(std::vector<Log::Message::SnapshotData>& list) const;
 
-
+        signals:
+            void messageQueued(QPrivateSignal*);
         private slots:
+
+            void onMessageQueued(QPrivateSignal*);
+
             void onAutoScrollTimerTimeout();
             void onVertialSliderMoved(int value);
         private:
@@ -45,6 +50,8 @@ namespace Log
             bool m_isDetaching = false;
             QTimer m_autoScrollTimer;
             
+            mutable QMutex m_mutex;
+            std::vector<Message> m_messageQueue;
         };
     }
 }

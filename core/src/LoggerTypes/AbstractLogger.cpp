@@ -8,12 +8,11 @@ namespace Log
 		DEFINE_SIGNAL_CONNECT_DISCONNECT(AbstractLogger, onClear, AbstractLogger&);
 		DEFINE_SIGNAL_CONNECT_DISCONNECT(AbstractLogger, onDelete, AbstractLogger&);
 
-		int AbstractLogger::s_idCounter = 0;
 
 		AbstractLogger::AbstractLogger(const std::string& name)
 			: LoggerInterface()
 			, m_metaInfo(
-				++s_idCounter,
+				++getIDCounter(),
 				0,
 				name,
 				DateTime(),
@@ -25,7 +24,8 @@ namespace Log
 			, onClear("onClear")
 			, onDelete("onDelete")
 		{
-			m_sharedMetaInfo = std::make_shared<LoggerMetaInfo>(m_metaInfo);
+			m_sharedMetaInfo = std::make_shared<MetaInfo>(m_metaInfo);
+			getLoggerMap()[this] = m_sharedMetaInfo;
 		}
 		AbstractLogger::AbstractLogger(const AbstractLogger& other)
 			: LoggerInterface()
@@ -35,14 +35,15 @@ namespace Log
 			, onClear("onClear")
 			, onDelete("onDelete")
 		{
-			m_metaInfo.id = ++s_idCounter;
-			m_sharedMetaInfo = std::make_shared<LoggerMetaInfo>(m_metaInfo);
+			m_metaInfo.id = ++getIDCounter();
+			m_sharedMetaInfo = std::make_shared<MetaInfo>(m_metaInfo);
 			m_messages.reserve(other.m_messages.size());
 			for (size_t i = 0; i < other.m_messages.size(); ++i)
 			{
 				m_messages.push_back(other.m_messages[i]);
 				m_messages.back().setContext(this);
 			}
+			getLoggerMap()[this] = m_sharedMetaInfo;
 		}
 		AbstractLogger::~AbstractLogger()
 		{
@@ -191,9 +192,19 @@ namespace Log
 		{
 			return m_metaInfo.id;
 		}
-		std::shared_ptr<const AbstractLogger::LoggerMetaInfo> AbstractLogger::getMetaInfo() const
+		std::shared_ptr<const AbstractLogger::MetaInfo> AbstractLogger::getMetaInfo() const
 		{
 			return m_sharedMetaInfo;
+		}
+		std::shared_ptr<AbstractLogger::MetaInfo> AbstractLogger::getMetaInfo(const AbstractLogger* logger)
+		{
+			std::unordered_map<const AbstractLogger*, std::shared_ptr<AbstractLogger::MetaInfo>>& loggerMap = getLoggerMap();
+			auto it = loggerMap.find(logger);
+			if (it != loggerMap.end())
+			{
+				return it->second;
+			}
+			return nullptr;
 		}
 
 		void AbstractLogger::logInternal(const Message& msg)
@@ -205,6 +216,16 @@ namespace Log
 		void AbstractLogger::emitNewMessage(const Message& msg)
 		{
 			onNewMessage.emitSignal(msg);
+		}
+		AbstractLogger::LoggerID& AbstractLogger::getIDCounter()
+		{
+			static LoggerID idCounter = 0;
+			return idCounter;
+		}
+		std::unordered_map<const AbstractLogger*, std::shared_ptr<AbstractLogger::MetaInfo>>& AbstractLogger::getLoggerMap()
+		{
+			static std::unordered_map<const AbstractLogger*, std::shared_ptr<AbstractLogger::MetaInfo>> loggerMap;
+			return loggerMap;
 		}
 	}
 }

@@ -251,7 +251,7 @@ namespace Log
 			childRoot = new QTreeWidgetItem(root->m_treeWidget);
 			thisMessagesRoot = new QTreeWidgetItem(childRoot);
 
-			loggerMetaInfo = logger.getMetaInfo();
+			MetaInfo = logger.getMetaInfo();
 
 			setupChildRoot();
 			setupMessageRoot();
@@ -270,7 +270,7 @@ namespace Log
 			}
 			thisMessagesRoot = new QTreeWidgetItem(childRoot);
 
-			loggerMetaInfo = logger.getMetaInfo();
+			MetaInfo = logger.getMetaInfo();
 
 			setupChildRoot();
 			setupMessageRoot();
@@ -292,7 +292,7 @@ namespace Log
 			}
 			if (root)
 			{
-				const auto& it = root->m_msgItems.find(loggerMetaInfo->id);
+				const auto& it = root->m_msgItems.find(MetaInfo->id);
 				if (it != root->m_msgItems.end())
 					root->m_msgItems.erase(it);
 			}
@@ -304,16 +304,16 @@ namespace Log
 		}
 		void QContextLoggerTree::TreeData::setupChildRoot()
 		{
-			QColor contextColor = loggerMetaInfo->color.toQColor();
-			childRoot->setData((int)HeaderPos::contextName, Qt::DisplayRole, loggerMetaInfo->name.c_str());
-			childRoot->setData((int)HeaderPos::timestamp, Qt::DisplayRole, loggerMetaInfo->creationTime.toString(root->m_timeFormat).c_str());
+			QColor contextColor = MetaInfo->color.toQColor();
+			childRoot->setData((int)HeaderPos::contextName, Qt::DisplayRole, MetaInfo->name.c_str());
+			childRoot->setData((int)HeaderPos::timestamp, Qt::DisplayRole, MetaInfo->creationTime.toString(root->m_timeFormat).c_str());
 			childRoot->setBackground((int)HeaderPos::contextName, contextColor);
 			childRoot->setBackground((int)HeaderPos::timestamp, contextColor);
 			childRoot->setBackground((int)HeaderPos::message, contextColor);
 		}
 		void QContextLoggerTree::TreeData::setupMessageRoot()
 		{
-			QColor contextColor = loggerMetaInfo->color.toQColor();
+			QColor contextColor = MetaInfo->color.toQColor();
 			thisMessagesRoot->setData((int)HeaderPos::contextName, Qt::DisplayRole, "Messages");
 			thisMessagesRoot->setBackground((int)HeaderPos::contextName, contextColor);
 			thisMessagesRoot->setBackground((int)HeaderPos::timestamp, contextColor);
@@ -322,7 +322,7 @@ namespace Log
 		void QContextLoggerTree::TreeData::updateDateTime()
 		{
 			//childRoot->setData((int)HeaderPos::timestamp, Qt::DisplayRole, logger->getCreationDateTime().toString(parent->m_timeFormat).c_str());
-			childRoot->setData((int)HeaderPos::timestamp, Qt::DisplayRole, loggerMetaInfo->creationTime.toString(root->m_timeFormat).c_str());
+			childRoot->setData((int)HeaderPos::timestamp, Qt::DisplayRole, MetaInfo->creationTime.toString(root->m_timeFormat).c_str());
 			for (size_t i = 0; i < msgItems.size(); ++i)
 			{
 				//const Message& m = logger->getMessages()[i];
@@ -384,7 +384,7 @@ namespace Log
 		}
 		void QContextLoggerTree::TreeData::getLoggerIDsRecursive(std::vector<Logger::AbstractLogger::LoggerID>& list) const
 		{
-			list.push_back(loggerMetaInfo->id);
+			list.push_back(MetaInfo->id);
 			for (auto& it : children)
 			{
 				it->getLoggerIDsRecursive(list);
@@ -442,7 +442,7 @@ namespace Log
 		}
 		bool QContextLoggerTree::TreeData::getLoggerIsAlive() const
 		{
-			return loggerMetaInfo->isAlive;
+			return MetaInfo->isAlive;
 		}
 		QContextLoggerTree::TreeData* QContextLoggerTree::TreeData::getParent() const
 		{
@@ -472,7 +472,7 @@ namespace Log
 		}
 		void QContextLoggerTree::TreeData::saveVisibleMessages(std::vector<Logger::AbstractLogger::LoggerSnapshotData>& list) const
 		{
-			Logger::AbstractLogger::LoggerSnapshotData snapshot(*loggerMetaInfo);
+			Logger::AbstractLogger::LoggerSnapshotData snapshot(*MetaInfo);
 			snapshot.messages.reserve(msgItems.size());
 
 			for (size_t i = 0; i < msgItems.size(); ++i)
