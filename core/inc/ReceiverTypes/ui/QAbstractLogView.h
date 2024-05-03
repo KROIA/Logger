@@ -117,38 +117,43 @@ namespace Log
 
             struct NewContextQueueData
             {
-                Logger::AbstractLogger *logger = nullptr;
+                Logger::AbstractLogger* logger = nullptr;
+                std::vector<Message> messagesAtAttack;
 
                 NewContextQueueData(Logger::AbstractLogger& logger)
-					: logger(&logger)
-				{	
+                    : logger(&logger)
+                    , messagesAtAttack(logger.getMessages())
+                {
                 }
 
                 NewContextQueueData(const NewContextQueueData& other)
-					: logger(other.logger)
-				{	
+                    : logger(other.logger)
+                    , messagesAtAttack(other.messagesAtAttack)
+                {
                 }
                 NewContextQueueData(const NewContextQueueData&& other) noexcept
                     : logger(other.logger)
-                {   
+                    , messagesAtAttack(std::move(other.messagesAtAttack))
+                {
                 }
-                
-                NewContextQueueData &operator=(const NewContextQueueData& other)
-				{
+
+                NewContextQueueData& operator=(const NewContextQueueData& other)
+                {
                     if (logger == other.logger)
                         return *this;
                     logger = other.logger;
-					return *this;
-				}
+                    messagesAtAttack = other.messagesAtAttack;
+                    return *this;
+                }
 
                 void onContextDestroy(Logger::AbstractLogger& logger)
                 {
-					if (this->logger == &logger)
-					{
-						this->logger = nullptr;
-					}
-				}
-
+                    if (this->logger == &logger)
+                    {
+                        this->logger = nullptr;
+                        messagesAtAttack.clear();
+                    }
+                }
             };
 
             QMutex m_newContextQueueMutex;

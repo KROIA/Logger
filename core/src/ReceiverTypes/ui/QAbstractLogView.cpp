@@ -285,9 +285,7 @@ namespace Log
 					m_contextData[queueData.logger->getID()] = data;
 					onNewContextCheckBoxCreated(data);
 				}
-				const auto& messages = queueData.logger->getMessages();
-
-				for (const auto& message : messages)
+				for (const auto& message : queueData.messagesAtAttack)
 				{
 					onNewMessage(message);
 				}
