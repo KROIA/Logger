@@ -129,13 +129,16 @@
            <property name="widgetResizable">
             <bool>true</bool>
            </property>
+           <property name="alignment">
+            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+           </property>
            <widget class="QWidget" name="logLevel_frame">
             <property name="geometry">
              <rect>
               <x>0</x>
               <y>0</y>
               <width>226</width>
-              <height>149</height>
+              <height>151</height>
              </rect>
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_4">
@@ -267,13 +270,16 @@
            <property name="widgetResizable">
             <bool>true</bool>
            </property>
+           <property name="alignment">
+            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+           </property>
            <widget class="QWidget" name="context_scrollAreaWidgetContents">
             <property name="geometry">
              <rect>
               <x>0</x>
               <y>0</y>
               <width>226</width>
-              <height>121</height>
+              <height>120</height>
              </rect>
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_7">

@@ -24,6 +24,7 @@ namespace Log
 		{
 			ui->setupUi(this);
 			ui->context_scrollAreaWidgetContents->layout()->setAlignment(Qt::AlignTop);
+			ui->logLevel_frame->layout()->setAlignment(Qt::AlignTop);
 			ui->searchIcon_label->setPixmap(Resources::getIconSearch().pixmap(16, 16));
 
 			m_autoCreateNewCheckBoxForNewContext = true;
