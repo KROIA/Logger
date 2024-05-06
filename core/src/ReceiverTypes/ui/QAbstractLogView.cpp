@@ -11,6 +11,8 @@
 #include <QFileDialog>
 #include "ui/DateTimeWidget.h"
 #include <fstream>
+#include <QApplication>
+#include <QThread>
 
 
 namespace Log
@@ -337,7 +339,12 @@ namespace Log
 				}
 				m_newContextQueue.insert({ logger.getID(), NewContextQueueData(logger) });
 			}
-			emit newContextAdded(0);
+			if (QApplication::instance(), QApplication::instance()->thread() != QThread::currentThread())
+			{
+				emit newContextAdded(0);
+			}
+			else
+				onNewContextAdded(0);
 		}
 
 
