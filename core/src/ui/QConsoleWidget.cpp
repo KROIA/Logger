@@ -76,8 +76,13 @@ namespace Log
         {
             m_model->clear();
         }
-        void QConsoleWidget::getSaveVisibleMessages(std::vector<Log::Message::SnapshotData>& list) const
+        void QConsoleWidget::getSaveVisibleMessages(std::vector<Log::Message::SnapshotData>& list)
         {
+            if (QApplication::instance(), QApplication::instance()->thread() != QThread::currentThread())
+            {  }
+            else
+                onMessageQueued(nullptr);
+
             int count = m_model->rowCount();
             list.reserve(count);
             for (int i = 0; i < count; ++i)
