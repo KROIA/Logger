@@ -31,7 +31,7 @@ namespace Log
             void onNewMessage(const Message& m);
             void clear();
 
-            void getSaveVisibleMessages(std::vector<Log::Message::SnapshotData>& list) const;
+            void getSaveVisibleMessages(std::vector<Log::Message::SnapshotData>& list);
 
         signals:
             void messageQueued(QPrivateSignal*);
