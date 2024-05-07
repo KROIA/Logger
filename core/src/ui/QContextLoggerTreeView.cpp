@@ -47,8 +47,10 @@ namespace Log
 		}
 		void QContextLoggerTreeView::addContext(Logger::AbstractLogger& logger)
 		{
-			QMutexLocker locker(&m_mutex);
-			m_treeItem->addContext(logger);
+			{
+				QMutexLocker locker(&m_mutex);
+				m_treeItem->addContext(logger);
+			}
 			QAbstractLogView::addContext(logger);
 		}
 

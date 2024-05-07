@@ -99,7 +99,13 @@ namespace Log
 		}
 		QAbstractLogView::~QAbstractLogView()
 		{
-
+			QMutexLocker lock(&m_newContextQueueMutex);
+			for (auto& context : m_newContextQueue)
+			{
+				Logger::ContextLogger* logger = dynamic_cast<Logger::ContextLogger*>(context.second.logger);
+				if(logger)
+					logger->disconnect_onContextDestroy_slot(this, &QAbstractLogView::onContextDestroyFromNewQueue);
+			}
 		}
 
 		bool QAbstractLogView::saveVisibleMessages(const std::string& outputFile) const
@@ -265,6 +271,9 @@ namespace Log
 			for (const auto& context : newContextQueue)
 			{
 				const NewContextQueueData& queueData = context.second;
+				Logger::ContextLogger* contextLogger = dynamic_cast<Logger::ContextLogger*>(queueData.logger);
+				if(contextLogger)
+					contextLogger->disconnect_onContextDestroy_slot(this, &QAbstractLogView::onContextDestroyFromNewQueue);
 				attachLogger(*queueData.logger);
 				if (m_autoCreateNewCheckBoxForNewContext)
 				{
@@ -442,6 +451,15 @@ namespace Log
 			for (auto& child : logger.getChilds())
 			{
 				addContextRecursive(*child);
+			}
+		}
+		void QAbstractLogView::onContextDestroyFromNewQueue(Logger::AbstractLogger& logger)
+		{
+			QMutexLocker lock(&m_newContextQueueMutex);
+			const auto& it = m_newContextQueue.find(logger.getID());
+			if (it != m_newContextQueue.end())
+			{
+				m_newContextQueue.erase(it);
 			}
 		}
 	}

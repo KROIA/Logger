@@ -107,6 +107,7 @@ namespace Log
 
             Ui::QAbstractLogView* ui;
         private:
+		    void onContextDestroyFromNewQueue(Logger::AbstractLogger& logger);
             QCheckBox* m_levelCheckBoxes[static_cast<int>(Level::__count)];
             std::vector<QLineEdit*> m_filterTextEdits;
             std::unordered_map<Logger::AbstractLogger::LoggerID, ContextData*> m_contextData;
