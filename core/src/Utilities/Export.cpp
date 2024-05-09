@@ -56,10 +56,12 @@ namespace Log
 					if (messageText[k] == '\n')
 					{
 						messageText.replace(k, 1, "\\n");
+						k++;
 					}
 					else if (messageText[k] == '\"')
 					{
 						messageText.replace(k, 1, "\\\"");
+						k++;
 					}
 				}
 				out << "\t\tMessage=\"" << messageText <<"\"" << std::endl;
