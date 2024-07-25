@@ -310,7 +310,7 @@ namespace Log
 		}
 		void QAbstractLogView::onNewSubscribed(Logger::AbstractLogger& logger)
 		{
-			addContext(logger);
+			//addContext(logger);
 			if (auto* contextLogger = dynamic_cast<Logger::ContextLogger*>(&logger))
 				addChildContextRecursive(*contextLogger);
 		}
@@ -337,14 +337,15 @@ namespace Log
 				Logger::ContextLogger* contextLogger = dynamic_cast<Logger::ContextLogger*>(&logger);
 				if (contextLogger)
 				{
-					contextLogger->connect_onContextDestroy_slot([this](Logger::AbstractLogger& l) {
+					contextLogger->connect_onContextDestroy_slot(this, &QAbstractLogView::onDelete);
+					/*contextLogger->connect_onContextDestroy_slot([this](Logger::AbstractLogger& l) {
 						QMutexLocker lock(&m_newContextQueueMutex);
 						const auto& it = m_newContextQueue.find(l.getID());
 						if (it != m_newContextQueue.end())
 						{
 							m_newContextQueue.erase(it);
 						}
-						});
+						});*/
 				}
 				m_newContextQueue.insert({ logger.getID(), NewContextQueueData(logger) });
 			}

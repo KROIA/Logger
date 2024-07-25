@@ -92,6 +92,7 @@ namespace Log
 			return context;
 		}
 
+
 		void ContextLogger::clear()
 		{
 			for (ContextLogger* c : m_childs)
