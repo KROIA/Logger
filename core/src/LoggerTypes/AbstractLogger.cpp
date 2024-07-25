@@ -112,6 +112,31 @@ namespace Log
 			logInternal(m);
 		}
 
+		void AbstractLogger::logTrace(const std::string& msg)
+		{
+			log(Level::trace, msg);
+		}
+		void AbstractLogger::logDebug(const std::string& msg)
+		{
+			log(Level::debug, msg);
+		}
+		void AbstractLogger::logInfo(const std::string& msg)
+		{
+			log(Level::info, msg);
+		}
+		void AbstractLogger::logWarning(const std::string& msg)
+		{
+			log(Level::warning, msg);
+		}
+		void AbstractLogger::logError(const std::string& msg)
+		{
+			log(Level::error, msg);
+		}
+		void AbstractLogger::logCustom(const std::string& msg)
+		{
+			log(Level::custom, msg);
+		}
+
 		void AbstractLogger::log(const char* msg)
 		{
 			if (!m_metaInfo.enabled) return;
@@ -135,6 +160,31 @@ namespace Log
 			m.setTabCount(m_metaInfo.tabCount);
 			m.setContext(this);
 			logInternal(m);
+		}
+
+		void AbstractLogger::logTrace(const char* msg)
+		{
+			log(Level::trace, msg);
+		}
+		void AbstractLogger::logDebug(const char* msg)
+		{
+			log(Level::debug, msg);
+		}
+		void AbstractLogger::logInfo(const char* msg)
+		{
+			log(Level::info, msg);
+		}
+		void AbstractLogger::logWarning(const char* msg)
+		{
+			log(Level::warning, msg);
+		}
+		void AbstractLogger::logError(const char* msg)
+		{
+			log(Level::error, msg);
+		}
+		void AbstractLogger::logCustom(const char* msg)
+		{
+			log(Level::custom, msg);
 		}
 
 		void AbstractLogger::setTabCount(unsigned int tabCount)

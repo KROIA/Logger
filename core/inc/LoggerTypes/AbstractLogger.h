@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Logger_base.h"
-#include "LogMessage.h"
 #include "LoggerInterface.h"
 #include "Utilities/Signal.h"
 #include "LogColor.h"
@@ -41,9 +40,23 @@ namespace Log
 			void log(Level level, const std::string& msg) override;
 			void log(Level level, const Color& col, const std::string& msg) override;
 
+			void logTrace(const std::string& msg) override;
+			void logDebug(const std::string& msg) override;
+			void logInfo(const std::string& msg) override;
+			void logWarning(const std::string& msg) override;
+			void logError(const std::string& msg) override;
+			void logCustom(const std::string& msg) override;
+
 			void log(const char* msg) override;
 			void log(Level level, const char* msg) override;
 			void log(Level level, const Color& col, const char* msg) override;
+
+			void logTrace(const char* msg) override;
+			void logDebug(const char* msg) override;
+			void logInfo(const char* msg) override;
+			void logWarning(const char* msg) override;
+			void logError(const char* msg) override;
+			void logCustom(const char* msg) override;
 
 			void setTabCount(unsigned int tabCount) override;
 			void tabIn() override;
