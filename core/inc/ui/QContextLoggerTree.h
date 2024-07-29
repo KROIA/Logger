@@ -1,12 +1,12 @@
 #pragma once
 #include "Logger_base.h"
+#include "LogObject.h"
 
 #ifdef QT_WIDGETS_LIB
 #include <QTreeWidgetItem>
-#include "LoggerTypes/ContextLogger.h"
+#include "Utilities/DateTime.h"
 #include <unordered_map>
 #include <QTimer>
-#include "ReceiverTypes/ContextReceiver.h"
 #include "LogLevel.h"
 #include <QDebug>
 
@@ -38,8 +38,8 @@ namespace Log
 			void setDateTimeFormat(DateTime::Format format);
 			DateTime::Format getDateTimeFormat() const;
 
-			void addContext(Logger::AbstractLogger& newContext);
-			void removeContext(Logger::AbstractLogger::LoggerID id);
+			void addContext(const LogObject::Info &newContext);
+			//void removeContext(LoggerID id);
 			void onNewMessage(const Message& m);
 			void clearMessages();
 
@@ -54,12 +54,12 @@ namespace Log
 			DateTime::Range getDateTimeFilterRangeType() const;
 			bool isDateTimeFilterActive() const;
 
-			void getSaveVisibleMessages(std::vector<Logger::AbstractLogger::LoggerSnapshotData>& list) const;
+			void getSaveVisibleMessages(std::unordered_map<LoggerID, std::vector<Message>>& list) const;
 
 
 		public slots:
-			void setContextVisibility(Logger::AbstractLogger::LoggerID id, bool isVisible);
-			bool getContextVisibility(Logger::AbstractLogger::LoggerID id) const;
+			void setContextVisibility(LoggerID id, bool isVisible);
+			bool getContextVisibility(LoggerID id) const;
 
 			void setLevelVisibility(Level level, bool isVisible);
 			bool getLevelVisibility(Level level) const;
@@ -68,23 +68,23 @@ namespace Log
 			void onUpdateTimer();		
 
 		private:
-			void addContextRecursive(Logger::ContextLogger& newContext);
+			//void addContextRecursive(Logger::ContextLogger& newContext);
 			void updateMessageCount(unsigned int& countOut);
 			void updateDateTimeFilter();
 
 			class TreeData
 			{
 				public:
-					TreeData(QContextLoggerTree* root, const Logger::AbstractLogger&logger);
-					TreeData(QContextLoggerTree* root, TreeData *parent, const Logger::AbstractLogger& logger);
+					TreeData(QContextLoggerTree* root, LoggerID loggerID);
+					TreeData(QContextLoggerTree* root, TreeData *parent, LoggerID loggerID);
 					~TreeData();
 					void updateDateTime();
 					void onNewMessage(const Message& m);
 
-					TreeData* createChild(Logger::AbstractLogger& newContext);
+					TreeData* createChild(LoggerID loggerID);
 
-					void getLoggerIDsRecursive(std::vector<Logger::AbstractLogger::LoggerID> &list) const;
-					void getChildLoggerIDsRecursive(std::vector<Logger::AbstractLogger::LoggerID> &list) const;
+					void getLoggerIDsRecursive(std::vector<LoggerID> &list) const;
+					void getChildLoggerIDsRecursive(std::vector<LoggerID> &list) const;
 			
 					void setContextVisibility(bool isVisible);
 					bool getContextVisibility() const;
@@ -95,13 +95,13 @@ namespace Log
 					void clearMessages();
 					void clearMessagesRecursive();
 
-					bool getLoggerIsAlive() const;
+					//bool getLoggerIsAlive() const;
 
 					TreeData *getParent() const;
 
 					void updateDateTimeFilter(const DateTimeFilter &filter);
 
-					void saveVisibleMessages(std::vector<Logger::AbstractLogger::LoggerSnapshotData>& list) const;
+					void saveVisibleMessages(std::unordered_map<LoggerID, std::vector<Message>>& list) const;
 			
 			private:
 				void setupChildRoot();
@@ -112,7 +112,7 @@ namespace Log
 
 				struct MessageData
 				{
-					Message::SnapshotData snapshot;
+					Message msg;
 					QTreeWidgetItem* item = nullptr;
 
 					enum VisibilityBitMask
@@ -138,17 +138,18 @@ namespace Log
 						return hideFilter == 0;
 					}
 				};
-				std::shared_ptr<const Logger::AbstractLogger::MetaInfo> MetaInfo;
+				//std::shared_ptr<const Logger::AbstractLogger::MetaInfo> MetaInfo;
 				std::vector<MessageData> msgItems;
 				std::vector<TreeData*> children;
 				TreeData *parent = nullptr;
 				QContextLoggerTree *root = nullptr;
+				LoggerID loggerID;
 			};
 			
 			QTreeWidget* m_treeWidget;
 			bool m_levelVisibility[static_cast<unsigned int>(Level::__count)];
 
-			std::unordered_map<Logger::AbstractLogger::LoggerID, TreeData*> m_msgItems;
+			std::unordered_map<LoggerID, TreeData*> m_msgItems;
 
 			QTimer m_updateTimer;
 			DateTime::Format m_timeFormat;

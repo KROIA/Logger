@@ -62,7 +62,7 @@ namespace Log
             m_proxyModel->setLevelVisibility(level, isVisible);
             m_proxyModel->invalidate(); // force update the new filter
         }
-        void QConsoleWidget::setContextVisibility(Logger::AbstractLogger::LoggerID loggerID, bool isVisible)
+        void QConsoleWidget::setContextVisibility(LoggerID loggerID, bool isVisible)
         {
             m_proxyModel->setContextVisibility(loggerID, isVisible);
             m_proxyModel->invalidate(); // force update the new filter
@@ -76,7 +76,7 @@ namespace Log
         {
             m_model->clear();
         }
-        void QConsoleWidget::getSaveVisibleMessages(std::vector<Log::Message::SnapshotData>& list)
+        void QConsoleWidget::getSaveVisibleMessages(std::unordered_map<LoggerID, std::vector<Message>>& list)
         {
             if (QApplication::instance(), QApplication::instance()->thread() != QThread::currentThread())
             {  }
@@ -89,8 +89,8 @@ namespace Log
             {
                 if (m_proxyModel->filterAcceptsRow(i))
                 {
-                    const Message::SnapshotData& data = m_model->getElement(i);
-                    list.push_back(data);
+                    const Message& data = m_model->getElement(i);
+                    list[data.getLoggerID()].push_back(data);
                 }
             }
         }

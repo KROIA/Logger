@@ -7,18 +7,18 @@
 size_t ContextObject::s_instanceCounter = 0;
 ContextObject::ContextObject(
 	const std::string& contextName,
-	Log::Logger::ContextLogger& logger,
+	Log::LogObject& logger,
 	Log::UI::QContextLoggerTreeView* view,
 	Log::UI::QConsoleView* consoleView,
 	QWidget* parent)
 	: QWidget(parent)
-	, m_logger(logger.createContext(contextName))
+	, m_logger(new Log::LogObject(logger, contextName))
 	, m_view(view)
 	, m_consoleView(consoleView)
 {
 	ui.setupUi(this);
 
-	m_logger->connect_onDelete_slot(this, &ContextObject::onDelete);
+	//m_logger->connect_onDelete_slot(this, &ContextObject::onDelete);
 	m_logger->setColor(Log::Color::darkGray);
 
 	m_messageTimer.setInterval(1000);
@@ -50,7 +50,7 @@ ContextObject::~ContextObject()
 	m_errorTimer.stop();
 	if (m_logger)
 	{
-		m_logger->disconnect_onDelete_slot(this, &ContextObject::onDelete);
+		//m_logger->disconnect_onDelete_slot(this, &ContextObject::onDelete);
 		m_logger->log("Destroy " + m_logger->getName());
 	}
 
@@ -69,7 +69,7 @@ void ContextObject::onMessageTimer()
 			std::string txt = "Long Message from " + m_logger->getName() + "\n";
 			txt += "This is a new line\n";
 			txt += "This is another new line\n";
-			m_logger->log(Log::Level::info, txt);
+			m_logger->log(txt, Log::Level::info);
 			counter = 0;
 		}
 		++counter;
@@ -79,19 +79,19 @@ void ContextObject::onWarningTimer()
 {
 	++m_counter;
 	if (m_logger)
-	m_logger->log(Log::Level::warning, std::to_string(m_counter) + " Warning from " + m_logger->getName());
+	m_logger->log(std::to_string(m_counter) + " Warning from " + m_logger->getName(), Log::Level::warning);
 }
 void ContextObject::onErrorTimer()
 {
 	++m_counter;
 	if (m_logger)
-	m_logger->log(Log::Level::error, std::to_string(m_counter) + " Error from " + m_logger->getName());
+	m_logger->log(std::to_string(m_counter) + " Error from " + m_logger->getName(), Log::Level::error);
 }
 
 void ContextObject::on_clear_pushButton_clicked()
 {
-	if (m_logger)
-	m_logger->clear();
+	//if (m_logger)
+	//m_logger->clear();
 }
 void ContextObject::on_createContext_pushButton_clicked()
 {
@@ -116,7 +116,7 @@ void ContextObject::onDeleteContext_pushButton_clicked()
 	if (obj)
 	{
 		obj->close();
-		Log::Logger::ContextLogger *logger = obj->m_logger;
+		Log::LogObject *logger = obj->m_logger;
 		obj->m_logger = nullptr;
 		obj->deleteLater();
 		
@@ -124,9 +124,9 @@ void ContextObject::onDeleteContext_pushButton_clicked()
 		obj->m_messageTimer.stop();
 		obj->m_warningTimer.stop();
 		obj->m_errorTimer.stop();
-		if(logger)
-			if(logger->getParent())
-				logger->getParent()->destroyContext(logger);
+		//if(logger)
+		//	if(logger->getParent())
+		//		logger->getParent()->destroyContext(logger);
 	}
 }
 void ContextObject::onDateTimeFormatSwitch_pushButton_clicked()
@@ -142,8 +142,8 @@ void ContextObject::onDateTimeFormatSwitch_pushButton_clicked()
 	if (m_consoleView)
 		m_consoleView->setDateTimeFormat(format);
 }
-
-void ContextObject::onDelete(Log::Logger::AbstractLogger& logger)
+/*
+void ContextObject::onDelete(Log::LogObject& logger)
 {
 	//qDebug() << "Logger deleted";
 	m_logger = nullptr;
@@ -151,4 +151,4 @@ void ContextObject::onDelete(Log::Logger::AbstractLogger& logger)
 	m_warningTimer.stop();
 	m_errorTimer.stop();
 	hide();
-}
+}*/

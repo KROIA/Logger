@@ -1,4 +1,5 @@
 #include "ReceiverTypes/ConsoleContextPlotter.h"
+#include "LogManager.h"
 #include <iostream>
 #include <windows.h>
 
@@ -7,14 +8,14 @@ namespace Log
 	namespace Receiver
 	{
 		ConsoleContextPlotter::ConsoleContextPlotter()
-			: ContextReceiver()
+			: AbstractReceiver()
 			, m_dateTimeFormat(DateTime::Format::yearMonthDay | DateTime::Format::hourMinuteSecondMillisecond)
 		{
 
 		}
 		ConsoleContextPlotter::ConsoleContextPlotter(const ConsoleContextPlotter& other)
-			: ContextReceiver(other)
-			, m_dateTimeFormat(DateTime::Format::yearMonthDay | DateTime::Format::hourMinuteSecondMillisecond)
+			: AbstractReceiver()
+			, m_dateTimeFormat(other.m_dateTimeFormat)
 		{
 
 		}
@@ -33,52 +34,31 @@ namespace Log
 			return m_dateTimeFormat;
 		}
 
-		void ConsoleContextPlotter::onContextCreate(Logger::ContextLogger& logger)
+		void ConsoleContextPlotter::onNewLogger(LogObject::Info loggerInfo)
 		{
-			LOGGER_UNUSED(logger);
+			LOGGER_UNUSED(loggerInfo);
 		}
-		void ConsoleContextPlotter::onContextDestroy(Logger::AbstractLogger& logger)
+		void ConsoleContextPlotter::onLoggerInfoChanged(LogObject::Info info)
 		{
-			LOGGER_UNUSED(logger);
+			LOGGER_UNUSED(info);
 		}
-
-		void ConsoleContextPlotter::onNewSubscribed(Logger::AbstractLogger& logger)
+		void ConsoleContextPlotter::onLogMessage(Message message)
 		{
-			Logger::ContextLogger *context = dynamic_cast<Logger::ContextLogger*>(&logger);
-			if (context)
-				onPrintAllMessagesRecursive(*context);
-			else
-				onPrintAllMessages(logger);
+			printToConsole(LogManager::getLogObjectInfo(message.getLoggerID()), message);
 		}
-		void ConsoleContextPlotter::onUnsubscribed(Logger::AbstractLogger& logger)
+		void ConsoleContextPlotter::onChangeParent(LoggerID childID, LoggerID newParentID)
 		{
-			LOGGER_UNUSED(logger);
-		}
-
-		void ConsoleContextPlotter::onNewMessage(const Message& m)
-		{
-			printToConsole(m);
-		}
-		void ConsoleContextPlotter::onClear(Logger::AbstractLogger& logger)
-		{
-			LOGGER_UNUSED(logger);
-		}
-		void ConsoleContextPlotter::onDelete(Logger::AbstractLogger& loggerToDestroy)
-		{
-			LOGGER_UNUSED(loggerToDestroy);
+			LOGGER_UNUSED(childID);
+			LOGGER_UNUSED(newParentID);
 		}
 
 
-		void ConsoleContextPlotter::printToConsole(const Message& msg)
+		void ConsoleContextPlotter::printToConsole(const LogObject::Info& context, const Message& msg)
 		{
 			using std::cout;
 
 			std::string type = Utilities::getLevelStr(msg.getLevel());
 			type = type + ":" + std::string(10 - type.size(), ' ');
-			Logger::AbstractLogger* logger = msg.getContext();
-			std::string contextName;
-			if (logger)
-				contextName = logger->getName();
 
 			HANDLE h = GetStdHandle(STD_OUTPUT_HANDLE);
 			WORD wOldColorAttrs;
@@ -91,16 +71,14 @@ namespace Log
 			wOldColorAttrs = csbiInfo.wAttributes;
 
 
-			WORD contextColor = (WORD)Color::white.getConsoleValue();
-			if (logger)
-				contextColor = (WORD)logger->getColor().getConsoleValue();
+			WORD contextColor = context.color.getConsoleValue();
 			WORD color = (WORD)msg.getColor().getConsoleValue();
 
 			cout << msg.getDateTime().toString(m_dateTimeFormat) << "  ";
 			SetConsoleTextAttribute(h, contextColor);
-			cout << contextName << ": ";
+			cout << context.name << ": ";
 			SetConsoleTextAttribute(h, color);
-			cout << std::string(msg.getTabCount(), ' ') << type << msg.getText() << "\n";
+			cout << type << msg.getText() << "\n";
 			SetConsoleTextAttribute(h, wOldColorAttrs);
 		}
 	}

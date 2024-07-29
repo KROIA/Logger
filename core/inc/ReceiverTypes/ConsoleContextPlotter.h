@@ -1,12 +1,15 @@
 #pragma once
 #include "Logger_base.h"
-#include "ContextReceiver.h"
+#include "ReceiverTypes/AbstractReceiver.h"
+#include "Utilities/DateTime.h"
+#include "LogMessage.h"
+#include <QObject>
 
 namespace Log
 {
 	namespace Receiver
 	{
-		class LOGGER_EXPORT ConsoleContextPlotter : public ContextReceiver
+		class LOGGER_EXPORT ConsoleContextPlotter : public AbstractReceiver
 		{
 		public:
 			ConsoleContextPlotter();
@@ -18,19 +21,13 @@ namespace Log
 			DateTime::Format getDateTimeFormat() const;
 
 		private:
-			void onContextCreate(Logger::ContextLogger& logger) override;
-			void onContextDestroy(Logger::AbstractLogger& logger) override;
+			void onNewLogger(LogObject::Info loggerInfo) override;
+			void onLoggerInfoChanged(LogObject::Info info) override;
+			void onLogMessage(Message message) override;
+			void onChangeParent(LoggerID childID, LoggerID newParentID) override;
+			
 
-
-			void onNewSubscribed(Logger::AbstractLogger& logger) override;
-			void onUnsubscribed(Logger::AbstractLogger& logger) override;
-
-			void onNewMessage(const Message& m) override;
-			void onClear(Logger::AbstractLogger& logger) override;
-
-			void onDelete(Logger::AbstractLogger& logger) override;
-
-			void printToConsole(const Message& msg);
+			void printToConsole(const LogObject::Info &context, const Message& msg);
 
 			DateTime::Format m_dateTimeFormat;
 		};

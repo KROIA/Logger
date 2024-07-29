@@ -270,6 +270,8 @@ The different color codes are
 	}
 	int Color::getConsoleValue() const
 	{
+		if (m_consoleValue == 0)
+			return Color::white.getConsoleValue();
 		return m_consoleValue;
 	}
 

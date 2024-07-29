@@ -56,11 +56,11 @@ int main(int argc, char* argv[])
     bool swtch = false;
     
 
-	Log::Logger::ContextLogger logger1("TestLogger1");
-	Log::Logger::ContextLogger logger2("TestLogger2");
-	Log::Logger::AbstractLogger logger3("AbstractLogger");
-    logger1.setIcon(QIcon(":\\icons\\debug.png"));
-    logger2.setIcon(QIcon(":\\icons\\trace.png"));
+	Log::LogObject logger1("TestLogger1");
+	Log::LogObject logger2("TestLogger2");
+	Log::LogObject logger3("AbstractLogger");
+    //logger1.setIcon(QIcon(":\\icons\\debug.png"));
+    //logger2.setIcon(QIcon(":\\icons\\trace.png"));
 	logger1.setColor(Log::Color::orange);
 	logger2.setColor(Log::Color::cyan);
 	Log::UI::QContextLoggerTreeView* view = new Log::UI::QContextLoggerTreeView();
@@ -68,19 +68,19 @@ int main(int argc, char* argv[])
 
 
     Log::UI::QConsoleView* console = new Log::UI::QConsoleView();
-    console->attachLogger(logger1);
-    console->attachLogger(logger2);
-    console->attachLogger(logger3);
+    //console->attachLogger(logger1);
+    //console->attachLogger(logger2);
+    //console->attachLogger(logger3);
     console->show();
 
 	Context1Object *obj1 = new Context1Object(logger1,view, console);
 	Context2Object *obj2 = new Context2Object(logger2,view, console);
 
-    logger3.log(Log::Level::info, Log::Color::green, "Hallo");
+    logger3.log("Hallo", Log::Level::info, Log::Color::green);
 
-	view->attachLogger(logger1);
-	view->attachLogger(logger2);
-	view->attachLogger(logger3);
+	//view->attachLogger(logger1);
+	//view->attachLogger(logger2);
+	//view->attachLogger(logger3);
 
     QTimer singleShotTimer;
     singleShotTimer.setSingleShot(true);
@@ -92,18 +92,18 @@ int main(int argc, char* argv[])
         auto worker = [m_workerThread, &logger2]()
             {
                 
-                Log::Logger::ContextLogger* context = logger2.createContext("Utilities::executeCommand");
+                Log::LogObject* context = new Log::LogObject(logger2, "Utilities::executeCommand");
                 
 
                 for(int i = 0; i < 2; i++)
                 {
                     std::this_thread::sleep_for(std::chrono::seconds(1));
-                    context->log(Log::Level::info, Log::Color::green, "Hallo\n\n\n");
+                    context->log("Hallo\n\n\n", Log::Level::info, Log::Color::green);
                 }
                 
 
               
-                context->deleteLater();
+                //context->deleteLater();
                 
                 m_workerThread->exit();
             };

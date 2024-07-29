@@ -1,5 +1,6 @@
 #pragma once
 #include "Logger_base.h"
+#include "LogObject.h"
 
 #ifdef QT_WIDGETS_LIB
 #include <QAbstractItemModel>
@@ -9,7 +10,6 @@
 #include <string>
 #include "LogMessage.h"
 #include <unordered_map>
-#include "LoggerTypes/AbstractLogger.h"
 
 namespace Log
 {
@@ -39,11 +39,11 @@ namespace Log
         QModelIndex parent(const QModelIndex& child) const override;
         QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
 
-        const Message::SnapshotData& getElement(size_t row) const;
+        const Message& getElement(size_t row) const;
 
         void clear();
     private:
-        std::vector<Message::SnapshotData> logs;
+        std::vector<Message> logs;
         DateTime::Format m_dateTimeFormat;
 	};
 
@@ -60,8 +60,8 @@ namespace Log
         void setLevelVisibility(Level level, bool isVisible);
         bool getLevelVisibility(Level level) const;
 
-        void setContextVisibility(Logger::AbstractLogger::LoggerID loggerID, bool isVisible);
-        bool getContextVisibility(Logger::AbstractLogger::LoggerID loggerID) const;
+        void setContextVisibility(LoggerID loggerID, bool isVisible);
+        bool getContextVisibility(LoggerID loggerID) const;
 
         void setDateTimeFilter(const DateTimeFilter &filter);
         const DateTimeFilter & getDateTimeFilter() const;
@@ -82,7 +82,7 @@ namespace Log
 
         QLogMessageItemModel *m_sourceModel;
         bool m_levelActivated[static_cast<int>(Level::__count)];
-        std::unordered_map<Logger::AbstractLogger::LoggerID, bool> m_contextVisibility; // Key unique Logger id
+        std::unordered_map<LoggerID, bool> m_contextVisibility; // Key unique Logger id
        
         
         DateTimeFilter m_dateTimeFilter;

@@ -2,10 +2,12 @@
 #include <fstream>
 
 #include "Logger_info.h"
+#include "LogManager.h"
+#include "LogObject.h"
 
 namespace Log
 {
-	bool Export::saveToFile(const std::vector<Logger::AbstractLogger::LoggerSnapshotData>& list, const std::string& file)
+	bool Export::saveToFile(const std::unordered_map<LoggerID, std::vector<Message>>& contexts, const std::string& file)
 	{
 		Log::DateTime::Format timeFormat = Log::DateTime::Format::yearMonthDay | Log::DateTime::Format::hourMinuteSecondMillisecond;
 
@@ -23,21 +25,21 @@ namespace Log
 		out << libInfo;
 
 
-		for (size_t i = 0; i < list.size(); i++)
+		for (const auto listIt : contexts)
 		{
-			const Logger::AbstractLogger::LoggerSnapshotData &data = list[i];
-			const Logger::AbstractLogger::MetaInfo &metaInfo = data.metaInfo;
-			const std::vector<Message::SnapshotData> &messages = data.messages;
-
+			//const Logger::AbstractLogger::LoggerSnapshotData &data = list[i];
+			//const Logger::AbstractLogger::MetaInfo &metaInfo = data.metaInfo;
+			const LoggerID id = listIt.first;
+			const std::vector<Message>& messages = listIt.second;
+			const LogObject::Info &metaInfo = LogManager::getLogObjectInfo(id);
 
 			std::string contextInfo =
-				"Context[" + std::to_string(metaInfo.id) + "]{\n" +
+				"Context[" + std::to_string(id) + "]{\n" +
 				"\tname=" + metaInfo.name + "\n" +
 				"\tcreationTime=" + metaInfo.creationTime.toString(timeFormat) + "\n" +
 				"\tparentID=" + std::to_string(metaInfo.parentId) + "\n" +
 				"\tcolor=" + metaInfo.color.getRGBStr() + "\n" +
 				"\tenabled=" + std::to_string(metaInfo.enabled) + "\n" +
-				"\ttabCount=" + std::to_string(metaInfo.tabCount) + "\n"+
 				"\tmessages={\n";
 
 			out << contextInfo;
@@ -46,9 +48,9 @@ namespace Log
 			{
 				out << "\t[" << j << "]{";
 
-				out << "Level=" << messages[j].level << std::endl;
+				out << "Level=" << messages[j].getLevel() << std::endl;
 
-				std::string messageText = messages[j].message;
+				std::string messageText = messages[j].getText();
 
 				// Replace newlines with \n and " with \"
 				for (size_t k = 0; k < messageText.size(); k++)
@@ -65,9 +67,8 @@ namespace Log
 					}
 				}
 				out << "\t\tMessage=\"" << messageText <<"\"" << std::endl;
-				out << "\t\tColor=" << messages[j].textColor.getRGBStr() << std::endl;
-				out << "\t\tDateTime=\"" << messages[j].dateTime.toString(timeFormat)<<"\"" << std::endl;
-				out << "\t\tTabCount=" << messages[j].tabCount << "\t}\n";
+				out << "\t\tColor=" << messages[j].getColor().getRGBStr() << std::endl;
+				out << "\t\tDateTime=\"" << messages[j].getDateTime().toString(timeFormat) << "\"\t}\n";
 			}
 			out << "\t}\n}\n";
 		}
