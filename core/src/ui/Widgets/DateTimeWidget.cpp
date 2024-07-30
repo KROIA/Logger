@@ -1,10 +1,10 @@
-#include "ui/DateTimeWidget.h"
+#include "ui/Widgets/DateTimeWidget.h"
 
 
 #ifdef QT_WIDGETS_LIB
 namespace Log
 {
-	namespace UI
+	namespace UIWidgets
 	{
 		DateTimeWidget::DateTimeWidget(QWidget* parent)
 			: QDateTimeEdit(parent)

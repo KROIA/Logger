@@ -7,7 +7,7 @@
 
 namespace Log
 {
-	namespace UI
+	namespace UIWidgets
 	{
 		class DateTimeWidget : public QDateTimeEdit
 		{

@@ -13,7 +13,7 @@ public:
 	ContextObject(
 		const std::string& contextName,
 		Log::LogObject& logger,
-		Log::UI::QContextLoggerTreeView* view,
+		Log::UI::QTreeConsoleView* view,
 		Log::UI::QConsoleView* consoleView,
 		QWidget *parent = nullptr);
 	virtual ~ContextObject();
@@ -45,7 +45,7 @@ protected:
 private:
 	Ui::ContextObject ui;
 	size_t m_instanceID;
-	Log::UI::QContextLoggerTreeView* m_view = nullptr;
+	Log::UI::QTreeConsoleView* m_view = nullptr;
 	Log::UI::QConsoleView* m_consoleView = nullptr;
 	static size_t s_instanceCounter;
 	int counter = 0;

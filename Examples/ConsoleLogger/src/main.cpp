@@ -1,13 +1,17 @@
+#include <QCoreapplication>
+
 #include "Logger.h"
 
-int main(void)
+
+int main(int argc, char *argv[])
 {
+	QCoreApplication app(argc, argv);
 	Log::LogObject context("context");
 	
 	Log::LogObject context3("context3");
 	context.setColor(Log::Color::Console::Foreground::cyan);
 	//Log::Receiver::ConsolePlotter plotter;
-	Log::UI::ConsoleContextPlotter plotter;
+	Log::UI::NativeConsoleView plotter;
 
 
 	context3.log("Test123");
@@ -53,6 +57,5 @@ int main(void)
 
 	
 
-	getchar();
-	return 0;
+	return app.exec();
 }

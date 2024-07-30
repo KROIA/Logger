@@ -12,8 +12,6 @@
 #include <QTimer>
 #include <QThread>
 
-#include "ui/DateTimeWidget.h"
-
 int main(int argc, char* argv[])
 {
     QGuiApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
@@ -63,7 +61,7 @@ int main(int argc, char* argv[])
     //logger2.setIcon(QIcon(":\\icons\\trace.png"));
 	logger1.setColor(Log::Color::orange);
 	logger2.setColor(Log::Color::cyan);
-	Log::UI::QContextLoggerTreeView* view = new Log::UI::QContextLoggerTreeView();
+	Log::UI::QTreeConsoleView* view = new Log::UI::QTreeConsoleView();
 	view->show();
 
 

@@ -1,7 +1,7 @@
 #include "ui/QConsoleView.h"
 
 #ifdef QT_WIDGETS_LIB
-#include "ui_QAbstractLogView.h"
+#include "ui_QAbstractLogWidget.h"
 #include <QTreeWidget>
 #include <QMetaType>
 
@@ -12,10 +12,10 @@ namespace Log
 	{
 
 		QConsoleView::QConsoleView(QWidget* parent)
-			: QAbstractLogView(parent)
+			: QAbstractLogWidget(parent)
 		{
 			setWindowTitle("Console");
-			m_consoleWidget = new QConsoleWidget(this);
+			m_consoleWidget = new UIWidgets::QConsoleWidget(this);
 			setContentWidget(m_consoleWidget);
 			postConstructorInit();
 		}
@@ -39,18 +39,18 @@ namespace Log
 
 		void QConsoleView::on_clear_pushButton_clicked()
 		{
-			QAbstractLogView::on_clear_pushButton_clicked();
+			QAbstractLogWidget::on_clear_pushButton_clicked();
 			m_consoleWidget->clear();
 		}
 
 		void QConsoleView::onLevelCheckBoxChanged(size_t index, Level level, bool isChecked)
 		{
-			QAbstractLogView::onLevelCheckBoxChanged(index, level, isChecked);
+			QAbstractLogWidget::onLevelCheckBoxChanged(index, level, isChecked);
 			m_consoleWidget->setLevelVisibility(level, isChecked);
 		}
 		void QConsoleView::onContextCheckBoxChanged(const ContextData& context, bool isChecked)
 		{
-			QAbstractLogView::onContextCheckBoxChanged(context, isChecked);
+			QAbstractLogWidget::onContextCheckBoxChanged(context, isChecked);
 			m_consoleWidget->setContextVisibility(context.id, isChecked);
 		}
 
@@ -61,20 +61,20 @@ namespace Log
 
 		void QConsoleView::onNewLogger(LogObject::Info loggerInfo)
 		{
-			QAbstractLogView::onNewLogger(loggerInfo);
+			QAbstractLogWidget::onNewLogger(loggerInfo);
 		}
 		void QConsoleView::onLoggerInfoChanged(LogObject::Info info)
 		{
-			QAbstractLogView::onLoggerInfoChanged(info);
+			QAbstractLogWidget::onLoggerInfoChanged(info);
 		}
 		void QConsoleView::onLogMessage(Message message)
 		{
-			QAbstractLogView::onLogMessage(message);
+			QAbstractLogWidget::onLogMessage(message);
 			m_consoleWidget->onNewMessage(message);
 		}
 		void QConsoleView::onChangeParent(LoggerID childID, LoggerID newParentID)
 		{
-			QAbstractLogView::onChangeParent(childID, newParentID);
+			QAbstractLogWidget::onChangeParent(childID, newParentID);
 		}
 
 	}

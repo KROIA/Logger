@@ -2,7 +2,7 @@
 #include "Logger.h"
 
 Context2Object::Context2Object(Log::LogObject& logger, 
-	Log::UI::QContextLoggerTreeView* view, 
+	Log::UI::QTreeConsoleView* view, 
 	Log::UI::QConsoleView* consoleView,
 	QWidget*parent)
 	: ContextObject("Context1Object", logger, view, consoleView, parent)
@@ -23,7 +23,7 @@ void Context2Object::on_createContext_pushButton_clicked()
 {
 	ContextObject::on_createContext_pushButton_clicked();
 	ContextObject* child = m_contextObjects[m_contextObjects.size() - 1];
-	Log::UI::QContextLoggerTreeView* view = new Log::UI::QContextLoggerTreeView();
+	Log::UI::QTreeConsoleView* view = new Log::UI::QTreeConsoleView();
 	//view->attachLogger(*(child->m_logger));
 	view->show();
 }

@@ -1,4 +1,4 @@
-#include "ReceiverTypes/ConsoleContextPlotter.h"
+#include "ui/NativeConsoleView.h"
 #include "LogManager.h"
 #include <iostream>
 #include <windows.h>
@@ -7,53 +7,53 @@ namespace Log
 {
 	namespace UI
 	{
-		ConsoleContextPlotter::ConsoleContextPlotter()
+		NativeConsoleView::NativeConsoleView()
 			: AbstractReceiver()
 			, m_dateTimeFormat(DateTime::Format::yearMonthDay | DateTime::Format::hourMinuteSecondMillisecond)
 		{
 
 		}
-		ConsoleContextPlotter::ConsoleContextPlotter(const ConsoleContextPlotter& other)
+		NativeConsoleView::NativeConsoleView(const NativeConsoleView& other)
 			: AbstractReceiver()
 			, m_dateTimeFormat(other.m_dateTimeFormat)
 		{
 
 		}
 
-		ConsoleContextPlotter::~ConsoleContextPlotter()
+		NativeConsoleView::~NativeConsoleView()
 		{
 
 		}
 
-		void ConsoleContextPlotter::setDateTimeFormat(DateTime::Format format)
+		void NativeConsoleView::setDateTimeFormat(DateTime::Format format)
 		{
 			m_dateTimeFormat = format;
 		}
-		DateTime::Format ConsoleContextPlotter::getDateTimeFormat() const
+		DateTime::Format NativeConsoleView::getDateTimeFormat() const
 		{
 			return m_dateTimeFormat;
 		}
 
-		void ConsoleContextPlotter::onNewLogger(LogObject::Info loggerInfo)
+		void NativeConsoleView::onNewLogger(LogObject::Info loggerInfo)
 		{
 			LOGGER_UNUSED(loggerInfo);
 		}
-		void ConsoleContextPlotter::onLoggerInfoChanged(LogObject::Info info)
+		void NativeConsoleView::onLoggerInfoChanged(LogObject::Info info)
 		{
 			LOGGER_UNUSED(info);
 		}
-		void ConsoleContextPlotter::onLogMessage(Message message)
+		void NativeConsoleView::onLogMessage(Message message)
 		{
 			printToConsole(LogManager::getLogObjectInfo(message.getLoggerID()), message);
 		}
-		void ConsoleContextPlotter::onChangeParent(LoggerID childID, LoggerID newParentID)
+		void NativeConsoleView::onChangeParent(LoggerID childID, LoggerID newParentID)
 		{
 			LOGGER_UNUSED(childID);
 			LOGGER_UNUSED(newParentID);
 		}
 
 
-		void ConsoleContextPlotter::printToConsole(const LogObject::Info& context, const Message& msg)
+		void NativeConsoleView::printToConsole(const LogObject::Info& context, const Message& msg)
 		{
 			using std::cout;
 

@@ -1,7 +1,7 @@
 #include "Context1Object.h"
 
 Context1Object::Context1Object(Log::LogObject& logger, 
-	Log::UI::QContextLoggerTreeView* view, 
+	Log::UI::QTreeConsoleView* view, 
 	Log::UI::QConsoleView* consoleView,
 	QWidget *parent)
 	: ContextObject("Context1Object", logger, view, consoleView, parent)

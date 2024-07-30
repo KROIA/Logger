@@ -11,12 +11,9 @@
 #include "LogObject.h"
 #include "LogManager.h"
 
-// Log Receivers
-#include "ReceiverTypes/AbstractReceiver.h"
-#include "ReceiverTypes/ConsoleContextPlotter.h"
-
-// ui
-#include "ui/QContextLoggerTreeView.h"
+// Console views
+#include "ui/NativeConsoleView.h"
+#include "ui/QTreeConsoleView.h"
 #include "ui/QConsoleView.h"
 
 // Utilities

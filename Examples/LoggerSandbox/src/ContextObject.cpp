@@ -8,7 +8,7 @@ size_t ContextObject::s_instanceCounter = 0;
 ContextObject::ContextObject(
 	const std::string& contextName,
 	Log::LogObject& logger,
-	Log::UI::QContextLoggerTreeView* view,
+	Log::UI::QTreeConsoleView* view,
 	Log::UI::QConsoleView* consoleView,
 	QWidget* parent)
 	: QWidget(parent)

@@ -1,4 +1,4 @@
-#include "ui/QConsoleWidget.h"
+#include "ui/Widgets/QConsoleWidget.h"
 
 #ifdef QT_WIDGETS_LIB
 #include <QHeaderView>
@@ -9,7 +9,7 @@
 
 namespace Log
 {
-    namespace UI
+    namespace UIWidgets
     {
 
 

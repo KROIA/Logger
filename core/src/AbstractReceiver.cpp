@@ -1,4 +1,4 @@
-#include "ReceiverTypes/AbstractReceiver.h"
+#include "AbstractReceiver.h"
 #include "LogManager.h"
 
 namespace Log

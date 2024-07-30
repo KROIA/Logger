@@ -2,8 +2,8 @@
 #include "Logger_base.h"
 
 #ifdef QT_WIDGETS_LIB
-#include "ui/QContextLoggerTree.h"
-#include "ReceiverTypes/ui/QAbstractLogView.h"
+#include "ui/Widgets/QContextLoggerTreeWidget.h"
+#include "ui/Widgets/QAbstractLogWidget.h"
 #include <QTreeWidget>
 #include <QTreeView>
 #include <QMutex>
@@ -12,12 +12,12 @@ namespace Log
 {
     namespace UI
     {
-        class LOGGER_EXPORT QContextLoggerTreeView: public QAbstractLogView
+        class LOGGER_EXPORT QTreeConsoleView: public UIWidgets::QAbstractLogWidget
         {
             Q_OBJECT
         public:
-            QContextLoggerTreeView(QWidget* parent = nullptr);
-            ~QContextLoggerTreeView();
+            QTreeConsoleView(QWidget* parent = nullptr);
+            ~QTreeConsoleView();
 
             void setDateTimeFormat(DateTime::Format format) override;
             DateTime::Format getDateTimeFormat() const override;
@@ -44,7 +44,7 @@ namespace Log
 
 
             QTreeWidget* m_treeWidget;
-            Receiver::QContextLoggerTree* m_treeItem;
+            UIWidgets::QContextLoggerTreeWidget* m_treeItem;
             mutable QMutex m_mutex;
 
             

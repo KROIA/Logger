@@ -13,9 +13,9 @@
 
 namespace Log
 {
-	namespace Receiver
+	namespace UIWidgets
 	{
-		class LOGGER_EXPORT QContextLoggerTree : public QWidget
+		class LOGGER_EXPORT QContextLoggerTreeWidget : public QWidget
 		{
 			Q_OBJECT
 			friend class TreeData;
@@ -28,8 +28,8 @@ namespace Log
 
 				__count
 			};
-			QContextLoggerTree(QTreeWidget* parent = nullptr);
-			~QContextLoggerTree();
+			QContextLoggerTreeWidget(QTreeWidget* parent = nullptr);
+			~QContextLoggerTreeWidget();
 
 
 			const QString& getHeaderName(HeaderPos pos) const;
@@ -75,8 +75,8 @@ namespace Log
 			class TreeData
 			{
 				public:
-					TreeData(QContextLoggerTree* root, LoggerID loggerID);
-					TreeData(QContextLoggerTree* root, TreeData *parent, LoggerID loggerID);
+					TreeData(QContextLoggerTreeWidget* root, LoggerID loggerID);
+					TreeData(QContextLoggerTreeWidget* root, TreeData *parent, LoggerID loggerID);
 					~TreeData();
 					void updateDateTime();
 					void onNewMessage(const Message& m);
@@ -142,7 +142,7 @@ namespace Log
 				std::vector<MessageData> msgItems;
 				std::vector<TreeData*> children;
 				TreeData *parent = nullptr;
-				QContextLoggerTree *root = nullptr;
+				QContextLoggerTreeWidget *root = nullptr;
 				LoggerID loggerID;
 			};
 			

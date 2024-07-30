@@ -1,12 +1,13 @@
 #pragma once
 #include "Logger_base.h"
 #include "Utilities/DateTime.h"
-#include "ui/QContextLoggerTree.h"
+
 #include "LogMessage.h"
-#include "ReceiverTypes/AbstractReceiver.h"
+#include "AbstractReceiver.h"
 
 #ifdef QT_WIDGETS_LIB
-#include "ReceiverTypes/ui/QAbstractLogView.h"
+#include "ui/Widgets/QAbstractLogWidget.h"
+#include "ui/Widgets/QContextLoggerTreeWidget.h"
 #include <QWidget>
 #include <QTreeWidget>
 #include <QTimer>
@@ -15,22 +16,22 @@
 #include <QMutex>
 
 QT_BEGIN_NAMESPACE
-namespace Ui { class QAbstractLogView; }
+namespace Ui { class QAbstractLogWidget; }
 QT_END_NAMESPACE
 
 namespace Log 
 {
-    namespace UI
+    namespace UIWidgets
     {
-        class LOGGER_EXPORT QAbstractLogView : public QWidget, public AbstractReceiver
+        class LOGGER_EXPORT QAbstractLogWidget : public QWidget, public AbstractReceiver
         {
             Q_OBJECT
             friend class QSignalHandler;
 
         
         public:
-            QAbstractLogView(QWidget* parent = nullptr);
-            ~QAbstractLogView();
+            QAbstractLogWidget(QWidget* parent = nullptr);
+            ~QAbstractLogWidget();
 
         protected:
             void postConstructorInit();
@@ -84,7 +85,7 @@ namespace Log
             virtual void onDateTimeFilterChanged(const DateTimeFilter& filter) = 0;
 
 
-            Ui::QAbstractLogView* ui;
+            Ui::QAbstractLogWidget* ui;
         private:
             QCheckBox* m_levelCheckBoxes[static_cast<int>(Level::__count)];
             std::vector<QLineEdit*> m_filterTextEdits;

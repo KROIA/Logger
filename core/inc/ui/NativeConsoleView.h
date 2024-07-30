@@ -1,6 +1,6 @@
 #pragma once
 #include "Logger_base.h"
-#include "ReceiverTypes/AbstractReceiver.h"
+#include "AbstractReceiver.h"
 #include "Utilities/DateTime.h"
 #include "LogMessage.h"
 #include <QObject>
@@ -9,13 +9,13 @@ namespace Log
 {
 	namespace UI
 	{
-		class LOGGER_EXPORT ConsoleContextPlotter : public AbstractReceiver
+		class LOGGER_EXPORT NativeConsoleView : public AbstractReceiver
 		{
 		public:
-			ConsoleContextPlotter();
-			ConsoleContextPlotter(const ConsoleContextPlotter& other);
+			NativeConsoleView();
+			NativeConsoleView(const NativeConsoleView& other);
 
-			~ConsoleContextPlotter();
+			~NativeConsoleView();
 
 			void setDateTimeFormat(DateTime::Format format);
 			DateTime::Format getDateTimeFormat() const;

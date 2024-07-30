@@ -1,7 +1,7 @@
-#include "ui/QContextLoggerTreeView.h"
+#include "ui/QTreeConsoleView.h"
 
 #ifdef QT_WIDGETS_LIB
-#include "ui_QAbstractLogView.h"
+#include "ui_QAbstractLogWidget.h"
 #include <QTreeWidget>
 #include <QMetaType>
 
@@ -11,69 +11,69 @@ namespace Log
 	namespace UI
 	{
 
-		QContextLoggerTreeView::QContextLoggerTreeView(QWidget* parent)
-			: QAbstractLogView(parent)
+		QTreeConsoleView::QTreeConsoleView(QWidget* parent)
+			: QAbstractLogWidget(parent)
 		{
 			setWindowTitle("Console tree view");
 			m_treeWidget = new QTreeWidget();
 			setContentWidget(m_treeWidget);
-			m_treeItem = new Receiver::QContextLoggerTree(m_treeWidget);
+			m_treeItem = new UIWidgets::QContextLoggerTreeWidget(m_treeWidget);
 
-			connect(this, &QContextLoggerTreeView::messageQueued, this, &QContextLoggerTreeView::onMessageQueued, Qt::QueuedConnection);
+			connect(this, &QTreeConsoleView::messageQueued, this, &QTreeConsoleView::onMessageQueued, Qt::QueuedConnection);
 			postConstructorInit();
 		}
-		QContextLoggerTreeView::~QContextLoggerTreeView()
+		QTreeConsoleView::~QTreeConsoleView()
 		{
 
 		}
 
-		void QContextLoggerTreeView::setDateTimeFormat(DateTime::Format format)
+		void QTreeConsoleView::setDateTimeFormat(DateTime::Format format)
 		{
 			m_treeItem->setDateTimeFormat(format);
 		}
-		DateTime::Format QContextLoggerTreeView::getDateTimeFormat() const
+		DateTime::Format QTreeConsoleView::getDateTimeFormat() const
 		{
 			return m_treeItem->getDateTimeFormat();
 		}
-		void QContextLoggerTreeView::getSaveVisibleMessages(std::unordered_map<LoggerID, std::vector<Message>>& list) const
+		void QTreeConsoleView::getSaveVisibleMessages(std::unordered_map<LoggerID, std::vector<Message>>& list) const
 		{
 			QMutexLocker locker(&m_mutex);
 			m_treeItem->getSaveVisibleMessages(list);
 		}
-		void QContextLoggerTreeView::on_clear_pushButton_clicked()
+		void QTreeConsoleView::on_clear_pushButton_clicked()
 		{
 			QMutexLocker locker(&m_mutex);
-			QAbstractLogView::on_clear_pushButton_clicked();
+			QAbstractLogWidget::on_clear_pushButton_clicked();
 			m_treeItem->clearMessages();
 		}
 
 
-		void QContextLoggerTreeView::onLevelCheckBoxChanged(size_t index, Level level, bool isChecked)
+		void QTreeConsoleView::onLevelCheckBoxChanged(size_t index, Level level, bool isChecked)
 		{
-			QAbstractLogView::onLevelCheckBoxChanged(index, level, isChecked);
+			QAbstractLogWidget::onLevelCheckBoxChanged(index, level, isChecked);
 			m_treeItem->setLevelVisibility(level, isChecked);
 		}
-		void QContextLoggerTreeView::onContextCheckBoxChanged(const ContextData& context, bool isChecked)
+		void QTreeConsoleView::onContextCheckBoxChanged(const ContextData& context, bool isChecked)
 		{
-			QAbstractLogView::onContextCheckBoxChanged(context, isChecked);
+			QAbstractLogWidget::onContextCheckBoxChanged(context, isChecked);
 			m_treeItem->setContextVisibility(context.id, isChecked);
 		}
-		void QContextLoggerTreeView::onDateTimeFilterChanged(const DateTimeFilter& filter)
+		void QTreeConsoleView::onDateTimeFilterChanged(const DateTimeFilter& filter)
 		{
 			m_treeItem->setDateTimeFilter(filter);
 		}
 
-		void QContextLoggerTreeView::onNewLogger(LogObject::Info loggerInfo)
+		void QTreeConsoleView::onNewLogger(LogObject::Info loggerInfo)
 		{
-			QAbstractLogView::onNewLogger(loggerInfo);
+			QAbstractLogWidget::onNewLogger(loggerInfo);
 			m_treeItem->addContext(loggerInfo);
 		}
-		void QContextLoggerTreeView::onLogMessage(Message message)
+		void QTreeConsoleView::onLogMessage(Message message)
 		{
-			QAbstractLogView::onLogMessage(message);
+			QAbstractLogWidget::onLogMessage(message);
 			m_treeItem->onNewMessage(message);
 		}
-		void QContextLoggerTreeView::onMessageQueued(QPrivateSignal*)
+		void QTreeConsoleView::onMessageQueued(QPrivateSignal*)
 		{
 			std::vector<Message> cpy;
 			{

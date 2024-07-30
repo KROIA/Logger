@@ -2,15 +2,15 @@
 #include "Logger_base.h"
 
 #ifdef QT_WIDGETS_LIB
-#include "ui/QConsoleWidget.h"
-#include "ReceiverTypes/ui/QAbstractLogView.h"
+#include "ui/Widgets/QConsoleWidget.h"
+#include "ui/Widgets/QAbstractLogWidget.h"
 #include <QTreeWidget>
 
 namespace Log 
 {
     namespace UI
     {
-        class LOGGER_EXPORT QConsoleView: public QAbstractLogView
+        class LOGGER_EXPORT QConsoleView: public UIWidgets::QAbstractLogWidget
         {
             Q_OBJECT
         public:
@@ -36,7 +36,7 @@ namespace Log
             void onLogMessage(Message message) override;
             void onChangeParent(LoggerID childID, LoggerID newParentID) override;
 
-            QConsoleWidget* m_consoleWidget;
+            UIWidgets::QConsoleWidget* m_consoleWidget;
         };
     }
 }

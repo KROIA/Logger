@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>QAbstractLogView</class>
- <widget class="QWidget" name="QAbstractLogView">
+ <class>QAbstractLogWidget</class>
+ <widget class="QWidget" name="QAbstractLogWidget">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -336,10 +336,10 @@
           <number>3</number>
          </property>
          <item row="3" column="0">
-          <widget class="Log::UI::DateTimeWidget" name="dateTimeFilterMin_dateTimeEdit"/>
+          <widget class="Log::UIWidgets::DateTimeWidget" name="dateTimeFilterMin_dateTimeEdit"/>
          </item>
          <item row="4" column="0">
-          <widget class="Log::UI::DateTimeWidget" name="dateTimeFilterMax_dateTimeEdit"/>
+          <widget class="Log::UIWidgets::DateTimeWidget" name="dateTimeFilterMax_dateTimeEdit"/>
          </item>
          <item row="3" column="1">
           <widget class="QPushButton" name="dateTimeFilterMinNow_pushButton">
@@ -515,9 +515,9 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>Log::UI::DateTimeWidget</class>
+   <class>Log::UIWidgets::DateTimeWidget</class>
    <extends>QDateTimeEdit</extends>
-   <header>ui/DateTimeWidget.h</header>
+   <header>ui/Widgets/DateTimeWidget.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

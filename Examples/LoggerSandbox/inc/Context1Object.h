@@ -7,7 +7,7 @@ class Context1Object : public ContextObject
 	Q_OBJECT
 public:
 	Context1Object(Log::LogObject& logger, 
-		Log::UI::QContextLoggerTreeView* view, 
+		Log::UI::QTreeConsoleView* view, 
 		Log::UI::QConsoleView* consoleView,
 		QWidget*parent = nullptr);
 	~Context1Object();

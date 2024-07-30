@@ -1,7 +1,7 @@
-#include "ReceiverTypes/ui/QAbstractLogView.h"
+#include "ui/Widgets/QAbstractLogWidget.h"
 
 #ifdef QT_WIDGETS_LIB
-#include "ui_QAbstractLogView.h"
+#include "ui_QAbstractLogWidget.h"
 #include "Utilities/Resources.h"
 #include "Utilities/Export.h"
 #include <QTreeWidget>
@@ -9,7 +9,7 @@
 #include <QSplitter>
 #include <QCheckBox>
 #include <QFileDialog>
-#include "ui/DateTimeWidget.h"
+#include "ui/Widgets/DateTimeWidget.h"
 #include <fstream>
 #include <QApplication>
 #include <QThread>
@@ -17,11 +17,11 @@
 
 namespace Log
 {
-	namespace UI
+	namespace UIWidgets
 	{
-		QAbstractLogView::QAbstractLogView(QWidget* parent)
+		QAbstractLogWidget::QAbstractLogWidget(QWidget* parent)
 			: QWidget(parent)
-			, ui(new Ui::QAbstractLogView)
+			, ui(new Ui::QAbstractLogWidget)
 		{
 			ui->setupUi(this);
 			ui->context_scrollAreaWidgetContents->layout()->setAlignment(Qt::AlignTop);
@@ -33,7 +33,7 @@ namespace Log
 			for (size_t i = 0; i < m_filterTextEdits.size(); ++i)
 			{
 				QObject::connect(m_filterTextEdits[i], &QLineEdit::textChanged,
-					this, &QAbstractLogView::onFilterTextChangedSlot);
+					this, &QAbstractLogWidget::onFilterTextChangedSlot);
 			}
 
 			for (int i = 0; i < Level::__count; ++i)
@@ -43,25 +43,25 @@ namespace Log
 				checkBox->setText(Utilities::getLevelStr((Level)i).c_str());
 				checkBox->setIcon(Utilities::getIcon((Level)i));
 				QObject::connect(checkBox, &QCheckBox::stateChanged,
-					this, &QAbstractLogView::onLevelCheckBoxStateChangedSlot);
+					this, &QAbstractLogWidget::onLevelCheckBoxStateChangedSlot);
 				m_levelCheckBoxes[i] = checkBox;
 				if (ui->logLevel_frame->layout())
 					ui->logLevel_frame->layout()->addWidget(checkBox);
 			}
-			QObject::connect(ui->allContext_checkBox, &QCheckBox::stateChanged, this, &QAbstractLogView::onAllContextCheckBoxStateChanged);
+			QObject::connect(ui->allContext_checkBox, &QCheckBox::stateChanged, this, &QAbstractLogWidget::onAllContextCheckBoxStateChanged);
 
 			ui->dateTimeFilterActivate_checkBox->setChecked(false);
 			connect(ui->dateTimeFilterActivate_checkBox, &QCheckBox::stateChanged,
-				this, &QAbstractLogView::onDateTimeFilterActivate_checkBox_stateChanged);
+				this, &QAbstractLogWidget::onDateTimeFilterActivate_checkBox_stateChanged);
 			connect(ui->dateTimeFilterMin_dateTimeEdit, &DateTimeWidget::dateTimeChanged,
-				this, &QAbstractLogView::onDateTimeFilterMin_changed);
+				this, &QAbstractLogWidget::onDateTimeFilterMin_changed);
 			connect(ui->dateTimeFilterMax_dateTimeEdit, &DateTimeWidget::dateTimeChanged,
-				this, &QAbstractLogView::onDateTimeFilterMax_changed);
+				this, &QAbstractLogWidget::onDateTimeFilterMax_changed);
 
 			connect(ui->dateTimeFilterMinNow_pushButton, &QPushButton::pressed,
-				this, &QAbstractLogView::onDateTimeFilterMinNow_pushButton_clicked);
+				this, &QAbstractLogWidget::onDateTimeFilterMinNow_pushButton_clicked);
 			connect(ui->dateTimeFilterMaxNow_pushButton, &QPushButton::pressed,
-				this, &QAbstractLogView::onDateTimeFilterMaxNow_pushButton_clicked);
+				this, &QAbstractLogWidget::onDateTimeFilterMaxNow_pushButton_clicked);
 
 			{
 				QHBoxLayout* layout = new QHBoxLayout();
@@ -90,14 +90,14 @@ namespace Log
 				ui->dateTimeFilterType_comboBox->addItem(DateTime::getRangeStr((DateTime::Range)i).c_str());
 			ui->dateTimeFilterType_comboBox->setCurrentIndex(DateTime::Range::between);
 			connect(ui->dateTimeFilterType_comboBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
-				this, &QAbstractLogView::onDateTimeFilterType_changed);
+				this, &QAbstractLogWidget::onDateTimeFilterType_changed);
 
 		}
-		QAbstractLogView::~QAbstractLogView()
+		QAbstractLogWidget::~QAbstractLogWidget()
 		{
 
 		}
-		void QAbstractLogView::postConstructorInit()
+		void QAbstractLogWidget::postConstructorInit()
 		{
 			std::vector< LogObject::Info> loggers = LogManager::getLogObjectsInfo();
 			for (const auto& logger : loggers)
@@ -106,14 +106,14 @@ namespace Log
 			}
 		}
 
-		bool QAbstractLogView::saveVisibleMessages(const std::string& outputFile) const
+		bool QAbstractLogWidget::saveVisibleMessages(const std::string& outputFile) const
 		{
 			std::unordered_map<LoggerID, std::vector<Message>> list;
 			getSaveVisibleMessages(list);
 			return Export::saveToFile(list, outputFile);
 		}
 
-		void QAbstractLogView::onAllContextCheckBoxStateChanged(int state)
+		void QAbstractLogWidget::onAllContextCheckBoxStateChanged(int state)
 		{
 			if (m_ignoreAllContextCheckBox_signals)
 				return;
@@ -129,11 +129,11 @@ namespace Log
 				loggerData.second.checkBox->setChecked(isChecked);
 			}
 		}
-		void QAbstractLogView::on_clear_pushButton_clicked()
+		void QAbstractLogWidget::on_clear_pushButton_clicked()
 		{
 
 		}
-		void QAbstractLogView::on_save_pushButton_clicked()
+		void QAbstractLogWidget::on_save_pushButton_clicked()
 		{
 			QString fileName = QFileDialog::getSaveFileName(this, tr("Save File"), "", tr("Log Files (*.log);;All Files (*)"));
 			if (fileName.isEmpty())
@@ -141,7 +141,7 @@ namespace Log
 			saveVisibleMessages(fileName.toStdString());
 		}
 
-		void QAbstractLogView::onLevelCheckBoxStateChangedSlot(int state)
+		void QAbstractLogWidget::onLevelCheckBoxStateChangedSlot(int state)
 		{
 			QCheckBox* checkBox = qobject_cast<QCheckBox*>(sender());
 			if (checkBox == nullptr)
@@ -156,7 +156,7 @@ namespace Log
 				}
 			}
 		}
-		void QAbstractLogView::onFilterTextChangedSlot(const QString& text)
+		void QAbstractLogWidget::onFilterTextChangedSlot(const QString& text)
 		{
 			QLineEdit* lineEdit = qobject_cast<QLineEdit*>(sender());
 			if (lineEdit == nullptr)
@@ -171,7 +171,7 @@ namespace Log
 				}
 			}
 		}
-		void QAbstractLogView::onCheckBoxStateChangedSlot(int state)
+		void QAbstractLogWidget::onCheckBoxStateChangedSlot(int state)
 		{
 			LOGGER_UNUSED(state);
 			QCheckBox* checkBox = qobject_cast<QCheckBox*>(sender());
@@ -188,7 +188,7 @@ namespace Log
 			}
 		}
 
-		void QAbstractLogView::onDateTimeFilterActivate_checkBox_stateChanged(int state)
+		void QAbstractLogWidget::onDateTimeFilterActivate_checkBox_stateChanged(int state)
 		{
 			LOGGER_UNUSED(state);
 			if (ui->dateTimeFilterActivate_checkBox->isChecked())
@@ -208,26 +208,26 @@ namespace Log
 			}
 			onDateTimeFilterChanged(m_dateTimeFilter);
 		}
-		void QAbstractLogView::onDateTimeFilterMin_changed(const DateTime& dateTime)
+		void QAbstractLogWidget::onDateTimeFilterMin_changed(const DateTime& dateTime)
 		{
 			m_dateTimeFilter.min = dateTime;
 			if (m_dateTimeFilter.active)
 				onDateTimeFilterChanged(m_dateTimeFilter);
 		}
-		void QAbstractLogView::onDateTimeFilterMax_changed(const DateTime& dateTime)
+		void QAbstractLogWidget::onDateTimeFilterMax_changed(const DateTime& dateTime)
 		{
 			m_dateTimeFilter.max = dateTime;
 			if (m_dateTimeFilter.active)
 				onDateTimeFilterChanged(m_dateTimeFilter);
 		}
-		void QAbstractLogView::onDateTimeFilterMinNow_pushButton_clicked()
+		void QAbstractLogWidget::onDateTimeFilterMinNow_pushButton_clicked()
 		{
 			ui->dateTimeFilterMin_dateTimeEdit->setNow();
 			m_dateTimeFilter.min = ui->dateTimeFilterMin_dateTimeEdit->getDateTime();
 			if (m_dateTimeFilter.active)
 				onDateTimeFilterChanged(m_dateTimeFilter);
 		}
-		void QAbstractLogView::onDateTimeFilterMaxNow_pushButton_clicked()
+		void QAbstractLogWidget::onDateTimeFilterMaxNow_pushButton_clicked()
 		{
 			ui->dateTimeFilterMax_dateTimeEdit->setNow();
 			m_dateTimeFilter.max = ui->dateTimeFilterMax_dateTimeEdit->getDateTime();
@@ -235,7 +235,7 @@ namespace Log
 				onDateTimeFilterChanged(m_dateTimeFilter);
 		}
 
-		void QAbstractLogView::onDateTimeFilterType_changed(int index)
+		void QAbstractLogWidget::onDateTimeFilterType_changed(int index)
 		{
 			m_dateTimeFilter.rangeType = (DateTime::Range)index;
 			if (m_dateTimeFilter.active)
@@ -246,7 +246,7 @@ namespace Log
 
 
 
-		void QAbstractLogView::onNewLogger(LogObject::Info loggerInfo)
+		void QAbstractLogWidget::onNewLogger(LogObject::Info loggerInfo)
 		{
 			ContextData data;
 			data.checkBox = new QCheckBox(this);
@@ -258,21 +258,21 @@ namespace Log
 			data.checkBox->setText(loggerInfo.name.c_str());
 			data.id = loggerInfo.id;
 			QObject::connect(data.checkBox, &QCheckBox::stateChanged,
-				this, &QAbstractLogView::onCheckBoxStateChangedSlot);
+				this, &QAbstractLogWidget::onCheckBoxStateChangedSlot);
 			m_contextData[loggerInfo.id] = data;
 			ui->context_scrollAreaWidgetContents->layout()->addWidget(data.checkBox);
 		}
-		void QAbstractLogView::onLoggerInfoChanged(LogObject::Info info)
+		void QAbstractLogWidget::onLoggerInfoChanged(LogObject::Info info)
 		{
 			LOGGER_UNUSED(info);
 		}
-		void QAbstractLogView::onLogMessage(Message message)
+		void QAbstractLogWidget::onLogMessage(Message message)
 		{
 			//if(m_contextData.find(message.getLoggerID()) == m_contextData.end())
 			//	onNewLogger(LogManager::getLogObjectInfo(message.getLoggerID()));
 			LOGGER_UNUSED(message);
 		}
-		void QAbstractLogView::onChangeParent(LoggerID childID, LoggerID newParentID)
+		void QAbstractLogWidget::onChangeParent(LoggerID childID, LoggerID newParentID)
 		{
 			LOGGER_UNUSED(childID);
 			LOGGER_UNUSED(newParentID);
@@ -280,19 +280,19 @@ namespace Log
 
 
 
-		void QAbstractLogView::setContentWidget(QWidget* widget)
+		void QAbstractLogWidget::setContentWidget(QWidget* widget)
 		{
 			ui->content_frame->layout()->addWidget(widget);
 		}
 	
 
-		void QAbstractLogView::onLevelCheckBoxChanged(size_t index, Level level, bool isChecked)
+		void QAbstractLogWidget::onLevelCheckBoxChanged(size_t index, Level level, bool isChecked)
 		{
 			LOGGER_UNUSED(index);
 			LOGGER_UNUSED(level);
 			LOGGER_UNUSED(isChecked);
 		}
-		void QAbstractLogView::onFilterTextChanged(size_t index, QLineEdit* lineEdit, const std::string& text)
+		void QAbstractLogWidget::onFilterTextChanged(size_t index, QLineEdit* lineEdit, const std::string& text)
 		{
 			LOGGER_UNUSED(lineEdit);
 			if (index > 0)
@@ -309,7 +309,7 @@ namespace Log
 				}
 			}
 		}
-		void QAbstractLogView::onContextCheckBoxChanged(const ContextData& context, bool isChecked)
+		void QAbstractLogWidget::onContextCheckBoxChanged(const ContextData& context, bool isChecked)
 		{
 			LOGGER_UNUSED(context);
 			LOGGER_UNUSED(isChecked);
