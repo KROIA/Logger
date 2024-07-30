@@ -1,42 +1,46 @@
 #pragma once
+
 #include "Logger_base.h"
-#include "LoggerTypes/AbstractLogger.h"
-#include <vector>
+#include "LogManager.h"
+#include <QObject>
 
 namespace Log
 {
-	namespace Receiver
+	class AbstractReceiver;
+	// Encapsulating signal handling in a private class
+	class SignalReceiver : public QObject
 	{
-		class LOGGER_EXPORT AbstractReceiver
-		{
-		public:
-			virtual ~AbstractReceiver();
+		friend class AbstractReceiver;
+		Q_OBJECT
+	public:
+		SignalReceiver(AbstractReceiver* receiver);
+		~SignalReceiver() {};
 
-			virtual void attachLogger(Logger::AbstractLogger& logger);
-			virtual void detachLogger(Logger::AbstractLogger& logger);
+	public slots:
+		void onNewLogger(LogObject::Info loggerInfo);
+		void onLoggerInfoChanged(LogObject::Info info);
+		void onLogMessage(Message message);
+		void onChangeParent(LoggerID childID, LoggerID newParentID);
 
-			
+	private:
+		AbstractReceiver* receiver;
+	};
 
-			virtual void clearAttachedLoggers();
-			const std::vector<Logger::AbstractLogger*>& getAttachedLoggers() const;
+	class AbstractReceiver
+	{
+		friend class SignalReceiver;
+	public:
+		AbstractReceiver();
+		virtual ~AbstractReceiver();
 
-			bool isAttached(Logger::AbstractLogger& logger) const;
-		protected:
-			virtual void onPrintAllMessages(Logger::AbstractLogger& logger);
+	protected:
+		virtual void onNewLogger(LogObject::Info loggerInfo) = 0;
+		virtual void onLoggerInfoChanged(LogObject::Info info) = 0;
+		virtual void onLogMessage(Message message) = 0;
+		virtual void onChangeParent(LoggerID childID, LoggerID newParentID) = 0;
+	private:
+		SignalReceiver signalReceiver;
+	};
 
-			virtual void onNewSubscribed(Logger::AbstractLogger& logger) = 0;
-			virtual void onUnsubscribed(Logger::AbstractLogger& logger) = 0;
-
-			virtual void onNewMessage(const Message& m) = 0;
-			virtual void onClear(Logger::AbstractLogger& logger) = 0;
-			virtual void onDelete(Logger::AbstractLogger& logger) = 0;
-
-
-			std::vector<Logger::AbstractLogger*> m_loggers;
-		private:
-			//void onDeletePrivate(Logger::AbstractLogger& logger);
-			
-
-		};
-	}
+	
 }

@@ -1,85 +1,37 @@
 #include "ReceiverTypes/AbstractReceiver.h"
+#include "LogManager.h"
 
 namespace Log
 {
-	namespace Receiver
+	SignalReceiver::SignalReceiver(AbstractReceiver* receiver)
+		: receiver(receiver)
 	{
-		AbstractReceiver::~AbstractReceiver()
-		{
-			clearAttachedLoggers();
-		}
-		void AbstractReceiver::clearAttachedLoggers()
-		{
-			std::vector<Logger::AbstractLogger*> loggers = m_loggers;
-			for (size_t i = 0; i < loggers.size(); i++)
-			{
-				loggers[i]->disconnect_onNewMessage_slot(this, &AbstractReceiver::onNewMessage);
-				loggers[i]->disconnect_onClear_slot(this, &AbstractReceiver::onClear);
-				loggers[i]->disconnect_onDelete_slot(this, &AbstractReceiver::onDelete);
-				//loggers[i]->disconnect_onDelete_slot(this, &AbstractReceiver::onDeletePrivate);
-			}
-			m_loggers.clear();
-		}
-		const std::vector<Logger::AbstractLogger*>& AbstractReceiver::getAttachedLoggers() const
-		{
-			return m_loggers;
-		}
-		bool AbstractReceiver::isAttached(Logger::AbstractLogger& logger) const
-		{
-			for (size_t i = 0; i < m_loggers.size(); i++)
-			{
-				if (m_loggers[i] == &logger)
-				{
-					return true;
-				}
-			}
-			return false;
-		}
-		void AbstractReceiver::attachLogger(Logger::AbstractLogger& logger)
-		{
-			if(isAttached(logger))
-			{
-				return;
-			}
-			m_loggers.push_back(&logger);
-			logger.connect_onNewMessage_slot(this, &AbstractReceiver::onNewMessage);
-			logger.connect_onClear_slot(this, &AbstractReceiver::onClear);
-			logger.connect_onDelete_slot(this, &AbstractReceiver::onDelete);
-			//logger.connect_onDelete_slot(this, &AbstractReceiver::onDeletePrivate);
-
-			onNewSubscribed(logger);
-		}
-		void AbstractReceiver::detachLogger(Logger::AbstractLogger& logger)
-		{
-			logger.disconnect_onNewMessage_slot(this, &AbstractReceiver::onNewMessage);
-			logger.disconnect_onClear_slot(this, &AbstractReceiver::onClear);
-			logger.disconnect_onDelete_slot(this, &AbstractReceiver::onDelete);
-			//logger.disconnect_onDelete_slot(this, &AbstractReceiver::onDeletePrivate);
-
-			onUnsubscribed(logger);
-			for (size_t i = 0; i < m_loggers.size(); i++)
-			{
-				if (m_loggers[i] == &logger)
-				{
-					m_loggers.erase(m_loggers.begin() + i);
-					return;
-				}
-			}
-		}
-		
-
-		/*void AbstractReceiver::onDeletePrivate(Logger::AbstractLogger& logger)
-		{
-	
-		}*/
-
-		void AbstractReceiver::onPrintAllMessages(Logger::AbstractLogger& logger)
-		{
-			const std::vector<Message> &messages = logger.getMessages();
-			for (size_t i = 0; i < messages.size(); ++i)
-			{
-				onNewMessage(messages[i]);
-			}
-		}
+		LogManager& m = LogManager::instance();
+		connect(&m, &LogManager::onNewLogger, this, &SignalReceiver::onNewLogger, Qt::QueuedConnection);
+		connect(&m, &LogManager::onLoggerInfoChanged, this, &SignalReceiver::onLoggerInfoChanged, Qt::QueuedConnection);
+		connect(&m, &LogManager::onLogMessage, this, &SignalReceiver::onLogMessage, Qt::QueuedConnection);
+		connect(&m, &LogManager::onChangeParent, this, &SignalReceiver::onChangeParent, Qt::QueuedConnection);
 	}
+
+	void SignalReceiver::onNewLogger(LogObject::Info loggerInfo) { receiver->onNewLogger(loggerInfo);}
+	void SignalReceiver::onLoggerInfoChanged(LogObject::Info info) { receiver->onLoggerInfoChanged(info); }
+	void SignalReceiver::onLogMessage(Message message) { receiver->onLogMessage(message); }
+	void SignalReceiver::onChangeParent(LoggerID childID, LoggerID newParentID) { receiver->onChangeParent(childID, newParentID); }
+
+
+
+
+	AbstractReceiver::AbstractReceiver()
+		: signalReceiver(this)
+	{
+		
+	}
+	AbstractReceiver::~AbstractReceiver()
+	{
+
+	}
+
+
+
+	
 }

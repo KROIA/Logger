@@ -17,6 +17,7 @@ namespace Log
 			setWindowTitle("Console");
 			m_consoleWidget = new QConsoleWidget(this);
 			setContentWidget(m_consoleWidget);
+			postConstructorInit();
 		}
 		QConsoleView::~QConsoleView()
 		{
@@ -31,30 +32,9 @@ namespace Log
 		{
 			return m_consoleWidget->getDateTimeFormat();
 		}
-		void QConsoleView::getSaveVisibleMessages(std::vector<Logger::AbstractLogger::LoggerSnapshotData>& list) const
+		void QConsoleView::getSaveVisibleMessages(std::unordered_map<LoggerID, std::vector<Message>>& list) const
 		{
-			std::vector< Logger::AbstractLogger::MetaInfo> contexts = getContexts();
-			std::unordered_map<Logger::AbstractLogger::LoggerID, Logger::AbstractLogger::LoggerSnapshotData*> contextMap;
-			for (auto& context : contexts)
-			{
-				Logger::AbstractLogger::LoggerSnapshotData data(context);
-				list.push_back(data);
-			}
-			for (auto& snapshot : list)
-			{
-				contextMap[snapshot.metaInfo.id] = &snapshot;
-			}
-			std::vector<Log::Message::SnapshotData> messages;
-			m_consoleWidget->getSaveVisibleMessages(messages);
-
-			for (auto& message : messages)
-			{
-				auto it = contextMap.find(message.loggerID);
-				if (it != contextMap.end())
-				{
-					it->second->messages.push_back(message);
-				}
-			}
+			m_consoleWidget->getSaveVisibleMessages(list);
 		}
 
 		void QConsoleView::on_clear_pushButton_clicked()
@@ -68,10 +48,10 @@ namespace Log
 			QAbstractLogView::onLevelCheckBoxChanged(index, level, isChecked);
 			m_consoleWidget->setLevelVisibility(level, isChecked);
 		}
-		void QConsoleView::onContextCheckBoxChanged(ContextData const* context, bool isChecked)
+		void QConsoleView::onContextCheckBoxChanged(const ContextData& context, bool isChecked)
 		{
 			QAbstractLogView::onContextCheckBoxChanged(context, isChecked);
-			m_consoleWidget->setContextVisibility(context->loggerInfo->id, isChecked);
+			m_consoleWidget->setContextVisibility(context.id, isChecked);
 		}
 
 		void QConsoleView::onDateTimeFilterChanged(const DateTimeFilter& filter)
@@ -79,9 +59,22 @@ namespace Log
 			m_consoleWidget->setDateTimeFilter(filter);
 		}
 
-		void QConsoleView::onNewMessage(const Message& m)
+		void QConsoleView::onNewLogger(LogObject::Info loggerInfo)
 		{
-			m_consoleWidget->onNewMessage(m);
+			QAbstractLogView::onNewLogger(loggerInfo);
+		}
+		void QConsoleView::onLoggerInfoChanged(LogObject::Info info)
+		{
+			QAbstractLogView::onLoggerInfoChanged(info);
+		}
+		void QConsoleView::onLogMessage(Message message)
+		{
+			QAbstractLogView::onLogMessage(message);
+			m_consoleWidget->onNewMessage(message);
+		}
+		void QConsoleView::onChangeParent(LoggerID childID, LoggerID newParentID)
+		{
+			QAbstractLogView::onChangeParent(childID, newParentID);
 		}
 
 	}

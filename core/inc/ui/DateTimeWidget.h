@@ -3,7 +3,6 @@
 
 #ifdef QT_WIDGETS_LIB
 #include <QDateTimeEdit>
-//#include "ui_DateTimeWidget.h"
 #include "Utilities/DateTime.h"
 
 namespace Log

@@ -1,6 +1,6 @@
 #pragma once
 #include "Logger_base.h"
-#include "LoggerTypes/AbstractLogger.h"
+#include "LogMessage.h"
 
 
 namespace Log
@@ -8,7 +8,7 @@ namespace Log
 	class LOGGER_EXPORT Export
 	{
 	public:
-		static bool saveToFile(const std::vector<Logger::AbstractLogger::LoggerSnapshotData>& list, const std::string& file);
+		static bool saveToFile(const std::unordered_map<LoggerID, std::vector<Message>>& contexts, const std::string& file);
 	
 	private:
 

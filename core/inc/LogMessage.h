@@ -10,20 +10,19 @@
 
 namespace Log
 {
-	namespace Logger
-	{
-		class AbstractLogger;
-	}
+	typedef unsigned int LoggerID;
+
 	class LOGGER_EXPORT Message
 	{
 	public:
-		Message(const std::string& msg);
-		Message(const std::string& msg, Level level);
-		Message(const std::string& msg, Level level, const Color& col);
+		Message();
+		explicit Message(const std::string& msg);
+		explicit Message(const std::string& msg, Level level);
+		explicit Message(const std::string& msg, Level level, const Color& col);
 
-		Message(const char* msg);
-		Message(const char* msg, Level level);
-		Message(const char* msg, Level level, const Color& col);
+		explicit Message(const char* msg);
+		explicit Message(const char* msg, Level level);
+		explicit Message(const char* msg, Level level, const Color& col);
 
 		Message(const Message& other);
 
@@ -40,9 +39,6 @@ namespace Log
 		void setText(const std::string& text);
 		void setText(const char* text);
 		const std::string& getText() const;
-		
-		void setContext(Logger::AbstractLogger* context);
-		Logger::AbstractLogger* getContext() const;
 
 		void setColor(const Color& color);
 		const Color& getColor() const;
@@ -54,8 +50,8 @@ namespace Log
 		void updateTimestamp();
 		const DateTime& getDateTime() const;
 
-		void setTabCount(unsigned int count);
-		unsigned int getTabCount() const;
+		void setLoggerID(LoggerID id){ m_loggerID = id; }
+		LoggerID getLoggerID() const { return m_loggerID; }
 
 		std::string toString(DateTime::Format format) const;
 
@@ -70,29 +66,15 @@ namespace Log
 		};
 		static void sort(std::vector<Message>& messages, SortType type);
 
-		struct SnapshotData
-		{
-			std::string message;
-			std::string contextName;
-			int loggerID;
-			Level level;
-			Color textColor;
-			Color contextColor;
-			unsigned int tabCount;
-
-			DateTime dateTime;
-		};
-		SnapshotData createSnapshot() const;
 
 	protected:
 		std::string m_message;
-		Logger::AbstractLogger* m_context;
 		Level m_level;
 		Color m_customColor;
 		bool m_useCustomColor;
-		unsigned int m_tabCount;
 
 		DateTime m_dateTime;
+		LoggerID m_loggerID;
 		
 	private:
 		void normalizeMessage();
@@ -100,3 +82,5 @@ namespace Log
 		static LevelColors s_levelColors; // Initialized in LogColor.cpp
 	};
 }
+
+Q_DECLARE_METATYPE(Log::Message);

@@ -2,7 +2,6 @@
 #include "Logger_base.h"
 
 #ifdef QT_WIDGETS_LIB
-#include "ReceiverTypes/ContextReceiver.h"
 #include <vector>
 #include <QTableView>
 #include <QStyledItemDelegate>
@@ -25,13 +24,13 @@ namespace Log
             DateTime::Format getDateTimeFormat() const;
 
             void setLevelVisibility(Level level, bool isVisible);
-            void setContextVisibility(Logger::AbstractLogger::LoggerID loggerID, bool isVisible);
+            void setContextVisibility(LoggerID loggerID, bool isVisible);
             void setDateTimeFilter(const DateTimeFilter& filter);
 
             void onNewMessage(const Message& m);
             void clear();
 
-            void getSaveVisibleMessages(std::vector<Log::Message::SnapshotData>& list);
+            void getSaveVisibleMessages(std::unordered_map<LoggerID, std::vector<Message>>& list);
 
         signals:
             void messageQueued(QPrivateSignal*);

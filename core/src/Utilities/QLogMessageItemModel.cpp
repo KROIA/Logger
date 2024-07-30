@@ -3,8 +3,8 @@
 #ifdef QT_WIDGETS_LIB
 #include <QBrush>
 #include <QFont>
-#include "LoggerTypes/AbstractLogger.h"
 #include "Utilities/Resources.h"
+#include "LogManager.h"
 
 
 namespace Log
@@ -43,7 +43,8 @@ namespace Log
         if (!index.isValid() || index.row() >= logs.size() || index.column() >= (int)Column::__count)
             return QVariant();
 
-        const Message::SnapshotData& entry = logs[index.row()];
+        const Message& entry = logs[index.row()];
+        LogObject::Info info = LogManager::getLogObjectInfo(entry.getLoggerID());
 
         float colorFactor = 0.5f;
 
@@ -51,9 +52,9 @@ namespace Log
         case Qt::DisplayRole:
             switch (index.column())
             {
-            case Column::TimeColumn:    return QString::fromStdString(entry.dateTime.toString(m_dateTimeFormat));
-            case Column::ContextColumn: return QString::fromStdString(entry.contextName);
-            case Column::MessageColumn: return QString::fromStdString(entry.message);
+            case Column::TimeColumn:    return QString::fromStdString(entry.getDateTime().toString(m_dateTimeFormat));
+            case Column::ContextColumn: return QString::fromStdString(info.name);
+            case Column::MessageColumn: return QString::fromStdString(entry.getText());
             }
             break;
         case Qt::ForegroundRole:
@@ -61,24 +62,24 @@ namespace Log
             {
             //case Column::TimeColumn:    return QBrush(entry.getContext()->getColor().toQColor());
             //case Column::ContextColumn: return QBrush(entry.getColor().toQColor());
-            case Column::MessageColumn: return QBrush(entry.textColor.toQColor());
+            case Column::MessageColumn: return QBrush(entry.getColor().toQColor());
             }
             break;
 
         case Qt::BackgroundRole:
             switch (index.column())
             {
-            case Column::TimeColumn:    return QBrush((entry.contextColor * colorFactor).toQColor());
-            case Column::ContextColumn: return QBrush((entry.contextColor * colorFactor).toQColor());
-            case Column::LevelColumn:   return QBrush((entry.contextColor * colorFactor).toQColor());
-            case Column::MessageColumn: return QBrush((entry.contextColor * colorFactor).toQColor());
+            case Column::TimeColumn:    return QBrush((info.color * colorFactor).toQColor());
+            case Column::ContextColumn: return QBrush((info.color * colorFactor).toQColor());
+            case Column::LevelColumn:   return QBrush((info.color * colorFactor).toQColor());
+            case Column::MessageColumn: return QBrush((info.color * colorFactor).toQColor());
             }
             break;
 
         case Qt::DecorationRole:
             switch (index.column())
             {
-            case Column::LevelColumn:   return Utilities::getIcon(entry.level);
+            case Column::LevelColumn:   return Utilities::getIcon(entry.getLevel());
             }
             break;
 
@@ -98,7 +99,7 @@ namespace Log
     void QLogMessageItemModel::addLog(const Message& entry)
     {
         beginInsertRows(QModelIndex(), logs.size(), logs.size());
-        logs.push_back(entry.createSnapshot());
+        logs.push_back(entry);
         endInsertRows();
     }
 
@@ -136,7 +137,7 @@ namespace Log
         return QVariant();
     }
 
-    const Message::SnapshotData& QLogMessageItemModel::getElement(size_t row) const
+    const Message& QLogMessageItemModel::getElement(size_t row) const
     {
         return logs[row];
     }
@@ -167,7 +168,7 @@ namespace Log
         return m_levelActivated[static_cast<int>(level)];
     }
 
-    void QLogMessageItemProxyModel::setContextVisibility(Logger::AbstractLogger::LoggerID loggerID, bool isVisible)
+    void QLogMessageItemProxyModel::setContextVisibility(LoggerID loggerID, bool isVisible)
     {
         auto it = m_contextVisibility.find(loggerID);
         if (it != m_contextVisibility.end())
@@ -180,7 +181,7 @@ namespace Log
         }
     }
 
-    bool QLogMessageItemProxyModel::getContextVisibility(Logger::AbstractLogger::LoggerID loggerID) const
+    bool QLogMessageItemProxyModel::getContextVisibility(LoggerID loggerID) const
     {
         auto it = m_contextVisibility.find(loggerID);
         if (it != m_contextVisibility.end())
@@ -249,24 +250,24 @@ namespace Log
         LOGGER_UNUSED(sourceParent);
         if (!m_sourceModel)
 			return false;
-		const Message::SnapshotData &data = m_sourceModel->getElement(sourceRow);
-        if(!m_levelActivated[static_cast<int>(data.level)])
+		const Message &data = m_sourceModel->getElement(sourceRow);
+        if(!m_levelActivated[static_cast<int>(data.getLevel())])
 			return false;
 
-        if(!getContextVisibility(data.loggerID))
+        if(!getContextVisibility(data.getLoggerID()))
             return false;
 
-        return m_dateTimeFilter.matches(data.dateTime);
+        return m_dateTimeFilter.matches(data.getDateTime());
     }
     bool QLogMessageItemProxyModel::lessThan(const QModelIndex& left,
         const QModelIndex& right) const
     {
         if(!m_sourceModel)
 			return false;
-        const Message::SnapshotData &leftData = m_sourceModel->getElement(left.row());
-        const Message::SnapshotData &rightData = m_sourceModel->getElement(right.row());
+        const Message &leftData = m_sourceModel->getElement(left.row());
+        const Message &rightData = m_sourceModel->getElement(right.row());
 
-        if(leftData.dateTime < rightData.dateTime)
+        if(leftData.getDateTime() < rightData.getDateTime())
 			return true;
         return false;
     }

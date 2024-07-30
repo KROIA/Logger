@@ -12,14 +12,14 @@ class ContextObject : public QWidget
 public:
 	ContextObject(
 		const std::string& contextName,
-		Log::Logger::ContextLogger& logger,
+		Log::LogObject& logger,
 		Log::UI::QContextLoggerTreeView* view,
 		Log::UI::QConsoleView* consoleView,
 		QWidget *parent = nullptr);
 	virtual ~ContextObject();
 
 
-	Log::Logger::ContextLogger* m_logger;
+	Log::LogObject* m_logger;
 
 protected slots:
 	void onMessageTimer();
@@ -32,7 +32,7 @@ protected slots:
 	void onDeleteContext_pushButton_clicked();
 	void onDateTimeFormatSwitch_pushButton_clicked();
 
-	void onDelete(Log::Logger::AbstractLogger& logger);
+	//void onDelete(Log::Logger::AbstractLogger& logger);
 protected:
 
 	QTimer m_messageTimer;

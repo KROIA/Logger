@@ -2,7 +2,6 @@
 #include "Logger_base.h"
 
 #ifdef QT_WIDGETS_LIB
-#include "LoggerTypes/ContextLogger.h"
 #include "ui/QContextLoggerTree.h"
 #include "ReceiverTypes/ui/QAbstractLogView.h"
 #include <QTreeWidget>
@@ -23,7 +22,7 @@ namespace Log
             void setDateTimeFormat(DateTime::Format format) override;
             DateTime::Format getDateTimeFormat() const override;
 
-            void getSaveVisibleMessages(std::vector<Logger::AbstractLogger::LoggerSnapshotData>& list) const override;
+            void getSaveVisibleMessages(std::unordered_map<LoggerID, std::vector<Message>>& list) const override;
 
         signals:
                 void messageQueued(QPrivateSignal*);
@@ -33,12 +32,14 @@ namespace Log
 
         private:
             void on_clear_pushButton_clicked() override;
-            void addContext(Logger::AbstractLogger& logger) override;
+    
 
             void onLevelCheckBoxChanged(size_t index, Level level, bool isChecked) override;
-            void onContextCheckBoxChanged(ContextData const* context, bool isChecked) override;
+            void onContextCheckBoxChanged(const ContextData& context, bool isChecked) override;
             void onDateTimeFilterChanged(const DateTimeFilter& filter) override;
-            void onNewMessage(const Message& m) override;
+
+            void onNewLogger(LogObject::Info loggerInfo) override;
+            void onLogMessage(Message message) override;
 
 
 
