@@ -98,16 +98,6 @@ namespace Log
 			TreeData *treeData = new TreeData(this, newContext.id);
 			m_msgItems[newContext.id] = treeData;
 		}
-		//void QContextLoggerTree::removeContext(Logger::AbstractLogger::LoggerID id)
-		//{
-		//	const auto& it = m_msgItems.find(id);
-		//	if (it == m_msgItems.end())
-		//		return;
-		//
-		//	TreeData* treeData = it->second;
-		//	m_msgItems.erase(it);
-		//	delete treeData;
-		//}
 		void QContextLoggerTree::onNewMessage(const Message& m)
 		{
 			const auto &it = m_msgItems.find(m.getLoggerID());
@@ -118,18 +108,10 @@ namespace Log
 		}
 		void QContextLoggerTree::clearMessages()
 		{
-			//restartSearch:
-			//auto copy = m_msgItems;
-			//for(auto &it : copy)
-			//{
-			//	if (!it.second->getLoggerIsAlive())
-			//	{
-			//		removeContext(it.first);
-			//		goto restartSearch;
-			//	}
-			//	else
-			//		it.second->clearMessages();
-			//}
+			for (auto& it : m_msgItems)
+			{
+				it.second->clearMessages();
+			}
 		}
 
 

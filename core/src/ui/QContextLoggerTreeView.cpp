@@ -46,14 +46,6 @@ namespace Log
 			QAbstractLogView::on_clear_pushButton_clicked();
 			m_treeItem->clearMessages();
 		}
-		/*void QContextLoggerTreeView::addContext(Logger::AbstractLogger& logger)
-		{
-			{
-				QMutexLocker locker(&m_mutex);
-				m_treeItem->addContext(logger);
-			}
-			QAbstractLogView::addContext(logger);
-		}*/
 
 
 		void QContextLoggerTreeView::onLevelCheckBoxChanged(size_t index, Level level, bool isChecked)
@@ -70,11 +62,6 @@ namespace Log
 		{
 			m_treeItem->setDateTimeFilter(filter);
 		}
-
-		//void QContextLoggerTreeView::onNewMessage(const Message& m)
-		//{
-		//	
-		//}
 
 		void QContextLoggerTreeView::onNewLogger(LogObject::Info loggerInfo)
 		{

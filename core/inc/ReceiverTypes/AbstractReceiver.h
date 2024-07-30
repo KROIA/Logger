@@ -39,11 +39,6 @@ namespace Log
 		virtual void onLogMessage(Message message) = 0;
 		virtual void onChangeParent(LoggerID childID, LoggerID newParentID) = 0;
 	private:
-		
-
-
-		
-
 		SignalReceiver signalReceiver;
 	};
 

@@ -5,11 +5,59 @@
 #include "LogManager.h"
 #include "LogObject.h"
 
+#include <QJsonDocument>
+#include <QJsonArray>
+#include <QJsonObject>
+
 namespace Log
 {
 	bool Export::saveToFile(const std::unordered_map<LoggerID, std::vector<Message>>& contexts, const std::string& file)
 	{
 		Log::DateTime::Format timeFormat = Log::DateTime::Format::yearMonthDay | Log::DateTime::Format::hourMinuteSecondMillisecond;
+
+		QJsonObject root;
+
+		QJsonObject libraryInfo;
+		libraryInfo["name"] = LibraryInfo::name;
+		libraryInfo["version"] = LibraryInfo::versionStr().c_str();
+
+		QJsonObject levelInfo;
+		for(int i=0; i<(int)Level::__count; ++i)
+			levelInfo[Utilities::getLevelStr((Level)i).c_str()] = i;
+		libraryInfo["levelInfo"] = levelInfo;
+
+		root["libraryInfo"] = libraryInfo;
+
+		QJsonArray contextArray;
+		for (const auto& context : contexts)
+		{
+			QJsonObject contextObject;
+			const LogObject::Info &metaInfo = LogManager::getLogObjectInfo(context.first);
+
+			contextObject["id"] = (int)context.first;
+			contextObject["name"] = metaInfo.name.c_str();
+			contextObject["creationTime"] = metaInfo.creationTime.toString(timeFormat).c_str();
+			contextObject["parentId"] = (int)metaInfo.parentId;
+			contextObject["color"] = metaInfo.color.getRGBStr().c_str();
+			//contextObject["enabled"] = metaInfo.enabled;
+
+			QJsonArray messageArray;
+			for (const auto& message : context.second)
+			{
+				QJsonObject messageObject;
+				messageObject["level"] = message.getLevel();
+				messageObject["text"] = message.getText().c_str();
+				messageObject["color"] = message.getColor().getRGBStr().c_str();
+				messageObject["dateTime"] = message.getDateTime().toString(timeFormat).c_str();
+
+				messageArray.append(messageObject);
+			}
+			contextObject["messages"] = messageArray;
+			contextArray.append(contextObject);
+		}
+		root["contexts"] = contextArray;
+
+		QJsonDocument doc(root);
 
 		std::ofstream out(file);
 		if (!out.is_open())
@@ -17,62 +65,9 @@ namespace Log
 			return false;
 		}
 
-		static const std::string libInfo = 
-			std::string("# Saved by library: \"") + LibraryInfo::name + "\"" +
-			"\tVersion: " + LibraryInfo::versionStr() + 
-			"\tBuildtype: " + LibraryInfo::buildTypeStr + "\n";
-
-		out << libInfo;
-
-
-		for (const auto listIt : contexts)
-		{
-			//const Logger::AbstractLogger::LoggerSnapshotData &data = list[i];
-			//const Logger::AbstractLogger::MetaInfo &metaInfo = data.metaInfo;
-			const LoggerID id = listIt.first;
-			const std::vector<Message>& messages = listIt.second;
-			const LogObject::Info &metaInfo = LogManager::getLogObjectInfo(id);
-
-			std::string contextInfo =
-				"Context[" + std::to_string(id) + "]{\n" +
-				"\tname=" + metaInfo.name + "\n" +
-				"\tcreationTime=" + metaInfo.creationTime.toString(timeFormat) + "\n" +
-				"\tparentID=" + std::to_string(metaInfo.parentId) + "\n" +
-				"\tcolor=" + metaInfo.color.getRGBStr() + "\n" +
-				"\tenabled=" + std::to_string(metaInfo.enabled) + "\n" +
-				"\tmessages={\n";
-
-			out << contextInfo;
-
-			for (size_t j = 0; j < messages.size(); j++)
-			{
-				out << "\t[" << j << "]{";
-
-				out << "Level=" << messages[j].getLevel() << std::endl;
-
-				std::string messageText = messages[j].getText();
-
-				// Replace newlines with \n and " with \"
-				for (size_t k = 0; k < messageText.size(); k++)
-				{
-					if (messageText[k] == '\n')
-					{
-						messageText.replace(k, 1, "\\n");
-						k++;
-					}
-					else if (messageText[k] == '\"')
-					{
-						messageText.replace(k, 1, "\\\"");
-						k++;
-					}
-				}
-				out << "\t\tMessage=\"" << messageText <<"\"" << std::endl;
-				out << "\t\tColor=" << messages[j].getColor().getRGBStr() << std::endl;
-				out << "\t\tDateTime=\"" << messages[j].getDateTime().toString(timeFormat) << "\"\t}\n";
-			}
-			out << "\t}\n}\n";
-		}
+		out << doc.toJson().toStdString();
 		out.close();
+
 		return true;
 	}
 

@@ -41,11 +41,6 @@ namespace Log
             virtual void getSaveVisibleMessages(std::unordered_map<LoggerID, std::vector<Message>>& list) const = 0;
             bool saveVisibleMessages(const std::string &outputFile) const;
 
-           // std::vector< Logger::AbstractLogger::MetaInfo> getContexts() const;
-
-        signals:
-            //void newContextAdded(QPrivateSignal*);
-
         protected slots:
             virtual void onAllContextCheckBoxStateChanged(int state);
             virtual void on_clear_pushButton_clicked();
@@ -65,8 +60,6 @@ namespace Log
             void onDateTimeFilterMaxNow_pushButton_clicked();
             void onDateTimeFilterType_changed(int index);
 
-            //void onNewContextAdded(QPrivateSignal*);
-
         protected:
 
             struct ContextData
@@ -83,113 +76,24 @@ namespace Log
             void onChangeParent(LoggerID childID, LoggerID newParentID) override;
 
 
-
-
-
-
-
-
-           /* struct ContextData
-            {
-                QCheckBox* checkBox;
-                std::shared_ptr<const Logger::AbstractLogger::MetaInfo> loggerInfo;
-
-                ContextData(std::shared_ptr<const Logger::AbstractLogger::MetaInfo> loggerInfo,
-                    QCheckBox* checkBox)
-                    : checkBox(checkBox)
-                    , loggerInfo(loggerInfo)
-                {
-                    checkBox->setChecked(true);
-                    checkBox->setText(loggerInfo->name.c_str());
-                }
-            };*/
             void setContentWidget(QWidget* widget);
-
-            //void onNewSubscribed(Logger::AbstractLogger& logger) override;
-            //void onUnsubscribed(Logger::AbstractLogger& logger) override;
-            //
-            //void onContextCreate(Logger::ContextLogger& logger) override;
-            //void onContextDestroy(Logger::AbstractLogger& logger) override;
-            //virtual void addContext(Logger::AbstractLogger& logger);
 
             virtual void onLevelCheckBoxChanged(size_t index, Level level, bool isChecked);
             virtual void onFilterTextChanged(size_t index, QLineEdit* lineEdit, const std::string& text);
             virtual void onContextCheckBoxChanged(const ContextData& context, bool isChecked);
-            //virtual void onNewContextCheckBoxCreated(ContextData const* context);
-            //virtual void onContextCheckBoxDestroyed(ContextData const* context);
-
             virtual void onDateTimeFilterChanged(const DateTimeFilter& filter) = 0;
-
-            //virtual void removeContext(Logger::AbstractLogger::LoggerID id);
-          
-
-
-
-            //void onNewMessage(const Message& m) = 0;
-            //void onClear(Logger::AbstractLogger& logger) override;
-            //void onDelete(Logger::AbstractLogger& logger) override;
-
-            //virtual void addContextRecursive(Logger::ContextLogger& logger);
-            //virtual void addChildContextRecursive(Logger::ContextLogger& logger);
 
 
             Ui::QAbstractLogView* ui;
         private:
-		    //void onContextDestroyFromNewQueue(Logger::AbstractLogger& logger);
             QCheckBox* m_levelCheckBoxes[static_cast<int>(Level::__count)];
             std::vector<QLineEdit*> m_filterTextEdits;
-
-            
 
             std::unordered_map<LoggerID, ContextData> m_contextData;
             DateTimeFilter m_dateTimeFilter;
 
             bool m_autoCreateNewCheckBoxForNewContext = false;
             bool m_ignoreAllContextCheckBox_signals = false;
-
-           /* struct NewContextQueueData
-            {
-                Logger::AbstractLogger* logger = nullptr;
-                std::vector<Message> messagesAtAttack;
-
-                NewContextQueueData(Logger::AbstractLogger& logger)
-                    : logger(&logger)
-                    , messagesAtAttack(logger.getMessages())
-                {
-                }
-
-                NewContextQueueData(const NewContextQueueData& other)
-                    : logger(other.logger)
-                    , messagesAtAttack(other.messagesAtAttack)
-                {
-                }
-                NewContextQueueData(const NewContextQueueData&& other) noexcept
-                    : logger(other.logger)
-                    , messagesAtAttack(std::move(other.messagesAtAttack))
-                {
-                }
-
-                NewContextQueueData& operator=(const NewContextQueueData& other)
-                {
-                    if (logger == other.logger)
-                        return *this;
-                    logger = other.logger;
-                    messagesAtAttack = other.messagesAtAttack;
-                    return *this;
-                }
-
-                void onContextDestroy(Logger::AbstractLogger& logger)
-                {
-                    if (this->logger == &logger)
-                    {
-                        this->logger = nullptr;
-                        messagesAtAttack.clear();
-                    }
-                }
-            };
-
-            QMutex m_newContextQueueMutex;
-            std::unordered_map<Logger::AbstractLogger::LoggerID, NewContextQueueData> m_newContextQueue;*/
         };
     }
 }

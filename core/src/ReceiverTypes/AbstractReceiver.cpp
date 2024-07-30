@@ -13,10 +13,7 @@ namespace Log
 		connect(&m, &LogManager::onChangeParent, this, &SignalReceiver::onChangeParent, Qt::QueuedConnection);
 	}
 
-	void SignalReceiver::onNewLogger(LogObject::Info loggerInfo) 
-	{ 
-		receiver->onNewLogger(loggerInfo);
-	}
+	void SignalReceiver::onNewLogger(LogObject::Info loggerInfo) { receiver->onNewLogger(loggerInfo);}
 	void SignalReceiver::onLoggerInfoChanged(LogObject::Info info) { receiver->onLoggerInfoChanged(info); }
 	void SignalReceiver::onLogMessage(Message message) { receiver->onLogMessage(message); }
 	void SignalReceiver::onChangeParent(LoggerID childID, LoggerID newParentID) { receiver->onChangeParent(childID, newParentID); }

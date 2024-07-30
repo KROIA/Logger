@@ -34,28 +34,7 @@ namespace Log
 		}
 		void QConsoleView::getSaveVisibleMessages(std::unordered_map<LoggerID, std::vector<Message>>& list) const
 		{
-			/*std::vector<Logger::AbstractLogger::MetaInfo> contexts = getContexts();
-			std::unordered_map<LoggerID, Logger::AbstractLogger::LoggerSnapshotData*> contextMap;
-			for (auto& context : contexts)
-			{
-				Logger::AbstractLogger::LoggerSnapshotData data(context);
-				list.push_back(data);
-			}
-			for (auto& snapshot : list)
-			{
-				contextMap[snapshot.metaInfo.id] = &snapshot;
-			}
-			std::vector<Log::Message::SnapshotData> messages;*/
 			m_consoleWidget->getSaveVisibleMessages(list);
-
-			/*for (auto& message : messages)
-			{
-				auto it = contextMap.find(message.loggerID);
-				if (it != contextMap.end())
-				{
-					it->second->messages.push_back(message);
-				}
-			}*/
 		}
 
 		void QConsoleView::on_clear_pushButton_clicked()

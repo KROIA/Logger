@@ -32,12 +32,11 @@ namespace Log
 
         private:
             void on_clear_pushButton_clicked() override;
-            //void addContext(LoggerID& logger);
+    
 
             void onLevelCheckBoxChanged(size_t index, Level level, bool isChecked) override;
             void onContextCheckBoxChanged(const ContextData& context, bool isChecked) override;
             void onDateTimeFilterChanged(const DateTimeFilter& filter) override;
-           // void onNewMessage(const Message& m);
 
             void onNewLogger(LogObject::Info loggerInfo) override;
             void onLogMessage(Message message) override;
