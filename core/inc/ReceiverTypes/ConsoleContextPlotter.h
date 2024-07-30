@@ -7,7 +7,7 @@
 
 namespace Log
 {
-	namespace Receiver
+	namespace UI
 	{
 		class LOGGER_EXPORT ConsoleContextPlotter : public AbstractReceiver
 		{

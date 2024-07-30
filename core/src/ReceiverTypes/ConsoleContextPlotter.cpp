@@ -5,7 +5,7 @@
 
 namespace Log
 {
-	namespace Receiver
+	namespace UI
 	{
 		ConsoleContextPlotter::ConsoleContextPlotter()
 			: AbstractReceiver()

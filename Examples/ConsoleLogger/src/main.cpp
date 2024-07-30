@@ -7,7 +7,7 @@ int main(void)
 	Log::LogObject context3("context3");
 	context.setColor(Log::Color::Console::Foreground::cyan);
 	//Log::Receiver::ConsolePlotter plotter;
-	Log::Receiver::ConsoleContextPlotter plotter;
+	Log::UI::ConsoleContextPlotter plotter;
 
 
 	context3.log("Test123");
