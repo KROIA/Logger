@@ -57,6 +57,7 @@ namespace Log
 
 		LogObject(const std::string& name = "LogObject");
 		LogObject(const LogObject& other, const std::string& name = "LogObject");
+		LogObject(LoggerID parentID, const std::string& name = "LogObject");
 
 		~LogObject();
 
@@ -69,6 +70,7 @@ namespace Log
 		DateTime getCreationDateTime() const;
 		LoggerID getID() const;
 		void setParentID(LoggerID parentID);
+		LoggerID getParentID() const;
 
 
 

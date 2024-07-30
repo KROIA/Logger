@@ -13,6 +13,11 @@ namespace Log
 		Info info(0, other.getID(), name, DateTime(), Color::white, true);
 		m_id = LogManager::addNewLogger(info);
 	}
+	LogObject::LogObject(LoggerID parentID, const std::string& name)
+	{
+		Info info(0, parentID, name, DateTime(), Color::white, true);
+		m_id = LogManager::addNewLogger(info);
+	}
 
 	LogObject::~LogObject()
 	{
@@ -63,6 +68,10 @@ namespace Log
 	void LogObject::setParentID(LoggerID parentID)
 	{
 		LogManager::onChangeParentInternal(m_id, parentID);
+	}
+	LoggerID LogObject::getParentID() const
+	{
+		return LogManager::getLogObjectInfo(m_id).parentId;
 	}
 
 
