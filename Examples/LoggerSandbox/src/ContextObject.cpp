@@ -19,7 +19,7 @@ ContextObject::ContextObject(
 	ui.setupUi(this);
 
 	//m_logger->connect_onDelete_slot(this, &ContextObject::onDelete);
-	m_logger->setColor(Log::Color::darkGray);
+	m_logger->setColor(Log::Colors::darkGray);
 
 	m_messageTimer.setInterval(1000);
 	m_warningTimer.setInterval(2000);

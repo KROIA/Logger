@@ -59,8 +59,8 @@ int main(int argc, char* argv[])
 	Log::LogObject logger3("AbstractLogger");
     //logger1.setIcon(QIcon(":\\icons\\debug.png"));
     //logger2.setIcon(QIcon(":\\icons\\trace.png"));
-	logger1.setColor(Log::Color::orange);
-	logger2.setColor(Log::Color::cyan);
+	logger1.setColor(Log::Colors::orange);
+	logger2.setColor(Log::Colors::cyan);
 	Log::UI::QTreeConsoleView* view = new Log::UI::QTreeConsoleView();
 	view->show();
 
@@ -74,7 +74,7 @@ int main(int argc, char* argv[])
 	Context1Object *obj1 = new Context1Object(logger1,view, console);
 	Context2Object *obj2 = new Context2Object(logger2,view, console);
 
-    logger3.log("Hallo", Log::Level::info, Log::Color::green);
+    logger3.log("Hallo", Log::Level::info, Log::Colors::green);
 
 	//view->attachLogger(logger1);
 	//view->attachLogger(logger2);
@@ -96,7 +96,7 @@ int main(int argc, char* argv[])
                 for(int i = 0; i < 2; i++)
                 {
                     std::this_thread::sleep_for(std::chrono::seconds(1));
-                    context->log("Hallo\n\n\n", Log::Level::info, Log::Color::green);
+                    context->log("Hallo\n\n\n", Log::Level::info, Log::Colors::green);
                 }
                 
 

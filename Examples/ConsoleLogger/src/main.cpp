@@ -9,7 +9,7 @@ int main(int argc, char *argv[])
 	Log::LogObject context("context");
 	
 	Log::LogObject context3("context3");
-	context.setColor(Log::Color::Console::Foreground::cyan);
+	context.setColor(Log::Colors::Console::Foreground::cyan);
 	//Log::Receiver::ConsolePlotter plotter;
 	Log::UI::NativeConsoleView plotter;
 
@@ -21,11 +21,11 @@ int main(int argc, char *argv[])
 	_sleep(10);
 	//context.tabIn();
 	context.log("Info msg", Log::Level::info);
-	context.log("Info msg green", Log::Level::info, Log::Color::green);
+	context.log("Info msg green", Log::Level::info, Log::Colors::green);
 	//context.tabIn();
 	_sleep(100);
 	Log::LogObject *context2 = new Log::LogObject(context, "Name 2");
-	context2->setColor(Log::Color::Console::Background::green);
+	context2->setColor(Log::Colors::Console::Background::green);
 	context2->log("Error msg1", Log::Level::error);
 	_sleep(10);
 	context2->log("Error msg2", Log::Level::error);

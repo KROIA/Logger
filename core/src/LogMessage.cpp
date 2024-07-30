@@ -3,10 +3,20 @@
 
 namespace Log
 {
+
+	LevelColors Message::s_levelColors{
+		Colors::cyan,		// trace,
+		Colors::magenta,	// debug,
+		Colors::white,		// info,
+		Colors::yellow,		// warning,
+		Colors::red,		// error,
+		Colors::green		// custom
+	};
+
 	Message::Message()
 		: m_message("")
 		, m_level(Level::info)
-		, m_customColor(Color::white)
+		, m_customColor(Colors::white)
 		, m_useCustomColor(false)
 		, m_loggerID(0)
 	{
@@ -15,7 +25,7 @@ namespace Log
 	Message::Message(const std::string& msg)
 		: m_message(msg)
 		, m_level(Level::info)
-		, m_customColor(Color::white)
+		, m_customColor(Colors::white)
 		, m_useCustomColor(false)
 		, m_loggerID(0)
 	{
@@ -24,7 +34,7 @@ namespace Log
 	Message::Message(const std::string& msg, Level level)
 		: m_message(msg)
 		, m_level(level)
-		, m_customColor(Color::white)
+		, m_customColor(Colors::white)
 		, m_useCustomColor(false)
 		, m_loggerID(0)
 	{
@@ -42,7 +52,7 @@ namespace Log
 	Message::Message(const char* msg)
 		: m_message(msg)
 		, m_level(Level::info)
-		, m_customColor(Color::white)
+		, m_customColor(Colors::white)
 		, m_useCustomColor(false)
 		, m_loggerID(0)
 	{
@@ -51,7 +61,7 @@ namespace Log
 	Message::Message(const char* msg, Level level)
 		: m_message(msg)
 		, m_level(level)
-		, m_customColor(Color::white)
+		, m_customColor(Colors::white)
 		, m_useCustomColor(false)
 		, m_loggerID(0)
 	{
@@ -175,7 +185,7 @@ namespace Log
 		if (m_level != Level::custom)
 		{
 			m_useCustomColor = false;
-			m_customColor = Color::white;
+			m_customColor = Colors::white;
 		}
 		else
 		{
@@ -221,7 +231,7 @@ namespace Log
 			case Level::error:    return s_levelColors.error;
 			case Level::custom:   return s_levelColors.custom;
 		}
-		return Color::white;
+		return Colors::white;
 	}
 	const LevelColors& Message::getLevelColors()
 	{

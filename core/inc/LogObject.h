@@ -26,7 +26,7 @@ namespace Log
 				, parentId(0)
 				, name("")
 				, creationTime(DateTime())
-				, color(Color::white)
+				, color(Colors::white)
 				, enabled(false)
 			{}
 			Info(LoggerID id,

@@ -4,6 +4,8 @@
 
 namespace Log
 {
+
+
 	/*
 The different color codes are
 
@@ -26,96 +28,10 @@ The different color codes are
 */
 
 
-	const Color Color::red(255, 0, 0, 0x04);
-	const Color Color::green(0, 255, 0, 0x02);
-	const Color Color::blue(0, 0, 255, 0x01);
-	const Color Color::yellow(255, 255, 0, 0x0E);
-	const Color Color::magenta(255, 0, 255, 0x05);
-	const Color Color::cyan(0, 255, 255, 0x03);
-	const Color Color::white(255, 255, 255, 0x0F);
-	const Color Color::black(0, 0, 0, 0x00);
-	const Color Color::brown(139, 69, 19, 0x06);
-	const Color Color::lightGray(211, 211, 211, 0x07);
-	const Color Color::darkGray(169, 169, 169, 0x08);
-	const Color Color::lightBlue(173, 216, 230, 0x09);
-	const Color Color::lightGreen(144, 238, 144, 0x0A);
-	const Color Color::lightCyan(224, 255, 255, 0x0B);
-	const Color Color::lightRed(255, 0xCC, 0xCB, 0x0C);
-	const Color Color::lightMagenta(255, 0x77, 255, 0x0D);
-
-	const Color Color::orange(255, 165, 0);
-
-	const Color Color::Console::Foreground::red(255, 0, 0, 0x04);
-	const Color Color::Console::Foreground::green(0, 255, 0, 0x02);
-	const Color Color::Console::Foreground::blue(0, 0, 255, 0x01);
-	const Color Color::Console::Foreground::yellow(255, 255, 0, 0x0E);
-	const Color Color::Console::Foreground::magenta(255, 0, 255, 0x05);
-	const Color Color::Console::Foreground::cyan(0, 255, 255, 0x03);
-	const Color Color::Console::Foreground::white(255, 255, 255, 0x0F);
-	const Color Color::Console::Foreground::black(0, 0, 0, 0x00);
-	const Color Color::Console::Foreground::brown(139, 69, 19, 0x06);
-	const Color Color::Console::Foreground::lightGray(211, 211, 211, 0x07);
-	const Color Color::Console::Foreground::darkGray(169, 169, 169, 0x08);
-	const Color Color::Console::Foreground::lightBlue(173, 216, 230, 0x09);
-	const Color Color::Console::Foreground::lightGreen(144, 238, 144, 0x0A);
-	const Color Color::Console::Foreground::lightCyan(224, 255, 255, 0x0B);
-	const Color Color::Console::Foreground::lightRed(255, 0xCC, 0xCB, 0x0C);
-	const Color Color::Console::Foreground::lightMagenta(255, 0x77, 255, 0x0D);
-
-	const Color Color::Console::Background::red(255, 0, 0, 0x40);
-	const Color Color::Console::Background::green(0, 255, 0, 0x20);
-	const Color Color::Console::Background::blue(0, 0, 255, 0x10);
-	const Color Color::Console::Background::yellow(255, 255, 0, 0xE0);
-	const Color Color::Console::Background::magenta(255, 0, 255, 0x50);
-	const Color Color::Console::Background::cyan(0, 255, 255, 0x30);
-	const Color Color::Console::Background::white(255, 255, 255, 0xF0);
-	const Color Color::Console::Background::black(0, 0, 0, 0x00);
-	const Color Color::Console::Background::brown(139, 69, 19, 0x60);
-	const Color Color::Console::Background::lightGray(211, 211, 211, 0x70);
-	const Color Color::Console::Background::darkGray(169, 169, 169, 0x80);
-	const Color Color::Console::Background::lightBlue(173, 216, 230, 0x90);
-	const Color Color::Console::Background::lightGreen(144, 238, 144, 0xA0);
-	const Color Color::Console::Background::lightCyan(224, 255, 255, 0xB0);
-	const Color Color::Console::Background::lightRed(255, 0xCC, 0xCB, 0xC0);
-	const Color Color::Console::Background::lightMagenta(255, 0x77, 255, 0xD0);
-
-
-	LevelColors Message::s_levelColors = {
-		Color::cyan,		// trace,
-		Color::magenta,		// debug,
-		Color::white,		// info,
-		Color::yellow,		// warning,
-		Color::red,			// error,
-		Color::green		// custom
-	};
+	
 
 	bool Color::s_isDarkMode = false;
 	float Color::s_darkModeFactor = 0.7f;
-
-	Color::Color()
-		: m_r(255)
-		, m_g(255)
-		, m_b(255)
-		, m_consoleValue(15)
-	{
-
-	}
-	Color::Color(uint8_t r, uint8_t g, uint8_t b)
-		: m_r(r)
-		, m_g(g)
-		, m_b(b)
-		, m_consoleValue(15)
-	{
-
-	}
-	Color::Color(uint8_t r, uint8_t g, uint8_t b, int consoleValue)
-		: m_r(r)
-		, m_g(g)
-		, m_b(b)
-		, m_consoleValue(consoleValue)
-	{
-
-	}
 
 
 	Color::Color(const Color& other)
@@ -271,7 +187,7 @@ The different color codes are
 	int Color::getConsoleValue() const
 	{
 		if (m_consoleValue == 0)
-			return Color::white.getConsoleValue();
+			return Colors::white.getConsoleValue();
 		return m_consoleValue;
 	}
 

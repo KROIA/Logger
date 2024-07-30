@@ -79,7 +79,9 @@ namespace Log
 	private:
 		void normalizeMessage();
 
-		static LevelColors s_levelColors; // Initialized in LogColor.cpp
+		static LevelColors s_levelColors; 
+
+		
 	};
 }
 

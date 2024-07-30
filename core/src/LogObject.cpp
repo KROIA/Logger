@@ -5,17 +5,17 @@ namespace Log
 {
 	LogObject::LogObject(const std::string& name)
 	{
-		Info info(0, 0, name, DateTime(), Color::white, true);
+		Info info(0, 0, name, DateTime(), Colors::white, true);
 		m_id = LogManager::addNewLogger(info);
 	}
 	LogObject::LogObject(const LogObject& other, const std::string& name)
 	{
-		Info info(0, other.getID(), name, DateTime(), Color::white, true);
+		Info info(0, other.getID(), name, DateTime(), Colors::white, true);
 		m_id = LogManager::addNewLogger(info);
 	}
 	LogObject::LogObject(LoggerID parentID, const std::string& name)
 	{
-		Info info(0, parentID, name, DateTime(), Color::white, true);
+		Info info(0, parentID, name, DateTime(), Colors::white, true);
 		m_id = LogManager::addNewLogger(info);
 	}
 
