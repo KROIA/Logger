@@ -4,7 +4,9 @@
 
 /// USER_SECTION_END
 
-#include "Logger_base.h"
+#include "Logger_global.h"
+#include "Logger_debug.h"
+
 #include <sstream>
 
 #define STRINGIFY(x) #x

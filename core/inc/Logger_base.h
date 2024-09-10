@@ -6,6 +6,7 @@
 
 #include "Logger_global.h"
 #include "Logger_debug.h"
+#include "Logger_info.h"
 
 /// USER_SECTION_START 2
 
