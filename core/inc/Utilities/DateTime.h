@@ -2,6 +2,8 @@
 
 #include "Logger_base.h"
 #include <string>
+
+#define NOMINMAX // Prevent windows.h from defining min and max macros, This collision with min/max functions in std::numeric_limits
 #include <windows.h>
 
 #ifdef QT_WIDGETS_LIB
@@ -210,6 +212,10 @@ namespace Log
 			}
 		}
 	} DateTimeFilter;
+
+
+
+
 
 
 	DEFINE_ENUM_FLAG_OPERATORS(Time::Format);
