@@ -19,7 +19,7 @@ namespace Log
 
 		QJsonObject libraryInfo;
 		libraryInfo["name"] = LibraryInfo::name;
-		libraryInfo["version"] = LibraryInfo::versionStr().c_str();
+		libraryInfo["version"] = LibraryInfo::version.toString().c_str();
 
 		QJsonObject levelInfo;
 		for(int i=0; i<(int)Level::__count; ++i)
