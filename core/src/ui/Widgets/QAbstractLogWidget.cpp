@@ -66,7 +66,13 @@ namespace Log
 			{
 				QHBoxLayout* layout = new QHBoxLayout();
 				layout->setAlignment(Qt::AlignCenter);
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
 				layout->setMargin(0);
+#else
+				layout->setContentsMargins(0, 0, 0, 0);
+#endif
+				
+				
 				ui->dateTimeFilterMinNow_pushButton->setLayout(layout);
 				QLabel* nowLabel = new QLabel();
 				nowLabel->setPixmap(Resources::getIconReload().pixmap(20, 20));
@@ -77,7 +83,11 @@ namespace Log
 			{
 				QHBoxLayout* layout = new QHBoxLayout();
 				layout->setAlignment(Qt::AlignCenter);
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
 				layout->setMargin(0);
+#else
+				layout->setContentsMargins(0, 0, 0, 0);
+#endif
 				ui->dateTimeFilterMaxNow_pushButton->setLayout(layout);
 				QLabel* nowLabel = new QLabel();
 				nowLabel->setPixmap(Resources::getIconReload().pixmap(20, 20));

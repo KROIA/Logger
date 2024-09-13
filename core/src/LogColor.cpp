@@ -224,7 +224,12 @@ The different color codes are
 		//if(sum > 240*3)
 		//	return QColor(50, 50, 50);
 		// Darken the color by reducing its brightness
+		
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
 		qreal h, s, v;
+#else
+		float h, s, v;
+#endif
 		QColor(m_r, m_g, m_b).getHsvF(&h, &s, &v);
 		v *= s_darkModeFactor; // Reduce brightness to 70%
 		//v = 0.5*v;
