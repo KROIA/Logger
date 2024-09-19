@@ -33,14 +33,17 @@ namespace Log
             QAbstractLogWidget(QWidget* parent = nullptr);
             ~QAbstractLogWidget();
 
-        protected:
-            void postConstructorInit();
+            bool saveVisibleMessages(const std::string& outputFile) const;
+            virtual void getSaveVisibleMessages(std::unordered_map<LoggerID, std::vector<Message>>& list) const = 0;
 
             virtual void setDateTimeFormat(DateTime::Format format) = 0;
             virtual DateTime::Format getDateTimeFormat() const = 0;
 
-            virtual void getSaveVisibleMessages(std::unordered_map<LoggerID, std::vector<Message>>& list) const = 0;
-            bool saveVisibleMessages(const std::string &outputFile) const;
+
+        protected:
+            void postConstructorInit();
+
+            
 
         protected slots:
             virtual void onAllContextCheckBoxStateChanged(int state);
