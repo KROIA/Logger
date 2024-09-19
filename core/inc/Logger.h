@@ -15,6 +15,7 @@
 #include "ui/NativeConsoleView.h"
 #include "ui/QTreeConsoleView.h"
 #include "ui/QConsoleView.h"
+#include "ui/StaticObjs.h"
 
 // Utilities
 #include "Utilities/Resources.h"
