@@ -7,28 +7,31 @@
 namespace Log
 {
 	class AbstractReceiver;
-	// Encapsulating signal handling in a private class
-	class SignalReceiver : public QObject
+	namespace Internal
 	{
-		friend class AbstractReceiver;
-		Q_OBJECT
-	public:
-		SignalReceiver(AbstractReceiver* receiver);
-		~SignalReceiver() {};
+		// Encapsulating signal handling in a private class
+		class SignalReceiver : public QObject
+		{
+			friend class AbstractReceiver;
+			Q_OBJECT
+			public:
+			SignalReceiver(AbstractReceiver* receiver);
+			~SignalReceiver() {};
 
-	public slots:
-		void onNewLogger(LogObject::Info loggerInfo);
-		void onLoggerInfoChanged(LogObject::Info info);
-		void onLogMessage(Message message);
-		void onChangeParent(LoggerID childID, LoggerID newParentID);
+			public slots:
+			void onNewLogger(LogObject::Info loggerInfo);
+			void onLoggerInfoChanged(LogObject::Info info);
+			void onLogMessage(Message message);
+			void onChangeParent(LoggerID childID, LoggerID newParentID);
 
-	private:
-		AbstractReceiver* receiver;
-	};
+			private:
+			AbstractReceiver* receiver;
+		};
+	}
 
 	class AbstractReceiver
 	{
-		friend class SignalReceiver;
+		friend class Internal::SignalReceiver;
 	public:
 		AbstractReceiver();
 		virtual ~AbstractReceiver();
@@ -39,7 +42,7 @@ namespace Log
 		virtual void onLogMessage(Message message) = 0;
 		virtual void onChangeParent(LoggerID childID, LoggerID newParentID) = 0;
 	private:
-		SignalReceiver signalReceiver;
+		Internal::SignalReceiver signalReceiver;
 	};
 
 	

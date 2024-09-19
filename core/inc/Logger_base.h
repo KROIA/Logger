@@ -9,5 +9,16 @@
 #include "Logger_info.h"
 
 /// USER_SECTION_START 2
-
+namespace Log
+{
+	namespace UI
+	{
+		enum ConsoleViewType
+		{
+			nativeConsoleView,
+			qConsoleView,
+			qTreeConsoleView
+		};
+	}
+}
 /// USER_SECTION_END
