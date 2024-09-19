@@ -24,6 +24,28 @@ namespace Log
 
 		}
 
+		void QConsoleView::createStaticInstance()
+		{
+			QConsoleView*& instancePtr = getStaticInstance();
+			if (instancePtr)
+				return;
+			instancePtr = new QConsoleView();
+		}
+		void QConsoleView::destroyStaticInstance()
+		{
+			QConsoleView*& instancePtr = getStaticInstance();
+			if (instancePtr)
+			{
+				delete instancePtr;
+				instancePtr = nullptr;
+			}
+		}
+		QConsoleView*& QConsoleView::getStaticInstance()
+		{
+			static QConsoleView* instancePtr = nullptr;
+			return instancePtr;
+		}
+
 		void QConsoleView::setDateTimeFormat(DateTime::Format format)
 		{
 			m_consoleWidget->setDateTimeFormat(format);

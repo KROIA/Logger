@@ -19,6 +19,10 @@ namespace Log
             QTreeConsoleView(QWidget* parent = nullptr);
             ~QTreeConsoleView();
 
+            static void createStaticInstance();
+            static void destroyStaticInstance();
+            static QTreeConsoleView*& getStaticInstance();
+
             void setDateTimeFormat(DateTime::Format format) override;
             DateTime::Format getDateTimeFormat() const override;
 

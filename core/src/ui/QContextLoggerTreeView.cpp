@@ -27,6 +27,28 @@ namespace Log
 
 		}
 
+		void QTreeConsoleView::createStaticInstance()
+		{
+			QTreeConsoleView*& instancePtr = getStaticInstance();
+			if (instancePtr)
+				return;
+			instancePtr = new QTreeConsoleView();
+		}
+		void QTreeConsoleView::destroyStaticInstance()
+		{
+			QTreeConsoleView*& instancePtr = getStaticInstance();
+			if (instancePtr)
+			{
+				delete instancePtr;
+				instancePtr = nullptr;
+			}
+		}
+		QTreeConsoleView*& QTreeConsoleView::getStaticInstance()
+		{
+			static QTreeConsoleView* instancePtr = nullptr;
+			return instancePtr;
+		}
+
 		void QTreeConsoleView::setDateTimeFormat(DateTime::Format format)
 		{
 			m_treeItem->setDateTimeFormat(format);

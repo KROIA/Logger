@@ -25,6 +25,28 @@ namespace Log
 
 		}
 
+		void NativeConsoleView::createStaticInstance()
+		{
+			NativeConsoleView*& instancePtr = getStaticInstance();
+			if (instancePtr)
+				return;
+			instancePtr = new NativeConsoleView();
+		}
+		void NativeConsoleView::destroyStaticInstance()
+		{
+			NativeConsoleView*& instancePtr = getStaticInstance();
+			if (instancePtr)
+			{
+				delete instancePtr;
+				instancePtr = nullptr;
+			}
+		}
+		NativeConsoleView*& NativeConsoleView::getStaticInstance()
+		{
+			static NativeConsoleView* instancePtr = nullptr;
+			return instancePtr;
+		}
+
 		void NativeConsoleView::setDateTimeFormat(DateTime::Format format)
 		{
 			m_dateTimeFormat = format;
@@ -32,6 +54,19 @@ namespace Log
 		DateTime::Format NativeConsoleView::getDateTimeFormat() const
 		{
 			return m_dateTimeFormat;
+		}
+
+		void NativeConsoleView::hide()
+		{
+			::ShowWindow(::GetConsoleWindow(), SW_HIDE);
+		}
+		void NativeConsoleView::show()
+		{
+			::ShowWindow(::GetConsoleWindow(), SW_SHOW);
+		}
+		bool NativeConsoleView::isVisible() const
+		{
+			return ::IsWindowVisible(::GetConsoleWindow());
 		}
 
 		void NativeConsoleView::onNewLogger(LogObject::Info loggerInfo)

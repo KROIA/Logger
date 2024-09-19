@@ -17,8 +17,16 @@ namespace Log
 
 			~NativeConsoleView();
 
+			static void createStaticInstance();
+			static void destroyStaticInstance();
+			static NativeConsoleView*& getStaticInstance();
+
 			void setDateTimeFormat(DateTime::Format format);
 			DateTime::Format getDateTimeFormat() const;
+
+			void hide();
+			void show();
+			bool isVisible() const;
 
 		private:
 			void onNewLogger(LogObject::Info loggerInfo) override;

@@ -5,6 +5,7 @@
 #include "ui/Widgets/QConsoleWidget.h"
 #include "ui/Widgets/QAbstractLogWidget.h"
 #include <QTreeWidget>
+#include <memory>
 
 namespace Log 
 {
@@ -16,6 +17,10 @@ namespace Log
         public:
             QConsoleView(QWidget* parent = nullptr);
             ~QConsoleView();
+
+            static void createStaticInstance();
+			static void destroyStaticInstance();
+			static QConsoleView*& getStaticInstance();
 
             void setDateTimeFormat(DateTime::Format format) override;
             DateTime::Format getDateTimeFormat() const override;
