@@ -103,7 +103,8 @@ namespace Log
 	};
 
 /// USER_SECTION_START 7
-
+/* 
+* Disable the Logger interface because this is the Logger library itself.
 /// USER_SECTION_END
 
 
@@ -161,6 +162,9 @@ namespace Log
 
 /// USER_SECTION_END
 #endif
+/// USER_SECTION_START 13
+*/
+/// USER_SECTION_END
 }
 
 

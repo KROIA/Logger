@@ -55,6 +55,9 @@ namespace Log
 		/// USER_SECTION_END
 	}
 
+/// USER_SECTION_START 55
+/*
+/// USER_SECTION_END
 #if defined(LOGGER) and not defined(LOGGER_LIB)
 	/// USER_SECTION_START 10
 
@@ -287,6 +290,9 @@ namespace Log
 	/// USER_SECTION_END
 
 #endif
+/// USER_SECTION_START 54
+*/
+/// USER_SECTION_END
 	
 
 }
