@@ -1,13 +1,17 @@
 #pragma once
 #include "Logger_global.h"
 
+/// USER_SECTION_START 14
+/*
+/// USER_SECTION_END
+
 // The Logger library is automaticly included if the logger dependency .cmake file is available
-#if defined(LOGGER) and not defined(LOGGER_LIB)
+#if defined(LOGGER)
 	#include "Logger.h"
 #endif
 
 /// USER_SECTION_START 1
-
+*/
 /// USER_SECTION_END
 
 // Debugging
@@ -83,7 +87,7 @@
 namespace Log
 {
 /// USER_SECTION_START 4
-
+	
 /// USER_SECTION_END
 	class LOGGER_EXPORT Profiler
 	{
@@ -103,12 +107,12 @@ namespace Log
 	};
 
 /// USER_SECTION_START 7
-/* 
+/*
 * Disable the Logger interface because this is the Logger library itself.
 /// USER_SECTION_END
 
 
-#if defined(LOGGER) and not defined(LOGGER_LIB)
+#if defined(LOGGER)
 	class LOGGER_EXPORT Logger 
 	{
 		/// USER_SECTION_START 8
