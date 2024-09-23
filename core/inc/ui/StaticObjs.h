@@ -15,17 +15,26 @@ namespace Log
 		void destroyConsoleView(ConsoleViewType type);
 		void destroyAllConsoleViews();
 
-		template<typename T>
-		T* getConsoleView()
+		// Template function to get the console view
+		template <typename T>
+		static T* getConsoleView()
 		{
-			// Return the console view of the specified type
-			if (std::is_same<T, NativeConsoleView>::value)
-				return NativeConsoleView::getStaticInstance();
-			else if (std::is_same<T, QConsoleView>::value)
-				return QConsoleView::getStaticInstance();
-			else if (std::is_same<T, QTreeConsoleView>::value)
-				return QTreeConsoleView::getStaticInstance();
 			return nullptr;
+		}
+		template <>
+		static NativeConsoleView* getConsoleView<NativeConsoleView>()
+		{
+			return NativeConsoleView::getStaticInstance();
+		}
+		template <>
+		static QConsoleView* getConsoleView<QConsoleView>()
+		{
+			return QConsoleView::getStaticInstance();
+		}
+		template <>
+		static QTreeConsoleView* getConsoleView<QTreeConsoleView>()
+		{
+			return QTreeConsoleView::getStaticInstance();
 		}
     }
 }
