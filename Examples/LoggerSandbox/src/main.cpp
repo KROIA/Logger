@@ -71,6 +71,8 @@ int main(int argc, char* argv[])
     //console->attachLogger(logger3);
     console->show();
 
+    logger3.logError("Hello, this is a long message that should be wrapped in the console view\nmultiple lines shuld also be possible");
+
 	Context1Object *obj1 = new Context1Object(logger1,view, console);
 	Context2Object *obj2 = new Context2Object(logger2,view, console);
 

@@ -134,8 +134,8 @@ namespace Log
             for (auto& m : cpy)
             {
                 m_model->addLog(m);
-                int count = QString::fromStdString(m.getText()).count('\n');
-                if (count > 0) // Ajust row height if message has multiple lines
+                int count = QString::fromStdString(m.getText()).count('\n')+1;
+                if (count > 1) // Ajust row height if message has multiple lines
                     setRowHeight(m_model->rowCount() - 1, verticalHeader()->defaultSectionSize() * count);
             }
         }
