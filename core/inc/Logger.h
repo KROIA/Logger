@@ -11,11 +11,15 @@
 #include "LogObject.h"
 #include "LogManager.h"
 
-// Console views
+// Receivers
+//	 Console views
 #include "ui/NativeConsoleView.h"
 #include "ui/QTreeConsoleView.h"
 #include "ui/QConsoleView.h"
 #include "ui/StaticObjs.h"
+//	 File
+#include "FilePlotter.h"
+ 
 
 // Utilities
 #include "Utilities/Resources.h"

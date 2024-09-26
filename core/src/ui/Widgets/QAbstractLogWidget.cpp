@@ -278,8 +278,6 @@ namespace Log
 		}
 		void QAbstractLogWidget::onLogMessage(Message message)
 		{
-			//if(m_contextData.find(message.getLoggerID()) == m_contextData.end())
-			//	onNewLogger(LogManager::getLogObjectInfo(message.getLoggerID()));
 			LOGGER_UNUSED(message);
 		}
 		void QAbstractLogWidget::onChangeParent(LoggerID childID, LoggerID newParentID)

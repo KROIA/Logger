@@ -51,6 +51,17 @@ namespace Log
 				, color(other.color)
 				, enabled(other.enabled)
 			{}
+
+			std::string toString() const
+			{
+				std::string str = "ID: " + std::to_string(id) + "\n";
+				str += "Parent ID: " + std::to_string(parentId) + "\n";
+				str += "Name: " + name + "\n";
+				str += "Creation Time: " + creationTime.toString(Log::DateTime::Format::dayMonthYear | Log::DateTime::Format::hourMinuteSecondMillisecond) + "\n";
+				str += "Color: " + color.getRGBStr() + "\n";
+				str += "Enabled: " + std::to_string(enabled) + "\n";
+				return str;
+			}
 		};
 
 		

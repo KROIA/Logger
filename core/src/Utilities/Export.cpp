@@ -3,61 +3,42 @@
 
 #include "Logger_info.h"
 #include "LogManager.h"
-#include "LogObject.h"
 
 #include <QJsonDocument>
-#include <QJsonArray>
-#include <QJsonObject>
+
 
 namespace Log
 {
-	bool Export::saveToFile(const std::unordered_map<LoggerID, std::vector<Message>>& contexts, const std::string& file)
+	bool Export::saveToFile(
+		const std::unordered_map<LoggerID, std::vector<Message>>& contexts, 
+		const std::string& file)
 	{
-		Log::DateTime::Format timeFormat = Log::DateTime::Format::yearMonthDay | Log::DateTime::Format::hourMinuteSecondMillisecond;
+		QJsonArray objs;
 
-		QJsonObject root;
-
-		QJsonObject libraryInfo;
-		libraryInfo["name"] = LibraryInfo::name;
-		libraryInfo["version"] = LibraryInfo::version.toString().c_str();
-
-		QJsonObject levelInfo;
-		for(int i=0; i<(int)Level::__count; ++i)
-			levelInfo[Utilities::getLevelStr((Level)i).c_str()] = i;
-		libraryInfo["levelInfo"] = levelInfo;
-
-		root["libraryInfo"] = libraryInfo;
-
-		QJsonArray contextArray;
+		objs.append(getFileHeader());
+		for(const auto& context : contexts)
+		{
+			const LogObject::Info &metaInfo = LogManager::getLogObjectInfo(context.first);
+			objs.append(toJson(metaInfo));
+		}
+		std::vector<Message> messages;
 		for (const auto& context : contexts)
 		{
-			QJsonObject contextObject;
-			const LogObject::Info &metaInfo = LogManager::getLogObjectInfo(context.first);
-
-			contextObject["id"] = (int)context.first;
-			contextObject["name"] = metaInfo.name.c_str();
-			contextObject["creationTime"] = metaInfo.creationTime.toString(timeFormat).c_str();
-			contextObject["parentId"] = (int)metaInfo.parentId;
-			contextObject["color"] = metaInfo.color.getRGBStr().c_str();
-			//contextObject["enabled"] = metaInfo.enabled;
-
-			QJsonArray messageArray;
 			for (const auto& message : context.second)
 			{
-				QJsonObject messageObject;
-				messageObject["level"] = message.getLevel();
-				messageObject["text"] = message.getText().c_str();
-				messageObject["color"] = message.getColor().getRGBStr().c_str();
-				messageObject["dateTime"] = message.getDateTime().toString(timeFormat).c_str();
-
-				messageArray.append(messageObject);
+				messages.push_back(message);
 			}
-			contextObject["messages"] = messageArray;
-			contextArray.append(contextObject);
 		}
-		root["contexts"] = contextArray;
+		// Sort messages by date and time
+		std::sort(messages.begin(), messages.end(), [](const Message& a, const Message& b) 
+			{ return a.getDateTime() < b.getDateTime(); });
 
-		QJsonDocument doc(root);
+		for (const auto& message : messages)
+		{
+			objs.append(toJson(message));
+		}
+
+		QJsonDocument doc(objs);
 
 		std::ofstream out(file);
 		if (!out.is_open())
@@ -71,4 +52,46 @@ namespace Log
 		return true;
 	}
 
+	QJsonObject Export::toJson(const LogObject::Info& info)
+	{
+		QJsonObject obj;
+		obj["id"] = (int)info.id;
+		obj["parentId"] = (int)info.parentId;
+		obj["name"] = info.name.c_str();
+		obj["creationTime"] = info.creationTime.toString(Log::DateTime::Format::yearMonthDay | Log::DateTime::Format::hourMinuteSecondMillisecond).c_str();
+		obj["color"] = info.color.getRGBStr().c_str();
+		obj["enabled"] = info.enabled;
+		return obj;
+	
+	}
+	QJsonObject Export::toJson(const Message& message)
+	{
+		QJsonObject obj;
+		obj["id"] = (int)message.getLoggerID();
+		obj["level"] = message.getLevel();
+		obj["text"] = message.getText().c_str();
+		obj["color"] = message.getColor().getRGBStr().c_str();
+		obj["dateTime"] = message.getDateTime().toString(Log::DateTime::Format::yearMonthDay | Log::DateTime::Format::hourMinuteSecondMillisecond).c_str();
+		return obj;
+	}
+	QJsonObject Export::getLibraryInfo()
+	{
+		QJsonObject obj;
+		obj["name"] = LibraryInfo::name;
+		obj["version"] = LibraryInfo::version.toString().c_str();
+		return obj;
+	}
+	QJsonObject Export::getLogLevelInfo()
+	{
+		QJsonObject obj;
+		for (int i = 0; i < (int)Level::__count; ++i)
+			obj[Utilities::getLevelStr((Level)i).c_str()] = i;
+		return obj;
+	}
+	QJsonObject Export::getFileHeader()
+	{
+		QJsonObject libraryInfo = getLibraryInfo();
+		libraryInfo["levelInfo"] = getLogLevelInfo();
+		return libraryInfo;
+	}
 } 

@@ -49,6 +49,7 @@ int main(int argc, char* argv[])
   
     qApp->setStyleSheet(Log::Resources::getDarkStylesheet());
     Log::Color::setDarkMode(true);
+    Log::FilePlotter filePlotter("log.txt");
 
     int count = 0;
     bool swtch = false;
