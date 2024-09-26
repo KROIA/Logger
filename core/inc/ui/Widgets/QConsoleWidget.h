@@ -40,6 +40,9 @@ namespace Log
 
             void onAutoScrollTimerTimeout();
             void onVertialSliderMoved(int value);
+
+            // Get the resize event
+            void resizeEvent(QResizeEvent* event) override;
         private:
             
             QLogMessageItemModel* m_model;

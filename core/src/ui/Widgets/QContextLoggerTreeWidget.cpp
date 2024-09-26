@@ -108,6 +108,13 @@ namespace Log
                 m_autoScrollTimer.stop();
         }
 
+        void QConsoleWidget::resizeEvent(QResizeEvent* event)
+        {
+            QTableView::resizeEvent(event);
+            // Resize the row height to fit the text
+            this->resizeRowsToContents();
+        }
+
         void QConsoleWidget::onNewMessage(const Message& m)
         {
             {
@@ -132,12 +139,7 @@ namespace Log
             }
             QMutexLocker locker(&m_mutex);
             for (auto& m : cpy)
-            {
                 m_model->addLog(m);
-                int count = QString::fromStdString(m.getText()).count('\n')+1;
-                if (count > 1) // Ajust row height if message has multiple lines
-                    setRowHeight(m_model->rowCount() - 1, verticalHeader()->defaultSectionSize() * count);
-            }
         }
     }
 }
