@@ -95,6 +95,10 @@ namespace Log
 			QAbstractLogWidget::onLogMessage(message);
 			m_treeItem->onNewMessage(message);
 		}
+		void QTreeConsoleView::onChangeParent(LoggerID childID, LoggerID newParentID)
+		{
+			m_treeItem->setParent(childID, newParentID);
+		}
 		void QTreeConsoleView::onMessageQueued(QPrivateSignal*)
 		{
 			std::vector<Message> cpy;

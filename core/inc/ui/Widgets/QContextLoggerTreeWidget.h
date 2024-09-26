@@ -54,6 +54,8 @@ namespace Log
 			DateTime::Range getDateTimeFilterRangeType() const;
 			bool isDateTimeFilterActive() const;
 
+			void setParent(LoggerID childID, LoggerID parentID);
+
 			void getSaveVisibleMessages(std::unordered_map<LoggerID, std::vector<Message>>& list) const;
 
 
@@ -82,6 +84,8 @@ namespace Log
 					void onNewMessage(const Message& m);
 
 					TreeData* createChild(LoggerID loggerID);
+					//void changeParent(LoggerID childID, TreeData* newParent);
+					void setParent(TreeData* newParent);
 
 					void getLoggerIDsRecursive(std::vector<LoggerID> &list) const;
 					void getChildLoggerIDsRecursive(std::vector<LoggerID> &list) const;
