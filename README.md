@@ -13,6 +13,7 @@
   * [QConsoleView](#qconsoleview)
   * [NativeConsoleView](#nativeconsoleview)
   * [FilePlotter](#fileplotter)
+  * [Custom receiver implementation](#custom-receiver-implementation)
 
 
 ## About
@@ -20,7 +21,7 @@
 
 The logger library can be used in your project to print messages to the console. A message is categorized in 6 levels: 
 
-|level |meaning |
+|Level |Meaning |
 |---|---|
 |<span style="color:rgb(0,255,255)">trace</span>|Can be used to print call stacks|
 |<span style="color:rgb(255,0,255)">debug</span>|Debug infos that are used for development|
@@ -262,3 +263,35 @@ The json format is not easy to read by hand but it is better for analyzing the l
 ]
 ```
 
+#### Custom receiver implementation
+``` C++
+#pragma once
+#include "Logger_base.h"
+#include "LogMessage.h"
+#include "AbstractReceiver.h"
+
+class CustomReceiver : public AbstractReceiver
+{
+  public:
+    CustomReceiver();
+    ~CustomReceiver();
+
+  protected:
+    // Gets called when a new LogObject was created 
+    void onNewLogger(LogObject::Info loggerInfo) override;
+    
+    // Gets called when the for example, the color of a LogObject got changed.
+    void onLoggerInfoChanged(LogObject::Info info) override;
+
+    // Gets called when a new message was sent from a LogObject
+    void onLogMessage(Message message) override;
+    
+    // Gets called when a LogObject with the ID <childID> 
+    // got assigned to a new parent logger with the ID <newParentID>
+    void onChangeParent(LoggerID childID, LoggerID newParentID) override;
+  private:
+  };
+}
+```
+To implement your custom receiver you just have to create a new class that derives from the `AbstractReceiver` base class.
+You don't have to worry about connecting signals to receive logs, just instantiate your object and you will receive all messages.

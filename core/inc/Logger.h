@@ -12,6 +12,7 @@
 #include "LogManager.h"
 
 // Receivers
+#include "AbstractReceiver.h"
 //	 Console views
 #include "ui/NativeConsoleView.h"
 #include "ui/QTreeConsoleView.h"
