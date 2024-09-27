@@ -102,7 +102,7 @@ list(APPEND USER_SPECIFIC_DEFINES)
 ## USER_SECTION_END
 
 set_if_not_defined(QT_INSTALL_BASE "C:\\Qt")
-set_if_not_defined(QT_MAJOR_VERSION 5)
+set_if_not_defined(QT_MAJOR_VERSION 6)
 set_if_not_defined(QT_VERSION "autoFind")
 set_if_not_defined(QT_COMPILER "autoFind")
 

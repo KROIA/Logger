@@ -1,19 +1,26 @@
-#include <QCoreapplication>
+#include <QApplication>
 
 #include "Logger.h"
 
 
 int main(int argc, char *argv[])
 {
-	QCoreApplication app(argc, argv);
+	// Qt Compatibility for high DPI displays
+    QGuiApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+    QGuiApplication::setAttribute(Qt::AA_UseHighDpiPixmaps);
+    QGuiApplication::setHighDpiScaleFactorRoundingPolicy(Qt::HighDpiScaleFactorRoundingPolicy::PassThrough);
+
+	QApplication app(argc, argv);
 
 	// Create a console view
 	Log::UI::NativeConsoleView plotter;
 
+	Log::UI::QTreeConsoleView treeViewConsole;
+	treeViewConsole.show();
+
 	// Create a logger object
 	Log::LogObject logger("logger OBJ");
 	logger.setColor(Log::Colors::Console::Foreground::cyan);
-
 	
 	logger.log("This is a simple info message");
 	logger.logInfo("This is also a simple info message");

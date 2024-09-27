@@ -124,4 +124,9 @@ namespace Log
 	{
 		log(msg, Level::custom);
 	}
+
+	void LogObject::setLevelEnabled(Level level, bool enabled)
+	{
+		LogManager::setLevelEnabled(level, enabled);
+	}
 }

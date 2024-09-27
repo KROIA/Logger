@@ -6,6 +6,11 @@ namespace Log
 		: QObject()
 	{
 		m_nextID = 1;
+
+		for (size_t i = 0; i < static_cast<size_t>(Level::__count); i++)
+		{
+			m_enabledLevels[i] = true;
+		}
 	}
 
 	LoggerID LogManager::addNewLogger(LogObject::Info loggerInfo)
@@ -29,6 +34,11 @@ namespace Log
 	void LogManager::onLogMessageInternal(Message message)
 	{
 		LogManager& m = instance();
+
+		// If the level is not enabled, do not emit the signal
+		if (!m.m_enabledLevels[static_cast<size_t>(message.getLevel())])
+			return;
+
 		bool emitSignal = false;
 		{
 			const std::lock_guard<std::mutex> lock(m.m_mutex);
@@ -67,14 +77,21 @@ namespace Log
 
 	void LogManager::setLogObjectInfo(LogObject::Info info)
 	{
+		bool emitSignal = false;
 		LogManager& m = instance();
 		{
 			const std::lock_guard<std::mutex> lock(m.m_mutex);
 			const auto& it = m.m_logObjects.find(info.id);
 			if (it != m.m_logObjects.end())
+			{
 				it->second = info;
+				emitSignal = true;
+			}
+		}		
+		if (emitSignal)
+		{
+			emit m.onLoggerInfoChanged(info);
 		}
-		emit m.onLoggerInfoChanged(info);
 	}
 
 	LogManager& LogManager::instance()
@@ -108,4 +125,15 @@ namespace Log
 		}
 		return result;
 	}
+
+	void LogManager::setLevelEnabled(Level level, bool enabled)
+	{
+		LogManager& m = instance();
+		{
+			const std::lock_guard<std::mutex> lock(m.m_mutex);
+			m.m_enabledLevels[static_cast<size_t>(level)] = enabled;
+		}
+	}
+
+
 }

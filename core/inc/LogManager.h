@@ -26,6 +26,7 @@ namespace Log
 
 		static LogObject::Info getLogObjectInfo(LoggerID loggerID);
 		static std::vector<LogObject::Info> getLogObjectsInfo();
+		static void setLevelEnabled(Level level, bool enabled);
 
 	signals:
 		void onNewLogger(LogObject::Info loggerInfo);
@@ -38,5 +39,7 @@ namespace Log
 		std::mutex m_mutex;
 		std::unordered_map<LoggerID, LogObject::Info> m_logObjects;
 		LoggerID m_nextID;
+
+		bool m_enabledLevels[static_cast<size_t>(Level::__count)];
 	};
 }

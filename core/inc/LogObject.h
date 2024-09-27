@@ -98,7 +98,7 @@ namespace Log
 		void logError(const std::string& msg);
 		void logCustom(const std::string& msg);
 
-
+		static void setLevelEnabled(Level level, bool enabled);
 
 	protected:
 
