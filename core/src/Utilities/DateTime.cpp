@@ -458,6 +458,12 @@ namespace Log
 		int ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count() % 1000;
 #endif
 
+		// localTime to posix time
+		//uint64_t t = (uint64_t)mktime(&localTime);
+
+		// posix time to localTime
+		//localtime_s(&localTime, (const time_t*)&t);
+
 		m_date.m_year = localTime.tm_year + 1900;
 		m_date.m_month = localTime.tm_mon + 1;
 		m_date.m_day = localTime.tm_mday;

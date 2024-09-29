@@ -29,6 +29,7 @@ namespace Log
 		};
 	}
 
+	// Reimplement this class to create a new receiver type.
 	class AbstractReceiver
 	{
 		friend class Internal::SignalReceiver;
