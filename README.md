@@ -17,7 +17,8 @@
 
 
 ## About
->📚 This library was created using the [library template](https://github.com/KROIA/QT_cmake_library_template)
+> <img src="documentation/Images/bookshelf.png" alt="QT_cmake_library_template"  width="40" style="vertical-align:middle;"> This library was created using the [library template](https://github.com/KROIA/QT_cmake_library_template)
+
 
 The logger library can be used in your project to print messages to the console. A message is categorized in 6 levels: 
 
