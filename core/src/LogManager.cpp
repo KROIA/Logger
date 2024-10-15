@@ -15,6 +15,7 @@ namespace Log
 
 	LoggerID LogManager::addNewLogger(LogObject::Info loggerInfo)
 	{
+		LOGGER_SENDER_PROFILING_FUNCTION(LOGGER_COLOR_STAGE_1);
 		LogManager &m = instance();
 		{
 			const std::lock_guard<std::mutex> lock(m.m_mutex);
@@ -33,6 +34,7 @@ namespace Log
 	}
 	void LogManager::onLogMessageInternal(Message message)
 	{
+		LOGGER_SENDER_PROFILING_FUNCTION(LOGGER_COLOR_STAGE_1);
 		LogManager& m = instance();
 
 		// If the level is not enabled, do not emit the signal
@@ -58,6 +60,7 @@ namespace Log
 	}
 	void LogManager::onChangeParentInternal(LoggerID childID, LoggerID newParentID)
 	{
+		LOGGER_SENDER_PROFILING_FUNCTION(LOGGER_COLOR_STAGE_1);
 		LogManager& m = instance();
 		bool emitSignal = false;
 		{
@@ -77,6 +80,7 @@ namespace Log
 
 	void LogManager::setLogObjectInfo(LogObject::Info info)
 	{
+		LOGGER_SENDER_PROFILING_FUNCTION(LOGGER_COLOR_STAGE_1);
 		bool emitSignal = false;
 		LogManager& m = instance();
 		{

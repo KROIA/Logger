@@ -61,41 +61,49 @@ namespace Log
 
 		void QConsoleView::on_clear_pushButton_clicked()
 		{
+			LOGGER_RECEIVER_PROFILING_FUNCTION(LOGGER_COLOR_STAGE_1);
 			QAbstractLogWidget::on_clear_pushButton_clicked();
 			m_consoleWidget->clear();
 		}
 
 		void QConsoleView::onLevelCheckBoxChanged(size_t index, Level level, bool isChecked)
 		{
+			LOGGER_RECEIVER_PROFILING_FUNCTION(LOGGER_COLOR_STAGE_1);
 			QAbstractLogWidget::onLevelCheckBoxChanged(index, level, isChecked);
 			m_consoleWidget->setLevelVisibility(level, isChecked);
 		}
 		void QConsoleView::onContextCheckBoxChanged(const ContextData& context, bool isChecked)
 		{
+			LOGGER_RECEIVER_PROFILING_FUNCTION(LOGGER_COLOR_STAGE_1);
 			QAbstractLogWidget::onContextCheckBoxChanged(context, isChecked);
 			m_consoleWidget->setContextVisibility(context.id, isChecked);
 		}
 
 		void QConsoleView::onDateTimeFilterChanged(const DateTimeFilter& filter)
 		{
+			LOGGER_RECEIVER_PROFILING_FUNCTION(LOGGER_COLOR_STAGE_1);
 			m_consoleWidget->setDateTimeFilter(filter);
 		}
 
 		void QConsoleView::onNewLogger(LogObject::Info loggerInfo)
 		{
+			LOGGER_RECEIVER_PROFILING_FUNCTION(LOGGER_COLOR_STAGE_1);
 			QAbstractLogWidget::onNewLogger(loggerInfo);
 		}
 		void QConsoleView::onLoggerInfoChanged(LogObject::Info info)
 		{
+			LOGGER_RECEIVER_PROFILING_FUNCTION(LOGGER_COLOR_STAGE_1);
 			QAbstractLogWidget::onLoggerInfoChanged(info);
 		}
 		void QConsoleView::onLogMessage(Message message)
 		{
+			LOGGER_RECEIVER_PROFILING_FUNCTION(LOGGER_COLOR_STAGE_1);
 			QAbstractLogWidget::onLogMessage(message);
 			m_consoleWidget->onNewMessage(message);
 		}
 		void QConsoleView::onChangeParent(LoggerID childID, LoggerID newParentID)
 		{
+			LOGGER_RECEIVER_PROFILING_FUNCTION(LOGGER_COLOR_STAGE_1);
 			QAbstractLogWidget::onChangeParent(childID, newParentID);
 		}
 

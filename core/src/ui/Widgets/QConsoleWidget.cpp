@@ -117,12 +117,14 @@ namespace Log
 
         void QConsoleWidget::onNewMessage(const Message& m)
         {
+            LOGGER_RECEIVER_PROFILING_FUNCTION(LOGGER_COLOR_STAGE_2);
             {
                 QMutexLocker locker(&m_mutex);
                 m_messageQueue.push_back(m);
             }
             if (QApplication::instance(), QApplication::instance()->thread() != QThread::currentThread())
             {
+                LOGGER_RECEIVER_PROFILING_BLOCK("Emit signal: messageQued", LOGGER_COLOR_STAGE_3);
                 emit messageQueued(nullptr);
             }
             else
@@ -131,6 +133,7 @@ namespace Log
 
         void QConsoleWidget::onMessageQueued(QPrivateSignal*)
         {
+            LOGGER_RECEIVER_PROFILING_FUNCTION(LOGGER_COLOR_STAGE_4);
             std::vector<Message> cpy;
             {
                 QMutexLocker locker(&m_mutex);

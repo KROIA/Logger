@@ -71,22 +71,18 @@ namespace Log
 
 		void NativeConsoleView::onNewLogger(LogObject::Info loggerInfo)
 		{
-			LOGGER_RECEIVER_PROFILING_FUNCTION(LOGGER_COLOR_STAGE_1);
 			LOGGER_UNUSED(loggerInfo);
 		}
 		void NativeConsoleView::onLoggerInfoChanged(LogObject::Info info)
 		{
-			LOGGER_RECEIVER_PROFILING_FUNCTION(LOGGER_COLOR_STAGE_1);
 			LOGGER_UNUSED(info);
 		}
 		void NativeConsoleView::onLogMessage(Message message)
 		{
-			LOGGER_RECEIVER_PROFILING_FUNCTION(LOGGER_COLOR_STAGE_1);
 			printToConsole(LogManager::getLogObjectInfo(message.getLoggerID()), message);
 		}
 		void NativeConsoleView::onChangeParent(LoggerID childID, LoggerID newParentID)
 		{
-			LOGGER_RECEIVER_PROFILING_FUNCTION(LOGGER_COLOR_STAGE_1);
 			LOGGER_UNUSED(childID);
 			LOGGER_UNUSED(newParentID);
 		}
@@ -94,7 +90,6 @@ namespace Log
 
 		void NativeConsoleView::printToConsole(const LogObject::Info& context, const Message& msg)
 		{
-			LOGGER_RECEIVER_PROFILING_FUNCTION(LOGGER_COLOR_STAGE_2);
 			using std::cout;
 
 			std::string type = Utilities::getLevelStr(msg.getLevel());

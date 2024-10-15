@@ -14,6 +14,7 @@
 
 int main(int argc, char* argv[])
 {
+    Log::Profiler::start();
     QGuiApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
     QGuiApplication::setAttribute(Qt::AA_UseHighDpiPixmaps);
     QGuiApplication::setHighDpiScaleFactorRoundingPolicy(Qt::HighDpiScaleFactorRoundingPolicy::PassThrough);
@@ -118,6 +119,7 @@ int main(int argc, char* argv[])
     
 	
 	app.exec();
+    Log::Profiler::stop("Loggersandbox.prof");
 	getchar();
 	return 0;
 }
