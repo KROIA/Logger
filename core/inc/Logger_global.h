@@ -67,4 +67,17 @@
 
 /// USER_SECTION_START 5
 
+/*
+* Enables the use of break points in debug mode.
+* The debuger will break at lines where a critical error occurs.
+* If not defined, the program will continue to run or may crash
+*/
+#define LOGGER_ENABLE_DEBUG_BREAK
+
+
+/*
+* Enables debug break when an error message is logged.
+* Only works if LOGGER_ENABLE_DEBUG_BREAK is defined
+*/
+//#define LOGGER_ENABLE_DEBUG_BREAK_ON_ERROR
 /// USER_SECTION_END

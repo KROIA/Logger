@@ -80,6 +80,11 @@ namespace Log
 	{
 		Message temp = msg;
 		temp.setLoggerID(m_id);
+		/*
+			If the debugger stops here, see the variable "errorMessage" in the Locals window to see the error message.
+			To disable this breakpoint make sure LOGGER_ENABLE_DEBUG_BREAK_ON_ERROR is not defined.
+		*/
+		LOGGER_DEBUG_BREAK_ON_ERROR(temp);
 		LogManager::onLogMessageInternal(temp);
 	}
 
@@ -91,12 +96,22 @@ namespace Log
 	{
 		Message m(msg, level);
 		m.setLoggerID(m_id);
+		/*
+			If the debugger stops here, see the variable "errorMessage" in the Locals window to see the error message.
+			To disable this breakpoint make sure LOGGER_ENABLE_DEBUG_BREAK_ON_ERROR is not defined.
+		*/
+		LOGGER_DEBUG_BREAK_ON_ERROR(m);
 		LogManager::onLogMessageInternal(m);
 	}
 	void LogObject::log(const std::string& msg, Level level, const Color& col)
 	{
 		Message m(msg, level, col);
 		m.setLoggerID(m_id);
+		/*
+			If the debugger stops here, see the variable "errorMessage" in the Locals window to see the error message.
+			To disable this breakpoint make sure LOGGER_ENABLE_DEBUG_BREAK_ON_ERROR is not defined.
+		*/
+		LOGGER_DEBUG_BREAK_ON_ERROR(m);
 		LogManager::onLogMessageInternal(m);
 	}
 
