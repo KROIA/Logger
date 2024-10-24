@@ -29,6 +29,32 @@
 #endif
 
 /// USER_SECTION_START 2
+#if defined(_DEBUG) && defined(LOGGER_ENABLE_DEBUG_BREAK)
+	#if defined(_MSC_VER)  // If using Microsoft Visual Studio
+		#define LOGGER_DEBUG_BREAK __debugbreak()
+	#elif defined(__GNUC__) || defined(__clang__)  // If using GCC or Clang
+		#include <signal.h>
+		#define LOGGER_DEBUG_BREAK raise(SIGTRAP)
+	#else
+		#define LOGGER_DEBUG_BREAK 
+	#endif
+
+	#if defined(LOGGER_ENABLE_DEBUG_BREAK_ON_ERROR)
+		#define LOGGER_DEBUG_BREAK_ON_ERROR(msg) \
+			if(msg.getLevel() == Log::Level::error) \
+			{ \
+				std::string errorMessage = msg.getText(); \
+                LOGGER_UNUSED(errorMessage); \
+				LOGGER_DEBUG_BREAK; \
+			} 
+	#else
+		#define LOGGER_DEBUG_BREAK_ON_ERROR(msg)
+	#endif
+#else
+	#define LOGGER_DEBUG_BREAK
+	#define LOGGER_DEBUG_BREAK_ON_ERROR(msg)
+#endif
+
 
 /// USER_SECTION_END
 
