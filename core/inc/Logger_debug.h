@@ -39,7 +39,7 @@
 		#define LOGGER_DEBUG_BREAK 
 	#endif
 
-	#if defined(LOGGER_ENABLE_DEBUG_BREAK_ON_ERROR)
+	#if defined(LOGGER_ENABLE_DEBUG_BREAK_ON_ERROR) && !defined(LOGGER_DISABLE_DEBUG_BREAK_ON_ERROR)
 		#define LOGGER_DEBUG_BREAK_ON_ERROR(msg) \
 			if(msg.getLevel() == Log::Level::error) \
 			{ \

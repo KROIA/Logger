@@ -80,4 +80,10 @@
 * Only works if LOGGER_ENABLE_DEBUG_BREAK is defined
 */
 //#define LOGGER_ENABLE_DEBUG_BREAK_ON_ERROR
+
+/*
+* Disables debug break when an error message is logged.
+* This will override the LOGGER_ENABLE_DEBUG_BREAK_ON_ERROR macro
+*/
+//#define LOGGER_DISABLE_DEBUG_BREAK_ON_ERROR
 /// USER_SECTION_END
