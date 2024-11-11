@@ -137,7 +137,7 @@ namespace Log
             std::vector<Message> cpy;
             {
                 QMutexLocker locker(&m_mutex);
-                cpy = m_messageQueue;
+                cpy = std::move(m_messageQueue);
                 m_messageQueue.clear();
             }
             QMutexLocker locker(&m_mutex);

@@ -89,6 +89,17 @@ namespace Log
 			    case Column::MessageColumn:   return QFont("Arial", 10, QFont::Bold);
 			}
 			break;
+        case Qt::ToolTipRole:
+        {
+            switch (index.column())
+            {
+				case Column::TimeColumn: return QString::fromStdString(entry.getDateTime().toString(m_dateTimeFormat));
+				case Column::ContextColumn: return QString::fromStdString(info.name);
+                case Column::LevelColumn: return QString::fromStdString(Utilities::getLevelStr(entry.getLevel()));
+				case Column::MessageColumn: return QString::fromStdString(entry.getText());
+            }
+            break;
+        }
             
         default:
             return QVariant();

@@ -344,6 +344,11 @@ namespace Log
 			QFont font = line->font((int)HeaderPos::message);
 			font.setBold(true);
 			line->setFont((int)HeaderPos::message, font);
+
+			line->setToolTip((int)HeaderPos::message, m.getText().c_str());
+			line->setToolTip((int)HeaderPos::timestamp, m.getDateTime().toString(root->m_timeFormat).c_str());
+			line->setToolTip((int)HeaderPos::contextName, m.getLevelString().c_str());
+
 			//line->setBackgroundColor((int)HeaderPos::message, m.getColor().toQColor());
 			if (m.getLoggerID() > 0)
 			{
