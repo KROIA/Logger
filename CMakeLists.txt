@@ -56,7 +56,7 @@ set(STATIC_POSTFIX_STR "-s")                    # <AUTO_REPLACED>
 set(PROFILING_POSTFIX_STR "-p")                 # <AUTO_REPLACED>  
 
 # Langauge settings
-set(CMAKE_CXX_STANDARD 23)                      # <AUTO_REPLACED> 
+set(CMAKE_CXX_STANDARD 17)                      # <AUTO_REPLACED> 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)             # <AUTO_REPLACED> 
 
 ## USER_SECTION_START 2
@@ -111,7 +111,7 @@ list(APPEND USER_SPECIFIC_GLOBAL_DEFINES)
 ## USER_SECTION_END
 
 set_if_not_defined(QT_INSTALL_BASE "C:\\Qt")
-set_if_not_defined(QT_MAJOR_VERSION 6)
+set_if_not_defined(QT_MAJOR_VERSION 5)
 set_if_not_defined(QT_VERSION "autoFind")
 set_if_not_defined(QT_COMPILER "autoFind")
 

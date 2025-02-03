@@ -86,63 +86,63 @@ namespace Log
 
 	namespace Colors
 	{
-		inline constexpr Color red(255,0, 0, 0x04);
-		inline constexpr Color green(0,255, 0, 0x02);
-		inline constexpr Color blue(0,0, 255, 0x01);
-		inline constexpr Color yellow(255, 255, 0, 0x0E);
-		inline constexpr Color magenta(255, 0, 255, 0x05);
-		inline constexpr Color cyan(0,255, 255, 0x03);
-		inline constexpr Color white(255, 255, 255, 0x0F);
-		inline constexpr Color black(0,0, 0, 0x00);
-		inline constexpr Color brown(139, 69, 19, 0x06);
-		inline constexpr Color lightGray(211, 211, 211, 0x07);
-		inline constexpr Color darkGray(169, 169, 169, 0x08);
-		inline constexpr Color lightBlue(173, 216, 230, 0x09);
-		inline constexpr Color lightGreen(144, 238, 144, 0x0A);
-		inline constexpr Color lightCyan(224, 255, 255, 0x0B);
-		inline constexpr Color lightRed(255, 0xCC, 0xCB, 0x0C);
-		inline constexpr Color lightMagenta(255, 0x77, 255, 0x0D);
-		inline constexpr Color orange(255, 165, 0);
+		constexpr Color red(255,0, 0, 0x04);
+		constexpr Color green(0,255, 0, 0x02);
+		constexpr Color blue(0,0, 255, 0x01);
+		constexpr Color yellow(255, 255, 0, 0x0E);
+		constexpr Color magenta(255, 0, 255, 0x05);
+		constexpr Color cyan(0,255, 255, 0x03);
+		constexpr Color white(255, 255, 255, 0x0F);
+		constexpr Color black(0,0, 0, 0x00);
+		constexpr Color brown(139, 69, 19, 0x06);
+		constexpr Color lightGray(211, 211, 211, 0x07);
+		constexpr Color darkGray(169, 169, 169, 0x08);
+		constexpr Color lightBlue(173, 216, 230, 0x09);
+		constexpr Color lightGreen(144, 238, 144, 0x0A);
+		constexpr Color lightCyan(224, 255, 255, 0x0B);
+		constexpr Color lightRed(255, 0xCC, 0xCB, 0x0C);
+		constexpr Color lightMagenta(255, 0x77, 255, 0x0D);
+		constexpr Color orange(255, 165, 0);
 
 		namespace Console
 		{
 			namespace Foreground
 			{
-				inline constexpr Color red(255, 0, 0, 0x04);
-				inline constexpr Color green(0, 255, 0, 0x02);
-				inline constexpr Color blue(0, 0, 255, 0x01);
-				inline constexpr Color yellow(255, 255, 0, 0x0E);
-				inline constexpr Color magenta(255, 0, 255, 0x05);
-				inline constexpr Color cyan(0, 255, 255, 0x03);
-				inline constexpr Color white(255, 255, 255, 0x0F);
-				inline constexpr Color black(0, 0, 0, 0x00);
-				inline constexpr Color brown(139, 69, 19, 0x06);
-				inline constexpr Color lightGray(211, 211, 211, 0x07);
-				inline constexpr Color darkGray(169, 169, 169, 0x08);
-				inline constexpr Color lightBlue(173, 216, 230, 0x09);
-				inline constexpr Color lightGreen(144, 238, 144, 0x0A);
-				inline constexpr Color lightCyan(224, 255, 255, 0x0B);
-				inline constexpr Color lightRed(255, 0xCC, 0xCB, 0x0C);
-				inline constexpr Color lightMagenta(255, 0x77, 255, 0x0D);
+				constexpr Color red(255, 0, 0, 0x04);
+				constexpr Color green(0, 255, 0, 0x02);
+				constexpr Color blue(0, 0, 255, 0x01);
+				constexpr Color yellow(255, 255, 0, 0x0E);
+				constexpr Color magenta(255, 0, 255, 0x05);
+				constexpr Color cyan(0, 255, 255, 0x03);
+				constexpr Color white(255, 255, 255, 0x0F);
+				constexpr Color black(0, 0, 0, 0x00);
+				constexpr Color brown(139, 69, 19, 0x06);
+				constexpr Color lightGray(211, 211, 211, 0x07);
+				constexpr Color darkGray(169, 169, 169, 0x08);
+				constexpr Color lightBlue(173, 216, 230, 0x09);
+				constexpr Color lightGreen(144, 238, 144, 0x0A);
+				constexpr Color lightCyan(224, 255, 255, 0x0B);
+				constexpr Color lightRed(255, 0xCC, 0xCB, 0x0C);
+				constexpr Color lightMagenta(255, 0x77, 255, 0x0D);
 			}
 			namespace Background
 			{
-				inline constexpr Color red(255, 0, 0, 0x40);
-				inline constexpr Color green(0, 255, 0, 0x20);
-				inline constexpr Color blue(0, 0, 255, 0x10);
-				inline constexpr Color yellow(255, 255, 0, 0xE0);
-				inline constexpr Color magenta(255, 0, 255, 0x50);
-				inline constexpr Color cyan(0, 255, 255, 0x30);
-				inline constexpr Color white(255, 255, 255, 0xF0);
-				inline constexpr Color black(0, 0, 0, 0x00);
-				inline constexpr Color brown(139, 69, 19, 0x60);
-				inline constexpr Color lightGray(211, 211, 211, 0x70);
-				inline constexpr Color darkGray(169, 169, 169, 0x80);
-				inline constexpr Color lightBlue(173, 216, 230, 0x90);
-				inline constexpr Color lightGreen(144, 238, 144, 0xA0);
-				inline constexpr Color lightCyan(224, 255, 255, 0xB0);
-				inline constexpr Color lightRed(255, 0xCC, 0xCB, 0xC0);
-				inline constexpr Color lightMagenta(255, 0x77, 255, 0xD0);
+				constexpr Color red(255, 0, 0, 0x40);
+				constexpr Color green(0, 255, 0, 0x20);
+				constexpr Color blue(0, 0, 255, 0x10);
+				constexpr Color yellow(255, 255, 0, 0xE0);
+				constexpr Color magenta(255, 0, 255, 0x50);
+				constexpr Color cyan(0, 255, 255, 0x30);
+				constexpr Color white(255, 255, 255, 0xF0);
+				constexpr Color black(0, 0, 0, 0x00);
+				constexpr Color brown(139, 69, 19, 0x60);
+				constexpr Color lightGray(211, 211, 211, 0x70);
+				constexpr Color darkGray(169, 169, 169, 0x80);
+				constexpr Color lightBlue(173, 216, 230, 0x90);
+				constexpr Color lightGreen(144, 238, 144, 0xA0);
+				constexpr Color lightCyan(224, 255, 255, 0xB0);
+				constexpr Color lightRed(255, 0xCC, 0xCB, 0xC0);
+				constexpr Color lightMagenta(255, 0x77, 255, 0xD0);
 			}
 		}
 	}
