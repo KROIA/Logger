@@ -495,10 +495,10 @@ namespace Log
 				countOut += tmp;
 			}
 			countOut += msgItems.size();
-			QString childsCountTxt = "[" + QString::number(countOut) + "] Messages childsCountTxt";
+			QString childsCountTxt = "[" + QString::number(countOut) + "] Messages";
 			childRoot->setData((int)HeaderPos::message, Qt::DisplayRole, childsCountTxt);
 
-			QString messageCountTxt = "[" + QString::number(msgItems.size()) + "] Messages messageCountTxt";
+			QString messageCountTxt = "[" + QString::number(msgItems.size()) + "] Messages";
 			thisMessagesRoot->setData((int)HeaderPos::message, Qt::DisplayRole, messageCountTxt);
 		}
 		void QContextLoggerTreeWidget::TreeData::clearMessages()
