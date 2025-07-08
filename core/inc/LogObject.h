@@ -92,17 +92,17 @@ namespace Log
 		void log(const std::string& msg, Level level, const Color& col);
 
 		void logTrace(const std::string& msg);
-		void trace(const std::string& msg) { logTrace(msg); }
+		void trace(const std::string& msg);
 		void logDebug(const std::string& msg);
-		void debug(const std::string& msg) { logDebug(msg); }
+		void debug(const std::string& msg);
 		void logInfo(const std::string& msg);
-		void info(const std::string& msg) { logInfo(msg); }
+		void info(const std::string& msg);
 		void logWarning(const std::string& msg);
-		void warning(const std::string& msg) { logWarning(msg); }
+		void warning(const std::string& msg);
 		void logError(const std::string& msg);
-		void error(const std::string& msg) { logError(msg); }
+		void error(const std::string& msg);
 		void logCustom(const std::string& msg);
-		void custom(const std::string& msg) { logCustom(msg); }
+		void custom(const std::string& msg);
 
 		static void setLevelEnabled(Level level, bool enabled);
 

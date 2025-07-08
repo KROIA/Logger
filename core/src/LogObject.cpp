@@ -119,7 +119,15 @@ namespace Log
 	{
 		log(msg, Level::trace);
 	}
+	void LogObject::trace(const std::string& msg)
+	{
+		log(msg, Level::trace);
+	}
 	void LogObject::logDebug(const std::string& msg)
+	{
+		log(msg, Level::debug);
+	}
+	void LogObject::debug(const std::string& msg)
 	{
 		log(msg, Level::debug);
 	}
@@ -127,7 +135,15 @@ namespace Log
 	{
 		log(msg, Level::info);
 	}
+	void LogObject::info(const std::string& msg)
+	{
+		log(msg, Level::info);
+	}
 	void LogObject::logWarning(const std::string& msg)
+	{
+		log(msg, Level::warning);
+	}
+	void LogObject::warning(const std::string& msg)
 	{
 		log(msg, Level::warning);
 	}
@@ -135,7 +151,15 @@ namespace Log
 	{
 		log(msg, Level::error);
 	}
+	void LogObject::error(const std::string& msg)
+	{
+		log(msg, Level::error);
+	}
 	void LogObject::logCustom(const std::string& msg)
+	{
+		log(msg, Level::custom);
+	}
+	void LogObject::custom(const std::string& msg)
 	{
 		log(msg, Level::custom);
 	}
