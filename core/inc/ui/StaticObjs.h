@@ -22,20 +22,11 @@ namespace Log
 			return nullptr;
 		}
 		template <>
-		NativeConsoleView* getConsoleView<NativeConsoleView>()
-		{
-			return NativeConsoleView::getStaticInstance();
-		}
+		NativeConsoleView* getConsoleView<NativeConsoleView>();
 		template <>
-		QConsoleView* getConsoleView<QConsoleView>()
-		{
-			return QConsoleView::getStaticInstance();
-		}
+		QConsoleView* getConsoleView<QConsoleView>();
 		template <>
-		QTreeConsoleView* getConsoleView<QTreeConsoleView>()
-		{
-			return QTreeConsoleView::getStaticInstance();
-		}
+		QTreeConsoleView* getConsoleView<QTreeConsoleView>();
     }
 }
 #endif

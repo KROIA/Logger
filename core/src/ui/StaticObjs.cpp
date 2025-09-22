@@ -44,5 +44,21 @@ namespace Log
 			QConsoleView::destroyStaticInstance();
 			QTreeConsoleView::destroyStaticInstance();
 		}
+
+		template <>
+		NativeConsoleView* getConsoleView<NativeConsoleView>()
+		{
+			return NativeConsoleView::getStaticInstance();
+		}
+		template <>
+		QConsoleView* getConsoleView<QConsoleView>()
+		{
+			return QConsoleView::getStaticInstance();
+		}
+		template <>
+		QTreeConsoleView* getConsoleView<QTreeConsoleView>()
+		{
+			return QTreeConsoleView::getStaticInstance();
+		}
 	}
 }
