@@ -3,7 +3,9 @@
 #include "Logger_base.h"
 #include <string>
 
+#ifndef NOMINMAX
 #define NOMINMAX // Prevent windows.h from defining min and max macros, This collision with min/max functions in std::numeric_limits
+#endif
 #include <windows.h>
 
 #ifdef QT_WIDGETS_LIB
