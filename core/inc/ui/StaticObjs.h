@@ -17,22 +17,22 @@ namespace Log
 
 		// Template function to get the console view
 		template <typename T>
-		static T* getConsoleView()
+		T* getConsoleView()
 		{
 			return nullptr;
 		}
 		template <>
-		static NativeConsoleView* getConsoleView<NativeConsoleView>()
+		NativeConsoleView* getConsoleView<NativeConsoleView>()
 		{
 			return NativeConsoleView::getStaticInstance();
 		}
 		template <>
-		static QConsoleView* getConsoleView<QConsoleView>()
+		QConsoleView* getConsoleView<QConsoleView>()
 		{
 			return QConsoleView::getStaticInstance();
 		}
 		template <>
-		static QTreeConsoleView* getConsoleView<QTreeConsoleView>()
+		QTreeConsoleView* getConsoleView<QTreeConsoleView>()
 		{
 			return QTreeConsoleView::getStaticInstance();
 		}
