@@ -22,7 +22,7 @@ namespace Log
 		__count
 	};
 
-	struct LOGGER_EXPORT LevelColors
+	struct LOGGER_API LevelColors
 	{
 		Color trace;
 		Color debug;

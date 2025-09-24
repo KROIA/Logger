@@ -11,7 +11,7 @@ namespace Log
 {
     namespace UI
     {
-        class LOGGER_EXPORT QConsoleView: public UIWidgets::QAbstractLogWidget
+        class LOGGER_API QConsoleView: public UIWidgets::QAbstractLogWidget
         {
             Q_OBJECT
         public:

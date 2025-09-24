@@ -8,7 +8,7 @@
 
 namespace Log
 {
-	class LOGGER_EXPORT Color
+	class LOGGER_API Color
 	{
 	public:
 		constexpr Color()

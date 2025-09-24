@@ -12,7 +12,7 @@ namespace Log
 {
 	typedef unsigned int LoggerID;
 
-	class LOGGER_EXPORT Message
+	class LOGGER_API Message
 	{
 	public:
 		Message();

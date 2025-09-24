@@ -9,7 +9,7 @@ namespace Log
 {
 	namespace UI
 	{
-		class LOGGER_EXPORT NativeConsoleView : public AbstractReceiver
+		class LOGGER_API NativeConsoleView : public AbstractReceiver
 		{
 		public:
 			NativeConsoleView();

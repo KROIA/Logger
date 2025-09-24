@@ -23,7 +23,7 @@ namespace Log
 {
     namespace UIWidgets
     {
-        class LOGGER_EXPORT QAbstractLogWidget : public QWidget, public AbstractReceiver
+        class LOGGER_API QAbstractLogWidget : public QWidget, public AbstractReceiver
         {
             Q_OBJECT
             friend class QSignalHandler;

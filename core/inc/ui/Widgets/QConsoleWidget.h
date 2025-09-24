@@ -13,7 +13,7 @@ namespace Log
 {
     namespace UIWidgets
     {
-        class LOGGER_EXPORT QConsoleWidget : public QTableView
+        class LOGGER_API QConsoleWidget : public QTableView
         {
             Q_OBJECT
             public:

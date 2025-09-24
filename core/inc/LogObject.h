@@ -7,7 +7,7 @@
 
 namespace Log
 {
-	class LOGGER_EXPORT LogObject
+	class LOGGER_API LogObject
 	{
 	public:
 		

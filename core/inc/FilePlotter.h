@@ -7,7 +7,7 @@
 
 namespace Log
 {
-	class LOGGER_EXPORT FilePlotter : public AbstractReceiver
+	class LOGGER_API FilePlotter : public AbstractReceiver
 	{
 	public:
 		FilePlotter(const std::string& filePath, DateTime::Format format = DateTime::Format::hourMinuteSecondMillisecond | DateTime::Format::yearMonthDay);

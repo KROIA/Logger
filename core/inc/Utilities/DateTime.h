@@ -15,8 +15,8 @@
 
 namespace Log
 {
-	class LOGGER_EXPORT DateTime;
-	class LOGGER_EXPORT Date
+	class LOGGER_API DateTime;
+	class LOGGER_API Date
 	{
 		friend DateTime;
 	public:
@@ -65,7 +65,7 @@ namespace Log
 		int m_month;
 		int m_day;
 	};
-	class LOGGER_EXPORT Time
+	class LOGGER_API Time
 	{
 		friend DateTime;
 	public:
@@ -120,7 +120,7 @@ namespace Log
 		int m_ms;
 	};
 
-	class LOGGER_EXPORT DateTime
+	class LOGGER_API DateTime
 	{
 	public:
 		enum Format: uint16_t

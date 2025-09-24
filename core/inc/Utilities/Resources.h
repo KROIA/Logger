@@ -11,7 +11,7 @@
 
 namespace Log
 {
-	class LOGGER_EXPORT Resources
+	class LOGGER_API Resources
 	{
 	public:
 		static const QIcon& getIcon(const std::string& name);

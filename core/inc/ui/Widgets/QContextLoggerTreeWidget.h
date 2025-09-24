@@ -15,7 +15,7 @@ namespace Log
 {
 	namespace UIWidgets
 	{
-		class LOGGER_EXPORT QContextLoggerTreeWidget : public QWidget
+		class LOGGER_API QContextLoggerTreeWidget : public QWidget
 		{
 			Q_OBJECT
 			friend class TreeData;

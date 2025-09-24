@@ -13,7 +13,7 @@
 
 namespace Log
 {
-	class LOGGER_EXPORT QLogMessageItemModel : public QAbstractItemModel
+	class LOGGER_API QLogMessageItemModel : public QAbstractItemModel
 	{
 	public:
         enum Column

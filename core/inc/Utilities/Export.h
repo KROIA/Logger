@@ -9,7 +9,7 @@
 
 namespace Log
 {
-	class LOGGER_EXPORT Export
+	class LOGGER_API Export
 	{
 	public:
 		static bool saveToFile(const std::unordered_map<LoggerID, std::vector<Message>>& contexts, const std::string& file);
