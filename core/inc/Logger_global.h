@@ -11,13 +11,13 @@
 #ifndef BUILD_STATIC
 	//#pragma message("LOGGER_LIB is a shared library")
 	#if defined(LOGGER_LIB)
-		#define LOGGER_EXPORT __declspec(dllexport)
+		#define LOGGER_API __declspec(dllexport)
 	#else
-		#define LOGGER_EXPORT __declspec(dllimport)
+		#define LOGGER_API __declspec(dllimport)
 	#endif
 #else 
 	//#pragma message("LOGGER_LIB is a static library")
-	#define LOGGER_EXPORT
+	#define LOGGER_API
 #endif
 
 /// USER_SECTION_START 2

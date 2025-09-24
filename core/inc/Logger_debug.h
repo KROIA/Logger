@@ -115,7 +115,7 @@ namespace Log
 /// USER_SECTION_START 4
 	
 /// USER_SECTION_END
-	class LOGGER_EXPORT Profiler
+	class LOGGER_API Profiler
 	{
 	public:
 		/// USER_SECTION_START 5
@@ -139,7 +139,7 @@ namespace Log
 
 
 #if LOGGER_LIBRARY_AVAILABLE == 1
-	class LOGGER_EXPORT Logger 
+	class LOGGER_API Logger 
 	{
 		/// USER_SECTION_START 8
 

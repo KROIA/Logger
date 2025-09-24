@@ -29,7 +29,7 @@ namespace Log
 
 /// USER_SECTION_END
 
-	class LOGGER_EXPORT LibraryInfo
+	class LOGGER_API LibraryInfo
 	{
 		LibraryInfo() = delete;
 		LibraryInfo(const LibraryInfo&) = delete;
