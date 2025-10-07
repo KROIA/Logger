@@ -3,6 +3,7 @@
 #include "Logger_base.h"
 #include "LogManager.h"
 #include <QObject>
+#include <array>
 
 namespace Log
 {
@@ -18,6 +19,8 @@ namespace Log
 			SignalReceiver(AbstractReceiver* receiver);
 			~SignalReceiver() {};
 
+			void setLevelFilter(Level level, bool enable);
+
 			public slots:
 			void onNewLogger(LogObject::Info loggerInfo);
 			void onLoggerInfoChanged(LogObject::Info info);
@@ -26,6 +29,7 @@ namespace Log
 
 			private:
 			AbstractReceiver* receiver;
+			std::array<bool, Level::__count> m_levelFilter;
 		};
 	}
 
@@ -36,6 +40,8 @@ namespace Log
 	public:
 		AbstractReceiver();
 		virtual ~AbstractReceiver();
+
+		void setLevelFilter(Level level, bool enable);
 
 	protected:
 		virtual void onNewLogger(LogObject::Info loggerInfo) = 0;

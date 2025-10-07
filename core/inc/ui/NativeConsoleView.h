@@ -28,6 +28,8 @@ namespace Log
 			void show();
 			bool isVisible() const;
 
+			
+
 		private:
 			void onNewLogger(LogObject::Info loggerInfo) override;
 			void onLoggerInfoChanged(LogObject::Info info) override;

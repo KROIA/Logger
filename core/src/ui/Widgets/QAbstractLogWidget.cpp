@@ -123,6 +123,17 @@ namespace Log
 			return Export::saveToFile(list, outputFile);
 		}
 
+		void QAbstractLogWidget::setLevelEnabled(Level level, bool enable)
+		{
+			if (level >= Level::__count)
+				return;
+			if (m_levelCheckBoxes[level])
+			{
+				m_levelCheckBoxes[level]->setChecked(enable);
+				onLevelCheckBoxChanged(level, level, m_levelCheckBoxes[level]->isChecked());
+			}
+		}
+
 		void QAbstractLogWidget::onAllContextCheckBoxStateChanged(int state)
 		{
 			if (m_ignoreAllContextCheckBox_signals)

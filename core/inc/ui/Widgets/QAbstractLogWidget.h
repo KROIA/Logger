@@ -39,6 +39,7 @@ namespace Log
             virtual void setDateTimeFormat(DateTime::Format format) = 0;
             virtual DateTime::Format getDateTimeFormat() const = 0;
 
+			void setLevelEnabled(Level level, bool enable);
 
         protected:
             void postConstructorInit();

@@ -12,6 +12,10 @@ int main(int argc, char *argv[])
 
 	QApplication app(argc, argv);
 
+	Log::UI::createConsoleView(Log::UI::ConsoleViewType::qConsoleView);
+	Log::UI::getConsoleView<Log::UI::QConsoleView>()->show();
+	Log::UI::getConsoleView<Log::UI::QConsoleView>()->setLevelEnabled(Log::Level::info, false);
+
 	// Create a file plotter
 	Log::FilePlotter plotter("outputFile.txt");
 
