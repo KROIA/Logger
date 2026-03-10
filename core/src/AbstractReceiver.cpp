@@ -7,6 +7,7 @@ namespace Log
 	{
 		SignalReceiver::SignalReceiver(AbstractReceiver* receiver)
 			: receiver(receiver)
+			, m_levelFilter()
 		{
 			LogManager& m = LogManager::instance();
 			connect(&m, &LogManager::onNewLogger, this, &SignalReceiver::onNewLogger, Qt::QueuedConnection);
@@ -28,7 +29,9 @@ namespace Log
 		void SignalReceiver::onLogMessage(Message message) 
 		{ 
 			Level level = message.getLevel();
-			if (level < Level::__count && !m_levelFilter[(size_t)level])
+			if(level >= Level::__count)
+				return;
+			if (!m_levelFilter[(size_t)level])
 				return;
 			receiver->onLogMessage(message); 
 		}

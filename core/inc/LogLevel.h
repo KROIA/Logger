@@ -10,7 +10,7 @@
 
 namespace Log
 {
-	enum Level
+	enum Level : unsigned int
 	{
 		trace,
 		debug,

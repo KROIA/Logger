@@ -69,7 +69,7 @@ namespace Log
 
             struct ContextData
             {
-                LoggerID id;
+                LoggerID id = 0;
                 std::vector<Message> messages;
                 QCheckBox* checkBox = nullptr;
             };
@@ -91,7 +91,7 @@ namespace Log
 
             Ui::QAbstractLogWidget* ui;
         private:
-            QCheckBox* m_levelCheckBoxes[static_cast<int>(Level::__count)];
+            QCheckBox* m_levelCheckBoxes[Level::__count];
             std::vector<QLineEdit*> m_filterTextEdits;
 
             std::unordered_map<LoggerID, ContextData> m_contextData;

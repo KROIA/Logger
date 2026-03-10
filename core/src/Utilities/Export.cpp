@@ -68,7 +68,7 @@ namespace Log
 	{
 		QJsonObject obj;
 		obj["id"] = (int)message.getLoggerID();
-		obj["level"] = message.getLevel();
+		obj["level"] = (int)message.getLevel();
 		obj["text"] = message.getText().c_str();
 		obj["color"] = message.getColor().getRGBStr().c_str();
 		obj["dateTime"] = message.getDateTime().toString(Log::DateTime::Format::yearMonthDay | Log::DateTime::Format::hourMinuteSecondMillisecond).c_str();
@@ -84,8 +84,8 @@ namespace Log
 	QJsonObject Export::getLogLevelInfo()
 	{
 		QJsonObject obj;
-		for (int i = 0; i < (int)Level::__count; ++i)
-			obj[Utilities::getLevelStr((Level)i).c_str()] = i;
+		for (unsigned int i = 0; i < Level::__count; ++i)
+			obj[Utilities::getLevelStr((Level)i).c_str()] = (int)i;
 		return obj;
 	}
 	QJsonObject Export::getFileHeader()
