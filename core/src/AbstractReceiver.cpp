@@ -1,5 +1,6 @@
 #include "AbstractReceiver.h"
 #include "LogManager.h"
+#include "Utilities/MessageFilter.h"
 
 namespace Log
 {
@@ -33,6 +34,11 @@ namespace Log
 				return;
 			if (!m_levelFilter[(size_t)level])
 				return;
+			if (m_messageFilter)
+			{
+				if (!m_messageFilter->filter(message))
+					return;
+			}
 			receiver->onLogMessage(message); 
 		}
 		void SignalReceiver::onChangeParent(LoggerID childID, LoggerID newParentID) { receiver->onChangeParent(childID, newParentID); }
@@ -54,7 +60,10 @@ namespace Log
 		signalReceiver.setLevelFilter(level, enable);
 	}
 
-
+	void AbstractReceiver::clearFilter()
+	{
+		signalReceiver.m_messageFilter = nullptr;
+	}
 
 	
 }
