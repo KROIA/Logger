@@ -10,7 +10,7 @@
 
 namespace Log
 {
-	typedef unsigned int LoggerID;
+	
 
 	class LOGGER_API Message
 	{

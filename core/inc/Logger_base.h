@@ -20,5 +20,6 @@ namespace Log
 			qTreeConsoleView
 		};
 	}
+	typedef unsigned int LoggerID;
 }
 /// USER_SECTION_END
