@@ -2,6 +2,7 @@
 
 #include "Logger_base.h"
 #include "LogManager.h"
+#include "Utilities/MessageFilter.h"
 
 #include <QObject>
 #include <array>
