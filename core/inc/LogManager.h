@@ -20,6 +20,8 @@ namespace Log
 		static void onChangeParentInternal(LoggerID childID, LoggerID newParentID);
 
 		static void setLogObjectInfo(LogObject::Info info);
+
+		
 	public:
 
 		static LogManager& instance();
@@ -27,6 +29,7 @@ namespace Log
 		static LogObject::Info getLogObjectInfo(LoggerID loggerID);
 		static std::vector<LogObject::Info> getLogObjectsInfo();
 		static void setLevelEnabled(Level level, bool enabled);
+		static bool isChildOf(LoggerID childID, LoggerID parentID);
 
 	signals:
 		void onNewLogger(LogObject::Info loggerInfo);

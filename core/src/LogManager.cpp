@@ -98,6 +98,20 @@ namespace Log
 		}
 	}
 
+	bool LogManager::isChildOf(LoggerID childID, LoggerID parentID)
+	{
+		LogManager& m = instance();
+		std::lock_guard<std::mutex> lock(m.m_mutex);
+		auto it = m.m_logObjects.find(childID);
+		while (it != m.m_logObjects.end())
+		{
+			if (it->second.parentId == parentID)
+				return true;
+			it = m.m_logObjects.find(it->second.parentId);
+		}
+		return false;
+	}
+
 	LogManager& LogManager::instance()
 	{
 		static LogManager instance;

@@ -1,5 +1,6 @@
 #include "Filter/LoggerIDFilter.h"
 #include "LogMessage.h"
+#include "LogManager.h"
 
 namespace Log
 {
@@ -29,7 +30,19 @@ namespace Log
 	}
 	bool LoggerIDFilter::filter(const Message& message) const
 	{
-		bool contains = containsLoggerID(message.getLoggerID());
+		LoggerID msgLoggerID = message.getLoggerID();
+		bool contains = containsLoggerID(msgLoggerID);
+		if(!contains && m_includeChildren)
+		{
+			for (const auto& id : m_loggerIDs)
+			{
+				if (LogManager::isChildOf(msgLoggerID, id))
+				{
+					contains = true;
+					break;
+				}
+			}
+		}
 		if (m_mode == Mode::Include)
 			return contains;
 		else // Exclude

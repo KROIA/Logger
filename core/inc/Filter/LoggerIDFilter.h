@@ -29,6 +29,9 @@ namespace Log
 		void setMode(Mode mode) { m_mode = mode; }
 		Mode getMode() const { return m_mode; }
 
+		void setIncludeChildren(bool include) { m_includeChildren = include; }
+		bool getIncludeChildren() const { return m_includeChildren; }
+
 		void addLoggerID(LoggerID id) { m_loggerIDs.insert(id); }
 		void removeLoggerID(LoggerID id) { m_loggerIDs.erase(id); }
 		bool containsLoggerID(LoggerID id) const { return m_loggerIDs.find(id) != m_loggerIDs.end(); }
@@ -45,6 +48,7 @@ namespace Log
 
 	private:
 		Mode m_mode = Mode::Include;
+		bool m_includeChildren = false;
 		std::unordered_set<LoggerID> m_loggerIDs;
 	};
 }
