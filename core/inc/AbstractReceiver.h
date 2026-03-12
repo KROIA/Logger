@@ -2,7 +2,7 @@
 
 #include "Logger_base.h"
 #include "LogManager.h"
-#include "Utilities/MessageFilter.h"
+
 
 #include <QObject>
 #include <array>
@@ -47,13 +47,7 @@ namespace Log
 
 		void setLevelFilter(Level level, bool enable);
 
-		template<typename T, typename... Args>
-		std::shared_ptr<T> setFlter(Args&&... args)
-		{
-			std::shared_ptr<T> filter = std::make_shared<T>(std::forward<Args>(args)...);
-			signalReceiver.m_messageFilter = filter;
-			return filter;
-		}
+
 		void setFilter(std::shared_ptr<MessageFilter> filter) 
 		{ 
 			signalReceiver.m_messageFilter = filter; 
