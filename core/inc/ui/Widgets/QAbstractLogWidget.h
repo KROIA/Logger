@@ -27,9 +27,15 @@ namespace Log
         {
             Q_OBJECT
             friend class QSignalHandler;
-
-        
         public:
+            enum SubWidget
+            {
+                logLevelFilter,
+				contextFilter,
+                dateTimeFilter,
+				__count
+            };
+
             QAbstractLogWidget(QWidget* parent = nullptr);
             ~QAbstractLogWidget();
 
@@ -41,6 +47,8 @@ namespace Log
 
 			void setLevelEnabled(Level level, bool enable);
 
+			void disableSubWidget(SubWidget widget);
+			void enableSubWidget(SubWidget widget);
         protected:
             void postConstructorInit();
 

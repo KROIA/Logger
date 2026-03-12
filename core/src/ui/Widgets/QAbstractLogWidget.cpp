@@ -134,6 +134,37 @@ namespace Log
 			}
 		}
 
+		void QAbstractLogWidget::disableSubWidget(SubWidget widget)
+		{
+			switch (widget)
+			{
+				case SubWidget::logLevelFilter:
+					ui->logLevel_frame->setVisible(false);
+					break;
+				case SubWidget::contextFilter:
+					ui->contextFilter_frame->setVisible(false);
+					break;
+				case SubWidget::dateTimeFilter:
+					ui->dateTimeFilter_frame->setVisible(false);
+					break;
+			}
+		}
+		void QAbstractLogWidget::enableSubWidget(SubWidget widget)
+		{
+			switch (widget)
+			{
+			case SubWidget::logLevelFilter:
+				ui->logLevel_frame->setVisible(true);
+				break;
+			case SubWidget::contextFilter:
+				ui->contextFilter_frame->setVisible(true);
+				break;
+			case SubWidget::dateTimeFilter:
+				ui->dateTimeFilter_frame->setVisible(true);
+				break;
+			}
+		}
+
 		void QAbstractLogWidget::onAllContextCheckBoxStateChanged(int state)
 		{
 			if (m_ignoreAllContextCheckBox_signals)
