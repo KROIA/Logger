@@ -20,6 +20,10 @@
 #include "ui/StaticObjs.h"
 //	 File
 #include "FilePlotter.h"
+
+
+// Filters
+#include "Filter/LoggerIDFilter.h"
  
 
 // Utilities
