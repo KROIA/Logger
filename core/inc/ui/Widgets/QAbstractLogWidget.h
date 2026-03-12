@@ -30,9 +30,12 @@ namespace Log
         public:
             enum SubWidget
             {
+                settingsFrame,
                 logLevelFilter,
 				contextFilter,
                 dateTimeFilter,
+				editFrame,
+                contentFrame,
 				__count
             };
 

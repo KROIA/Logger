@@ -25,7 +25,7 @@ namespace Log
 		{
 			ui->setupUi(this);
 			ui->context_scrollAreaWidgetContents->layout()->setAlignment(Qt::AlignTop);
-			ui->logLevel_frame->layout()->setAlignment(Qt::AlignTop);
+			ui->logLevelContent_frame->layout()->setAlignment(Qt::AlignTop);
 			ui->searchIcon_label->setPixmap(Resources::getIconSearch().pixmap(16, 16));
 
 			m_autoCreateNewCheckBoxForNewContext = true;
@@ -45,8 +45,8 @@ namespace Log
 				QObject::connect(checkBox, &QCheckBox::stateChanged,
 					this, &QAbstractLogWidget::onLevelCheckBoxStateChangedSlot);
 				m_levelCheckBoxes[i] = checkBox;
-				if (ui->logLevel_frame->layout())
-					ui->logLevel_frame->layout()->addWidget(checkBox);
+				if (ui->logLevelContent_frame->layout())
+					ui->logLevelContent_frame->layout()->addWidget(checkBox);
 			}
 			QObject::connect(ui->allContext_checkBox, &QCheckBox::stateChanged, this, &QAbstractLogWidget::onAllContextCheckBoxStateChanged);
 
@@ -138,6 +138,9 @@ namespace Log
 		{
 			switch (widget)
 			{
+				case SubWidget::settingsFrame:
+					ui->settings_frame->setVisible(false);
+					break;
 				case SubWidget::logLevelFilter:
 					ui->logLevel_frame->setVisible(false);
 					break;
@@ -147,12 +150,21 @@ namespace Log
 				case SubWidget::dateTimeFilter:
 					ui->dateTimeFilter_frame->setVisible(false);
 					break;
+				case SubWidget::editFrame:
+					ui->edit_frame->setVisible(false);
+					break;
+				case SubWidget::contentFrame:
+					ui->content_frame->setVisible(false);
+					break;
 			}
 		}
 		void QAbstractLogWidget::enableSubWidget(SubWidget widget)
 		{
 			switch (widget)
 			{
+			case SubWidget::settingsFrame:
+				ui->settings_frame->setVisible(true);
+				break;
 			case SubWidget::logLevelFilter:
 				ui->logLevel_frame->setVisible(true);
 				break;
@@ -161,6 +173,12 @@ namespace Log
 				break;
 			case SubWidget::dateTimeFilter:
 				ui->dateTimeFilter_frame->setVisible(true);
+				break;
+			case SubWidget::editFrame:
+				ui->edit_frame->setVisible(true);
+				break;
+			case SubWidget::contentFrame:
+				ui->content_frame->setVisible(true);
 				break;
 			}
 		}

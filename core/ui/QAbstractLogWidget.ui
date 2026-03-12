@@ -69,7 +69,7 @@
        <number>0</number>
       </property>
       <item>
-       <widget class="QFrame" name="frame_3">
+       <widget class="QFrame" name="logLevel_frame">
         <property name="minimumSize">
          <size>
           <width>0</width>
@@ -132,7 +132,7 @@
            <property name="alignment">
             <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
            </property>
-           <widget class="QWidget" name="logLevel_frame">
+           <widget class="QWidget" name="logLevelContent_frame">
             <property name="geometry">
              <rect>
               <x>0</x>
