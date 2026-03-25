@@ -26,6 +26,7 @@ namespace Log
             DateTime::Format getDateTimeFormat() const override;
 
             void getSaveVisibleMessages(std::unordered_map<LoggerID, std::vector<Message>>& list) const override;
+			void clear();
 
         private slots:
 

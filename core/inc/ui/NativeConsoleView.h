@@ -27,7 +27,7 @@ namespace Log
 			void hide();
 			void show();
 			bool isVisible() const;
-
+			void clear();
 			
 
 		private:

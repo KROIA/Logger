@@ -58,6 +58,10 @@ namespace Log
 		{
 			m_consoleWidget->getSaveVisibleMessages(list);
 		}
+		void QConsoleView::clear()
+		{
+			m_consoleWidget->clear();
+		}
 
 		void QConsoleView::on_clear_pushButton_clicked()
 		{

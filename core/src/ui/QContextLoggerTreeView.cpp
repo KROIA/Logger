@@ -62,12 +62,16 @@ namespace Log
 			QMutexLocker locker(&m_mutex);
 			m_treeItem->getSaveVisibleMessages(list);
 		}
-		void QTreeConsoleView::on_clear_pushButton_clicked()
+		void QTreeConsoleView::clear()
 		{
 			LOGGER_RECEIVER_PROFILING_FUNCTION(LOGGER_COLOR_STAGE_1);
 			QMutexLocker locker(&m_mutex);
 			QAbstractLogWidget::on_clear_pushButton_clicked();
 			m_treeItem->clearMessages();
+		}
+		void QTreeConsoleView::on_clear_pushButton_clicked()
+		{
+			clear();
 		}
 
 

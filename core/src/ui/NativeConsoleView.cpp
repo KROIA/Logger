@@ -68,6 +68,19 @@ namespace Log
 		{
 			return ::IsWindowVisible(::GetConsoleWindow());
 		}
+		void NativeConsoleView::clear()
+		{
+			HANDLE h = GetStdHandle(STD_OUTPUT_HANDLE);
+			CONSOLE_SCREEN_BUFFER_INFO csbiInfo;
+			GetConsoleScreenBufferInfo(h, &csbiInfo);
+			DWORD dwConSize = csbiInfo.dwSize.X * csbiInfo.dwSize.Y;
+			COORD coordScreen = { 0, 0 };
+			DWORD cCharsWritten;
+			FillConsoleOutputCharacter(h, (TCHAR)' ', dwConSize, coordScreen, &cCharsWritten);
+			GetConsoleScreenBufferInfo(h, &csbiInfo);
+			FillConsoleOutputAttribute(h, csbiInfo.wAttributes, dwConSize, coordScreen, &cCharsWritten);
+			SetConsoleCursorPosition(h, coordScreen);
+		}
 
 		void NativeConsoleView::onNewLogger(LogObject::Info loggerInfo)
 		{
