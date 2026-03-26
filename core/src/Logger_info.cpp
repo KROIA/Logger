@@ -167,9 +167,10 @@ namespace Log
 		return widget;
 	}
 #else
-	QWidget* LibraryInfo::createInfoWidget(QWidget* parent)
+	QWidget* LibraryInfo::createInfoWidget(QWidget* parent, bool disableHyperlink)
 	{
 		LOGGER_UNUSED(parent);
+		LOGGER_UNUSED(disableHyperlink);
 		return nullptr;
 	}
 #endif
