@@ -1,8 +1,38 @@
 #include "LogObject.h"
 #include "LogManager.h"
+#include <QJsonObject>
 
 namespace Log
 {
+	QJsonValue LogObject::Info::toJson() const
+	{
+		QJsonObject obj;
+		obj["id"] = (int)id;
+		obj["parentId"] = (int)parentId;
+		obj["name"] = name.c_str();
+		obj["creationTime"] = creationTime.toString(Log::DateTime::Format::yearMonthDay | Log::DateTime::Format::hourMinuteSecondMillisecond).c_str();
+		obj["color"] = color.getRGBStr().c_str();
+		obj["enabled"] = enabled;
+		return obj;
+	}
+	bool LogObject::Info::fromJson(const QJsonValue& value)
+	{
+		if (!value.isObject())
+			return false;
+		QJsonObject obj = value.toObject();
+		if (!obj.contains("id") || !obj.contains("parentId") || !obj.contains("name") || !obj.contains("creationTime") || !obj.contains("color") || !obj.contains("enabled"))
+			return false;
+		id = (LoggerID)obj["id"].toInt();
+		parentId = (LoggerID)obj["parentId"].toInt();
+		name = obj["name"].toString().toStdString();
+		creationTime.fromString(obj["creationTime"].toString().toStdString(), Log::DateTime::Format::yearMonthDay | Log::DateTime::Format::hourMinuteSecondMillisecond);
+		color.fromRGBStr(obj["color"].toString().toStdString());
+		enabled = obj["enabled"].toBool();
+		return true;
+	}
+
+
+
 	LogObject::LogObject(const std::string& name)
 	{
 		Info info(0, 0, name, DateTime(), Colors::white, true);

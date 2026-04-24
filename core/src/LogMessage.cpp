@@ -1,5 +1,6 @@
 #include "LogMessage.h"
 #include <algorithm>
+#include <QJsonObject>
 
 namespace Log
 {
@@ -218,6 +219,31 @@ namespace Log
 		return m_dateTime.toString(format) + " " +
 			Utilities::getLevelStr(m_level) +
 			m_message;
+	}
+	QJsonValue Message::toJson() const
+	{
+		QJsonObject obj;
+		obj["id"] = (int)getLoggerID();
+		obj["level"] = (int)getLevel();
+		obj["text"] = QString::fromUtf8(m_message.c_str(), m_message.size());
+		obj["color"] = getColor().getRGBStr().c_str();
+		obj["dateTime"] = getDateTime().toString(Log::DateTime::Format::yearMonthDay | Log::DateTime::Format::hourMinuteSecondMillisecond).c_str();
+		return obj;
+	}
+	bool Message::fromJson(const QJsonValue& value)
+	{
+		if (!value.isObject())
+			return false;
+		QJsonObject obj = value.toObject();
+		if (!obj.contains("id") || !obj.contains("level") || !obj.contains("text") || !obj.contains("color") || !obj.contains("dateTime"))
+			return false;
+		m_loggerID = (LoggerID)obj["id"].toInt();
+		m_level = (Level)obj["level"].toInt();
+		m_message = obj["text"].toString().toUtf8().toStdString();
+		m_customColor.fromRGBStr(obj["color"].toString().toStdString());
+		m_useCustomColor = true;
+		m_dateTime.fromString(obj["dateTime"].toString().toStdString(), Log::DateTime::Format::yearMonthDay | Log::DateTime::Format::hourMinuteSecondMillisecond);
+		return true;
 	}
 
 	const Color& Message::getLevelColor(Level l)

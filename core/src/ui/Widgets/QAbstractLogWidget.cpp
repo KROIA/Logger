@@ -4,6 +4,7 @@
 #include "ui_QAbstractLogWidget.h"
 #include "Utilities/Resources.h"
 #include "Utilities/Export.h"
+#include "Utilities/Import.h"
 #include <QTreeWidget>
 #include <QMetaType>
 #include <QSplitter>
@@ -107,6 +108,11 @@ namespace Log
 		{
 
 		}
+
+		void QAbstractLogWidget::clear()
+		{
+			m_contextData.clear();
+		}
 		void QAbstractLogWidget::postConstructorInit()
 		{
 			std::vector< LogObject::Info> loggers = LogManager::getLogObjectsInfo();
@@ -121,6 +127,24 @@ namespace Log
 			std::unordered_map<LoggerID, std::vector<Message>> list;
 			getSaveVisibleMessages(list);
 			return Export::saveToFile(list, outputFile);
+		}
+		bool QAbstractLogWidget::loadMessagesFromFile(const std::string& inputFile)
+		{
+			std::vector<std::pair<LogObject::Info, std::vector<Message>>> list;
+			if(Import::loadFromFile(list, inputFile))
+			{
+				clear();
+				for (const auto& context : list)
+				{
+					onNewLogger(context.first);
+					for (const auto& message : context.second)
+					{
+						onLogMessage(message);
+					}
+				}
+				return true;
+			}
+			return false;
 		}
 
 		void QAbstractLogWidget::setLevelEnabled(Level level, bool enable)
@@ -199,9 +223,10 @@ namespace Log
 				loggerData.second.checkBox->setChecked(isChecked);
 			}
 		}
+
 		void QAbstractLogWidget::on_clear_pushButton_clicked()
 		{
-
+			clear();
 		}
 		void QAbstractLogWidget::on_save_pushButton_clicked()
 		{

@@ -26,12 +26,11 @@ namespace Log
             DateTime::Format getDateTimeFormat() const override;
 
             void getSaveVisibleMessages(std::unordered_map<LoggerID, std::vector<Message>>& list) const override;
-			void clear();
+			void clear() override;
 
         private slots:
 
         private:
-            void on_clear_pushButton_clicked() override;
             void onLevelCheckBoxChanged(size_t index, Level level, bool isChecked) override;
             void onContextCheckBoxChanged(const ContextData& context, bool isChecked) override;
             void onDateTimeFilterChanged(const DateTimeFilter& filter) override;

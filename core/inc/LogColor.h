@@ -60,6 +60,7 @@ namespace Log
 
 		uint32_t getRGB() const;
 		std::string getRGBStr() const;
+		bool fromRGBStr(const std::string& str);
 
 #ifdef QT_WIDGETS_LIB
 		QColor toQColor() const;

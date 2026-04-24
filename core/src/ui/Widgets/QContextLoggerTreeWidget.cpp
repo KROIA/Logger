@@ -337,7 +337,7 @@ namespace Log
 		{
 			QTreeWidgetItem* line = new QTreeWidgetItem(thisMessagesRoot);
 			line->setData((int)HeaderPos::timestamp, Qt::DisplayRole, m.getDateTime().toString(root->m_timeFormat).c_str());
-			line->setData((int)HeaderPos::message, Qt::DisplayRole, m.getText().c_str());
+			line->setData((int)HeaderPos::message, Qt::DisplayRole, QString::fromStdString(m.getText()));
 
 			line->setIcon((int)HeaderPos::contextName, Utilities::getIcon(m.getLevel()));
 			line->setForeground((int)HeaderPos::message, m.getColor().toQColor());

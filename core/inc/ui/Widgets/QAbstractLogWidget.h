@@ -43,6 +43,7 @@ namespace Log
             ~QAbstractLogWidget();
 
             bool saveVisibleMessages(const std::string& outputFile) const;
+			bool loadMessagesFromFile(const std::string& inputFile);
             virtual void getSaveVisibleMessages(std::unordered_map<LoggerID, std::vector<Message>>& list) const = 0;
 
             virtual void setDateTimeFormat(DateTime::Format format) = 0;
@@ -52,6 +53,8 @@ namespace Log
 
 			void disableSubWidget(SubWidget widget);
 			void enableSubWidget(SubWidget widget);
+
+            virtual void clear();
         protected:
             void postConstructorInit();
 
@@ -59,7 +62,7 @@ namespace Log
 
         protected slots:
             virtual void onAllContextCheckBoxStateChanged(int state);
-            virtual void on_clear_pushButton_clicked();
+            void on_clear_pushButton_clicked();
             virtual void on_save_pushButton_clicked();
 
         

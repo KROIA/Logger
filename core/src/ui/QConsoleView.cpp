@@ -60,15 +60,11 @@ namespace Log
 		}
 		void QConsoleView::clear()
 		{
+			LOGGER_RECEIVER_PROFILING_FUNCTION(LOGGER_COLOR_STAGE_1);
 			m_consoleWidget->clear();
+			QAbstractLogWidget::clear();
 		}
 
-		void QConsoleView::on_clear_pushButton_clicked()
-		{
-			LOGGER_RECEIVER_PROFILING_FUNCTION(LOGGER_COLOR_STAGE_1);
-			QAbstractLogWidget::on_clear_pushButton_clicked();
-			m_consoleWidget->clear();
-		}
 
 		void QConsoleView::onLevelCheckBoxChanged(size_t index, Level level, bool isChecked)
 		{

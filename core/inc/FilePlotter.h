@@ -19,7 +19,8 @@ namespace Log
 		void onLogMessage(Message message) override;
 		void onChangeParent(LoggerID childID, LoggerID newParentID) override;
 	private:
-		void insertObject(const QJsonObject& obj);
+		void insertJson(const QJsonValue& obj);
+		void createDirectoryIfNotExists(const QString& filePath);
 
 		std::string m_filePath;
 		QFile *m_file;

@@ -19,7 +19,7 @@ namespace Log
 		for(const auto& context : contexts)
 		{
 			const LogObject::Info &metaInfo = LogManager::getLogObjectInfo(context.first);
-			objs.append(toJson(metaInfo));
+			objs.append(metaInfo.toJson());
 		}
 		std::vector<Message> messages;
 		for (const auto& context : contexts)
@@ -35,7 +35,7 @@ namespace Log
 
 		for (const auto& message : messages)
 		{
-			objs.append(toJson(message));
+			objs.append(message.toJson());
 		}
 
 		QJsonDocument doc(objs);
@@ -52,28 +52,6 @@ namespace Log
 		return true;
 	}
 
-	QJsonObject Export::toJson(const LogObject::Info& info)
-	{
-		QJsonObject obj;
-		obj["id"] = (int)info.id;
-		obj["parentId"] = (int)info.parentId;
-		obj["name"] = info.name.c_str();
-		obj["creationTime"] = info.creationTime.toString(Log::DateTime::Format::yearMonthDay | Log::DateTime::Format::hourMinuteSecondMillisecond).c_str();
-		obj["color"] = info.color.getRGBStr().c_str();
-		obj["enabled"] = info.enabled;
-		return obj;
-	
-	}
-	QJsonObject Export::toJson(const Message& message)
-	{
-		QJsonObject obj;
-		obj["id"] = (int)message.getLoggerID();
-		obj["level"] = (int)message.getLevel();
-		obj["text"] = message.getText().c_str();
-		obj["color"] = message.getColor().getRGBStr().c_str();
-		obj["dateTime"] = message.getDateTime().toString(Log::DateTime::Format::yearMonthDay | Log::DateTime::Format::hourMinuteSecondMillisecond).c_str();
-		return obj;
-	}
 	QJsonObject Export::getLibraryInfo()
 	{
 		QJsonObject obj;

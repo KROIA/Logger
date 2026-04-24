@@ -6,6 +6,7 @@
 #include "Utilities/DateTime.h"
 #include <string>
 #include <vector>
+#include <QJsonValue>
 
 
 namespace Log
@@ -54,6 +55,8 @@ namespace Log
 		LoggerID getLoggerID() const { return m_loggerID; }
 
 		std::string toString(DateTime::Format format) const;
+		QJsonValue toJson() const;
+		bool fromJson(const QJsonValue& value);
 
 		static const Color& getLevelColor(Level l);
 		static const LevelColors& getLevelColors();

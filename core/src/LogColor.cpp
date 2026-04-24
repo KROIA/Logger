@@ -213,6 +213,18 @@ The different color codes are
 		sprintf_s(hex, "#%02X%02X%02X", m_r, m_g, m_b);
 		return std::string(hex);
 	}
+	bool Color::fromRGBStr(const std::string& str)
+	{
+		if (str.size() != 7 || str[0] != '#')
+			return false;
+		int r, g, b;
+		if (sscanf_s(str.c_str(), "#%02X%02X%02X", &r, &g, &b) != 3)
+			return false;
+		m_r = (uint8_t)r;
+		m_g = (uint8_t)g;
+		m_b = (uint8_t)b;
+		return true;
+	}
 
 #ifdef QT_WIDGETS_LIB
 	QColor Color::toQColor() const

@@ -1,4 +1,6 @@
 #include "FilePlotter.h"
+#include <QFileInfo>
+#include <QDir>
 #include <QTextStream>
 #include <QJsonObject>
 #include <QJsonDocument>
@@ -11,7 +13,9 @@ namespace Log
 		, m_dateTimeFormat(format)
 	{
 		// Open the file to stream all messages to
-		m_file = new QFile(QString::fromStdString(m_filePath));
+		QString filePathQString = QString::fromStdString(filePath);
+		createDirectoryIfNotExists(filePathQString);
+		m_file = new QFile(filePathQString);
 		if (!m_file->open(QIODevice::WriteOnly | QIODevice::Text))
 		{
 			// Error opening file
@@ -37,25 +41,25 @@ namespace Log
 	}
 	void FilePlotter::onNewLogger(LogObject::Info loggerInfo)
 	{
-		insertObject(Export::toJson(loggerInfo));
+		insertJson(loggerInfo.toJson());
 	}
 	void FilePlotter::onLoggerInfoChanged(LogObject::Info info)
 	{
-		insertObject(Export::toJson(info));
+		insertJson(info.toJson());
 	}
 	void FilePlotter::onLogMessage(Message message)
 	{
-		insertObject(Export::toJson(message));
+		insertJson(message.toJson());
 	}
 	void FilePlotter::onChangeParent(LoggerID childID, LoggerID newParentID)
 	{
 		QJsonObject obj;
 		obj["childID"] = (int)childID;
 		obj["newParentID"] = (int)newParentID;
-		insertObject(obj);
+		insertJson(obj);
 	}
 
-	void FilePlotter::insertObject(const QJsonObject& obj)
+	void FilePlotter::insertJson(const QJsonValue& value)
 	{
 		if(!m_file)
 			return;
@@ -72,11 +76,35 @@ namespace Log
 		{
 			out << ",\n";
 		}
+		QJsonObject obj;
+		if(value.isObject())
+		{
+			obj = value.toObject();
+		}
+		else
+		{
+			obj["value"] = value;
+		}
 
 		// Add the new object
 		out << QJsonDocument(obj).toJson();
 
 		// Add the closing bracket back
 		out << "]\n";
+	}
+	void FilePlotter::createDirectoryIfNotExists(const QString& filePath)
+	{
+		// remove file name from path
+		QString path = QFileInfo(filePath).absolutePath();
+		QDir dir(path);
+		if (dir.exists()) {
+			//qDebug() << "Directory already exists:" << path;
+			return;
+		}
+
+		if (dir.mkpath(".")) {
+			//qDebug() << "Directory created successfully:" << path;
+			return;
+		}
 	}
 }

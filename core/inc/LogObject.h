@@ -5,6 +5,8 @@
 #include "Utilities/DateTime.h"
 #include "LogMessage.h"
 
+#include <QJsonValue>
+
 namespace Log
 {
 	class LOGGER_API LogObject
@@ -62,6 +64,8 @@ namespace Log
 				str += "Enabled: " + std::to_string(enabled) + "\n";
 				return str;
 			}
+			QJsonValue toJson() const;
+			bool fromJson(const QJsonValue& value);
 		};
 
 		
@@ -105,6 +109,7 @@ namespace Log
 		void custom(const std::string& msg);
 
 		static void setLevelEnabled(Level level, bool enabled);
+
 
 	protected:
 

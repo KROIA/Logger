@@ -55,6 +55,7 @@ namespace Log
 		Date normalized() const;
 
 		std::string toString(Format format) const;
+		bool fromString(const std::string& str, Format format);
 
 		// Check if a year is a leap year
 		static bool isLeapYear(int year) {
@@ -112,6 +113,7 @@ namespace Log
 		Time normalized() const;
 
 		std::string toString(Format format) const;
+		bool fromString(const std::string& str, Format format);
 
 	private:
 		int m_hour;
@@ -182,6 +184,7 @@ namespace Log
 		DateTime normalized() const;
 
 		std::string toString(Format format) const;
+		bool fromString(const std::string& str, Format format);
 
 	private:
 		Date m_date;

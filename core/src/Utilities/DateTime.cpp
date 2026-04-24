@@ -161,6 +161,35 @@ namespace Log
 			return year + "." + month + "." + day;
 		return "";
 	}
+	bool Date::fromString(const std::string& str, Format format)
+	{
+		size_t firstSep = str.find_first_of(".-/:");
+		size_t secondSep = str.find_first_of(".-/:", firstSep + 1);
+		if (firstSep == std::string::npos || secondSep == std::string::npos)
+			return false;
+		std::string part1 = str.substr(0, firstSep);
+		std::string part2 = str.substr(firstSep + 1, secondSep - firstSep - 1);
+		std::string part3 = str.substr(secondSep + 1);
+		int day, month, year;
+		if (((int)format & (int)Format::dayMonthYear) == (int)Format::dayMonthYear)
+		{
+			day = std::stoi(part1);
+			month = std::stoi(part2);
+			year = std::stoi(part3);
+		}
+		else if (((int)format & (int)Format::yearMonthDay) == (int)Format::yearMonthDay)
+		{
+			year = std::stoi(part1);
+			month = std::stoi(part2);
+			day = std::stoi(part3);
+		}
+		else
+			return false;
+		m_day = day;
+		m_month = month;
+		m_year = year;
+		return true;
+	}
 
 	Time::Time()
 	{
@@ -353,6 +382,39 @@ namespace Log
 			time += (time.size() ? ":" : "") + ms;
 		return time;
 	}
+	bool Time::fromString(const std::string& str, Format format)
+	{
+		size_t firstSep = str.find_first_of(" :.");
+		size_t secondSep = str.find_first_of(" :.", firstSep + 1);
+		size_t thirdSep = str.find_first_of(" :.", secondSep + 1);
+		if (firstSep == std::string::npos)
+			return false;
+		std::string part1 = str.substr(0, firstSep);
+		std::string part2 = secondSep != std::string::npos ? str.substr(firstSep + 1, secondSep - firstSep - 1) : "";
+		std::string part3 = thirdSep != std::string::npos ? str.substr(secondSep + 1, thirdSep - secondSep - 1) : "";
+		std::string part4 = str.substr(thirdSep + 1);
+		int hour = 0, min = 0, sec = 0, ms = 0;
+		if (((int)format & (int)Format::hourMinuteSecondMillisecond) == (int)Format::hourMinuteSecondMillisecond)
+		{
+			hour = std::stoi(part1);
+			min = std::stoi(part2);
+			sec = std::stoi(part3);
+			ms = std::stoi(part4);
+		}
+		else if (((int)format & (int)Format::hourMinuteSecond) == (int)Format::hourMinuteSecond)
+		{
+			hour = std::stoi(part1);
+			min = std::stoi(part2);
+			sec = std::stoi(part3);
+		}
+		else
+			return false;
+		m_hour = hour;
+		m_min = min;
+		m_sec = sec;
+		m_ms = ms;
+		return true;
+	}
 
 
 	const std::string& DateTime::getRangeStr(Range rangeType)
@@ -517,5 +579,18 @@ namespace Log
 	std::string DateTime::toString(Format format) const
 	{
 		return m_date.toString((Date::Format)format) + " " + m_time.toString((Time::Format)format);
+	}
+	bool DateTime::fromString(const std::string& str, Format format)
+	{
+		size_t spacePos = str.find_first_of(" ");
+		if (spacePos == std::string::npos)
+			return false;
+		std::string dateStr = str.substr(0, spacePos);
+		std::string timeStr = str.substr(spacePos + 1);
+		if (!m_date.fromString(dateStr, (Date::Format)format))
+			return false;
+		if (!m_time.fromString(timeStr, (Time::Format)format))
+			return false;
+		return true;
 	}
 }
