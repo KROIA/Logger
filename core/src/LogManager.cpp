@@ -1,4 +1,6 @@
 #include "LogManager.h"
+#include <QCoreApplication>
+#include <QThread>
 
 namespace Log
 {
@@ -56,6 +58,7 @@ namespace Log
 		if (emitSignal)
 		{
 			emit m.onLogMessage(message);
+			processEventsIfNoEventLoopRunning();
 		}
 	}
 	void LogManager::onChangeParentInternal(LoggerID childID, LoggerID newParentID)
@@ -110,6 +113,26 @@ namespace Log
 			it = m.m_logObjects.find(it->second.parentId);
 		}
 		return false;
+	}
+	bool LogManager::processEventsIfNoEventLoopRunning(QEventLoop::ProcessEventsFlags flags, int maxTimeMs)
+	{
+		// No QApplication/QCoreApplication exists
+		if (!QCoreApplication::instance())
+			return false;
+
+		QThread* thread = QThread::currentThread();
+
+		// loopLevel() > 0 means an event loop is currently running in this thread
+		if (thread->loopLevel() > 0)
+			return false;
+
+		// No event loop is running, so process pending events manually
+		if (maxTimeMs > 0)
+			QCoreApplication::processEvents(flags, maxTimeMs);
+		else
+			QCoreApplication::processEvents(flags);
+
+		return true;
 	}
 
 	LogManager& LogManager::instance()

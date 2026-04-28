@@ -2,6 +2,7 @@
 
 #include "Logger_base.h"
 #include <QObject>
+#include <QEventLoop>
 #include <unordered_map>
 #include "LogMessage.h"
 #include "LogObject.h"
@@ -39,6 +40,11 @@ namespace Log
 
 
 	private:
+		static bool processEventsIfNoEventLoopRunning(
+			QEventLoop::ProcessEventsFlags flags =
+				QEventLoop::ExcludeUserInputEvents | 
+				QEventLoop::ExcludeSocketNotifiers, 
+			int maxTimeMs = 0);
 		std::mutex m_mutex;
 		std::unordered_map<LoggerID, LogObject::Info> m_logObjects;
 		LoggerID m_nextID;
