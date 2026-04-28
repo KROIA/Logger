@@ -32,6 +32,9 @@ namespace Log
 		static void setLevelEnabled(Level level, bool enabled);
 		static bool isChildOf(LoggerID childID, LoggerID parentID);
 
+		static void setEnableAutomaticEventProcessing(bool enable) { instance().m_enableAutomaticEventProcessing = enable; }
+		static bool getEnableAutomaticEventProcessing() { return instance().m_enableAutomaticEventProcessing; }
+
 	signals:
 		void onNewLogger(LogObject::Info loggerInfo);
 		void onLoggerInfoChanged(LogObject::Info info);
@@ -50,5 +53,6 @@ namespace Log
 		LoggerID m_nextID;
 
 		bool m_enabledLevels[static_cast<size_t>(Level::__count)];
+		bool m_enableAutomaticEventProcessing = true;
 	};
 }

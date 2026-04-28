@@ -58,7 +58,8 @@ namespace Log
 		if (emitSignal)
 		{
 			emit m.onLogMessage(message);
-			processEventsIfNoEventLoopRunning();
+			if(m.m_enableAutomaticEventProcessing)
+				processEventsIfNoEventLoopRunning();
 		}
 	}
 	void LogManager::onChangeParentInternal(LoggerID childID, LoggerID newParentID)
