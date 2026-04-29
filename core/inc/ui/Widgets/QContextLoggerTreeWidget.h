@@ -9,6 +9,7 @@
 #include <QTimer>
 #include "LogLevel.h"
 #include <QDebug>
+#include <QColor>
 
 
 namespace Log
@@ -41,6 +42,7 @@ namespace Log
 			void addContext(const LogObject::Info &newContext);
 			//void removeContext(LoggerID id);
 			void onNewMessage(const Message& m);
+			void onNewMessages(const std::vector<Message>& messages);
 			void clearMessages();
 
 
@@ -148,6 +150,8 @@ namespace Log
 				TreeData *parent = nullptr;
 				QContextLoggerTreeWidget *root = nullptr;
 				LoggerID loggerID;
+				QColor m_contextColor;
+				QColor m_messageBackgroundColor;
 			};
 			
 			QTreeWidget* m_treeWidget;
@@ -158,6 +162,7 @@ namespace Log
 			QTimer m_updateTimer;
 			DateTime::Format m_timeFormat;
 			DateTimeFilter m_dateTimeFilter;
+			bool m_messageCountDirty = false;
 		};
 	}
 }

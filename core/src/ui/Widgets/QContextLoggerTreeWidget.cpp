@@ -19,11 +19,13 @@ namespace Log
 
 			m_dateTimeFilter.active = false;
 			m_timeFormat = DateTime::Format::yearMonthDay | DateTime::Format::hourMinuteSecondMillisecond;
-			m_updateTimer.setInterval(100);
+			m_updateTimer.setInterval(250);
 			connect(&m_updateTimer, &QTimer::timeout, this, &QContextLoggerTreeWidget::onUpdateTimer);
 			m_updateTimer.start();
 
 			m_treeWidget->setColumnCount(3);
+			m_treeWidget->setUniformRowHeights(true);
+			m_treeWidget->setAnimated(false);
 			QStringList headerLables;
 			for (int i = 0; i < (int)HeaderPos::__count; ++i)
 			{
@@ -105,13 +107,27 @@ namespace Log
 				return;
 			TreeData* treeData = it->second;
 			treeData->onNewMessage(m);
+			m_messageCountDirty = true;
+		}
+		void QContextLoggerTreeWidget::onNewMessages(const std::vector<Message>& messages)
+		{
+			if (messages.empty())
+				return;
+
+			m_treeWidget->setUpdatesEnabled(false);
+			for (const Message& message : messages)
+				onNewMessage(message);
+			m_treeWidget->setUpdatesEnabled(true);
 		}
 		void QContextLoggerTreeWidget::clearMessages()
 		{
+			m_treeWidget->setUpdatesEnabled(false);
 			for (auto& it : m_msgItems)
 			{
 				it.second->clearMessages();
 			}
+			m_treeWidget->setUpdatesEnabled(true);
+			m_messageCountDirty = true;
 		}
 
 
@@ -169,6 +185,7 @@ namespace Log
 			if (child && parent)
 			{
 				child->setParent(parent);
+				m_messageCountDirty = true;
 			}
 		}
 		void QContextLoggerTreeWidget::getSaveVisibleMessages(std::unordered_map<LoggerID, std::vector<Message>>& list) const
@@ -215,16 +232,26 @@ namespace Log
 		}
 		void QContextLoggerTreeWidget::onUpdateTimer()
 		{
-			for(auto & it : m_msgItems)
+			if (!m_messageCountDirty)
+				return;
+
+			for (auto& it : m_msgItems)
 			{
+				if (it.second->getParent() != nullptr)
+					continue;
+
 				unsigned int count = 0;
 				it.second->updateMessageCount(count);
 			}
+			m_messageCountDirty = false;
 		}
 		void QContextLoggerTreeWidget::updateMessageCount(unsigned int& countOut)
 		{
-			for(auto &it : m_msgItems)
+			for (auto& it : m_msgItems)
 			{
+				if (it.second->getParent() != nullptr)
+					continue;
+
 				unsigned int tmp = 0;
 				it.second->updateMessageCount(tmp);
 				countOut += tmp;
@@ -245,6 +272,7 @@ namespace Log
 			: parent(nullptr)
 		{
 			this->root = root;
+			msgItems.reserve(1024);
 			
 			childRoot = new QTreeWidgetItem(root->m_treeWidget);
 			thisMessagesRoot = new QTreeWidgetItem(childRoot);
@@ -258,6 +286,7 @@ namespace Log
 			: parent(parent)
 		{
 			this->root = root;
+			msgItems.reserve(1024);
 			if (parent)
 			{
 				childRoot = new QTreeWidgetItem(parent->childRoot);
@@ -303,21 +332,20 @@ namespace Log
 		void QContextLoggerTreeWidget::TreeData::setupChildRoot()
 		{
 			LogObject::Info info = LogManager::getLogObjectInfo(loggerID);
-			QColor contextColor = info.color.toQColor();
+			m_contextColor = info.color.toQColor();
+			m_messageBackgroundColor = (info.color * 0.5f).toQColor();
 			childRoot->setData((int)HeaderPos::contextName, Qt::DisplayRole, info.name.c_str());
 			childRoot->setData((int)HeaderPos::timestamp, Qt::DisplayRole, info.creationTime.toString(root->m_timeFormat).c_str());
-			childRoot->setBackground((int)HeaderPos::contextName, contextColor);
-			childRoot->setBackground((int)HeaderPos::timestamp, contextColor);
-			childRoot->setBackground((int)HeaderPos::message, contextColor);
+			childRoot->setBackground((int)HeaderPos::contextName, m_contextColor);
+			childRoot->setBackground((int)HeaderPos::timestamp, m_contextColor);
+			childRoot->setBackground((int)HeaderPos::message, m_contextColor);
 		}
 		void QContextLoggerTreeWidget::TreeData::setupMessageRoot()
 		{
-			LogObject::Info info = LogManager::getLogObjectInfo(loggerID);
-			QColor contextColor = info.color.toQColor();
 			thisMessagesRoot->setData((int)HeaderPos::contextName, Qt::DisplayRole, "Messages");
-			thisMessagesRoot->setBackground((int)HeaderPos::contextName, contextColor);
-			thisMessagesRoot->setBackground((int)HeaderPos::timestamp, contextColor);
-			thisMessagesRoot->setBackground((int)HeaderPos::message, contextColor);
+			thisMessagesRoot->setBackground((int)HeaderPos::contextName, m_contextColor);
+			thisMessagesRoot->setBackground((int)HeaderPos::timestamp, m_contextColor);
+			thisMessagesRoot->setBackground((int)HeaderPos::message, m_contextColor);
 		}
 		void QContextLoggerTreeWidget::TreeData::updateDateTime()
 		{
@@ -350,13 +378,9 @@ namespace Log
 			line->setToolTip((int)HeaderPos::contextName, m.getLevelString().c_str());
 
 			//line->setBackgroundColor((int)HeaderPos::message, m.getColor().toQColor());
-			if (m.getLoggerID() > 0)
-			{
-				QColor contextColor = (LogManager::getLogObjectInfo(m.getLoggerID()).color * 0.5).toQColor();
-				line->setBackground((int)HeaderPos::contextName, contextColor);
-				line->setBackground((int)HeaderPos::timestamp, contextColor);
-				line->setBackground((int)HeaderPos::message, contextColor);
-			}
+			line->setBackground((int)HeaderPos::contextName, m_messageBackgroundColor);
+			line->setBackground((int)HeaderPos::timestamp, m_messageBackgroundColor);
+			line->setBackground((int)HeaderPos::message, m_messageBackgroundColor);
 			
 
 			MessageData data;
@@ -373,7 +397,6 @@ namespace Log
 				data.setVisibilityFilter(MessageData::VisibilityBitMask::dateTimeVisibility, false);
 
 			msgItems.push_back(data);
-			thisMessagesRoot->addChild(line);
 		}
 		QContextLoggerTreeWidget::TreeData* QContextLoggerTreeWidget::TreeData::createChild(LoggerID loggerID)
 		{
@@ -503,9 +526,11 @@ namespace Log
 		}
 		void QContextLoggerTreeWidget::TreeData::clearMessages()
 		{
-			for(auto &it : msgItems)
+			if (thisMessagesRoot)
 			{
-				delete it.item;
+				auto childrenItems = thisMessagesRoot->takeChildren();
+				for (QTreeWidgetItem* item : childrenItems)
+					delete item;
 			}
 			msgItems.clear();
 		}

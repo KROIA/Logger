@@ -8,6 +8,7 @@
 #include <QTimer>
 #include "Utilities/QLogMessageItemModel.h"
 #include <QMutex>
+#include <atomic>
 
 namespace Log
 {
@@ -54,6 +55,7 @@ namespace Log
             
             mutable QMutex m_mutex;
             std::vector<Message> m_messageQueue;
+            std::atomic<bool> m_flushScheduled{ false };
         };
     }
 }

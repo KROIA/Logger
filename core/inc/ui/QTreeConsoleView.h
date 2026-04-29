@@ -7,6 +7,7 @@
 #include <QTreeWidget>
 #include <QTreeView>
 #include <QMutex>
+#include <atomic>
 
 namespace Log 
 {
@@ -53,6 +54,7 @@ namespace Log
 
             
             std::vector<Message> m_messageQueue;
+            std::atomic<bool> m_flushScheduled{ false };
         };
         
     }

@@ -21,6 +21,9 @@ namespace Log
             m_proxyModel->setSourceModel(m_model);
 
             setModel(m_proxyModel);
+            setWordWrap(false);
+            setShowGrid(false);
+
             QHeaderView* header = horizontalHeader();
             header->setStretchLastSection(true);
             header->setSectionResizeMode(QLogMessageItemModel::Column::TimeColumn, QHeaderView::Interactive);
@@ -60,12 +63,10 @@ namespace Log
         void QConsoleWidget::setLevelVisibility(Level level, bool isVisible)
         {
             m_proxyModel->setLevelVisibility(level, isVisible);
-            m_proxyModel->invalidate(); // force update the new filter
         }
         void QConsoleWidget::setContextVisibility(LoggerID loggerID, bool isVisible)
         {
             m_proxyModel->setContextVisibility(loggerID, isVisible);
-            m_proxyModel->invalidate(); // force update the new filter
         }
         void QConsoleWidget::setDateTimeFilter(const DateTimeFilter& filter)
         {
@@ -74,11 +75,17 @@ namespace Log
 
         void QConsoleWidget::clear()
         {
+            {
+                QMutexLocker locker(&m_mutex);
+                m_messageQueue.clear();
+                m_flushScheduled.store(false);
+            }
             m_model->clear();
+            m_model->clearLoggerCache();
         }
         void QConsoleWidget::getSaveVisibleMessages(std::unordered_map<LoggerID, std::vector<Message>>& list)
         {
-            if (QApplication::instance(), QApplication::instance()->thread() != QThread::currentThread())
+            if (QApplication::instance() && QApplication::instance()->thread() != QThread::currentThread())
             {  }
             else
                 onMessageQueued(nullptr);
@@ -122,13 +129,11 @@ namespace Log
                 QMutexLocker locker(&m_mutex);
                 m_messageQueue.push_back(m);
             }
-            if (QApplication::instance(), QApplication::instance()->thread() != QThread::currentThread())
+            if (!m_flushScheduled.exchange(true))
             {
                 LOGGER_RECEIVER_PROFILING_BLOCK("Emit signal: messageQued", LOGGER_COLOR_STAGE_3);
                 emit messageQueued(nullptr);
             }
-            else
-                onMessageQueued(nullptr);
         }
 
         void QConsoleWidget::onMessageQueued(QPrivateSignal*)
@@ -140,9 +145,16 @@ namespace Log
                 cpy = std::move(m_messageQueue);
                 m_messageQueue.clear();
             }
-            QMutexLocker locker(&m_mutex);
-            for (auto& m : cpy)
-                m_model->addLog(m);
+            m_model->addLogs(std::move(cpy));
+
+            m_flushScheduled.store(false);
+            bool needsReschedule = false;
+            {
+                QMutexLocker locker(&m_mutex);
+                needsReschedule = !m_messageQueue.empty();
+            }
+            if (needsReschedule && !m_flushScheduled.exchange(true))
+                emit messageQueued(nullptr);
         }
     }
 }

@@ -3,6 +3,8 @@
 #ifdef QT_WIDGETS_LIB
 #include <QBrush>
 #include <QFont>
+#include <algorithm>
+#include <iterator>
 #include "Utilities/Resources.h"
 #include "LogManager.h"
 
@@ -13,6 +15,7 @@ namespace Log
         : QAbstractItemModel(parent) 
     {
     	m_dateTimeFormat = DateTime::Format::yearMonthDay | DateTime::Format::hourMinuteSecondMillisecond;
+        logs.reserve(4096);
         
     }
 
@@ -44,16 +47,15 @@ namespace Log
             return QVariant();
 
         const Message& entry = logs[index.row()];
-        LogObject::Info info = LogManager::getLogObjectInfo(entry.getLoggerID());
-
-        float colorFactor = 0.5f;
+        const CachedLoggerData& loggerData = getCachedLoggerData(entry.getLoggerID());
+        static const QFont boldFont("Arial", 10, QFont::Bold);
 
         switch (role) {
         case Qt::DisplayRole:
             switch (index.column())
             {
             case Column::TimeColumn:    return QString::fromStdString(entry.getDateTime().toString(m_dateTimeFormat));
-            case Column::ContextColumn: return QString::fromStdString(info.name);
+            case Column::ContextColumn: return loggerData.name;
             case Column::MessageColumn: return QString::fromStdString(entry.getText());
             }
             break;
@@ -69,10 +71,10 @@ namespace Log
         case Qt::BackgroundRole:
             switch (index.column())
             {
-            case Column::TimeColumn:    return QBrush((info.color * colorFactor).toQColor());
-            case Column::ContextColumn: return QBrush((info.color * colorFactor).toQColor());
-            case Column::LevelColumn:   return QBrush((info.color * colorFactor).toQColor());
-            case Column::MessageColumn: return QBrush((info.color * colorFactor).toQColor());
+            case Column::TimeColumn:    
+            case Column::ContextColumn:
+            case Column::LevelColumn:   
+            case Column::MessageColumn: return QBrush(loggerData.backgroundColor);
             }
             break;
 
@@ -86,7 +88,7 @@ namespace Log
         case Qt::FontRole:
             switch (index.column())
             {
-			    case Column::MessageColumn:   return QFont("Arial", 10, QFont::Bold);
+			    case Column::MessageColumn:   return boldFont;
 			}
 			break;
         case Qt::ToolTipRole:
@@ -94,7 +96,7 @@ namespace Log
             switch (index.column())
             {
 				case Column::TimeColumn: return QString::fromStdString(entry.getDateTime().toString(m_dateTimeFormat));
-				case Column::ContextColumn: return QString::fromStdString(info.name);
+				case Column::ContextColumn: return loggerData.name;
                 case Column::LevelColumn: return QString::fromStdString(Utilities::getLevelStr(entry.getLevel()));
 				case Column::MessageColumn: return QString::fromStdString(entry.getText());
             }
@@ -111,6 +113,29 @@ namespace Log
     {
         beginInsertRows(QModelIndex(), logs.size(), logs.size());
         logs.push_back(entry);
+        endInsertRows();
+    }
+    void QLogMessageItemModel::addLogs(const std::vector<Message>& entries)
+    {
+        if (entries.empty())
+            return;
+
+        const int firstRow = static_cast<int>(logs.size());
+        const int lastRow = firstRow + static_cast<int>(entries.size()) - 1;
+        beginInsertRows(QModelIndex(), firstRow, lastRow);
+        logs.insert(logs.end(), entries.begin(), entries.end());
+        endInsertRows();
+    }
+    void QLogMessageItemModel::addLogs(std::vector<Message>&& entries)
+    {
+        if (entries.empty())
+            return;
+
+        const int firstRow = static_cast<int>(logs.size());
+        const int lastRow = firstRow + static_cast<int>(entries.size()) - 1;
+        beginInsertRows(QModelIndex(), firstRow, lastRow);
+        logs.reserve(logs.size() + entries.size());
+        std::move(entries.begin(), entries.end(), std::back_inserter(logs));
         endInsertRows();
     }
 
@@ -159,6 +184,26 @@ namespace Log
 		logs.clear();
 		endResetModel();
     }
+    void QLogMessageItemModel::clearLoggerCache()
+    {
+        m_cachedLoggerData.clear();
+    }
+    const QLogMessageItemModel::CachedLoggerData& QLogMessageItemModel::getCachedLoggerData(LoggerID loggerID) const
+    {
+        const auto cachedIt = m_cachedLoggerData.find(loggerID);
+        if (cachedIt != m_cachedLoggerData.end())
+            return cachedIt->second;
+
+        static const float colorFactor = 0.5f;
+        const LogObject::Info info = LogManager::getLogObjectInfo(loggerID);
+
+        CachedLoggerData data;
+        data.name = QString::fromStdString(info.name);
+        data.backgroundColor = (info.color * colorFactor).toQColor();
+
+        const auto inserted = m_cachedLoggerData.emplace(loggerID, std::move(data));
+        return inserted.first->second;
+    }
 
 
     QLogMessageItemProxyModel::QLogMessageItemProxyModel(QObject* parent)
@@ -173,6 +218,7 @@ namespace Log
     void QLogMessageItemProxyModel::setLevelVisibility(Level level, bool isVisible)
     {
         m_levelActivated[static_cast<int>(level)] = isVisible;
+        invalidateFilter();
     }
     bool QLogMessageItemProxyModel::getLevelVisibility(Level level) const
     {
@@ -190,6 +236,7 @@ namespace Log
         {
             m_contextVisibility[loggerID] = isVisible;
         }
+        invalidateFilter();
     }
 
     bool QLogMessageItemProxyModel::getContextVisibility(LoggerID loggerID) const
@@ -206,7 +253,7 @@ namespace Log
     void QLogMessageItemProxyModel::setDateTimeFilter(const DateTimeFilter& filter)
     {
         m_dateTimeFilter = filter;
-        invalidate(); // force update the new filter
+        invalidateFilter();
     }
     const DateTimeFilter& QLogMessageItemProxyModel::getDateTimeFilter() const
     {
@@ -218,11 +265,12 @@ namespace Log
 		m_dateTimeFilter.max = max;
 		m_dateTimeFilter.rangeType = rangeType;
         m_dateTimeFilter.active = true;
-
+        invalidateFilter();
     }
     void QLogMessageItemProxyModel::clearDateTimeFilter()
     {
         m_dateTimeFilter.active = false;
+        invalidateFilter();
     }
     const DateTime& QLogMessageItemProxyModel::getDateTimeFilterMin() const
     {

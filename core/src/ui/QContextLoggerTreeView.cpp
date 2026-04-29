@@ -66,6 +66,8 @@ namespace Log
 		{
 			LOGGER_RECEIVER_PROFILING_FUNCTION(LOGGER_COLOR_STAGE_1);
 			QMutexLocker locker(&m_mutex);
+			m_messageQueue.clear();
+			m_flushScheduled.store(false);
 			m_treeItem->clearMessages();
 			QAbstractLogWidget::clear();
 		}
@@ -99,7 +101,12 @@ namespace Log
 		{
 			LOGGER_RECEIVER_PROFILING_FUNCTION(LOGGER_COLOR_STAGE_1);
 			QAbstractLogWidget::onLogMessage(message);
-			m_treeItem->onNewMessage(message);
+			{
+				QMutexLocker locker(&m_mutex);
+				m_messageQueue.push_back(message);
+			}
+			if (!m_flushScheduled.exchange(true))
+				emit messageQueued(nullptr);
 		}
 		void QTreeConsoleView::onChangeParent(LoggerID childID, LoggerID newParentID)
 		{
@@ -112,12 +119,19 @@ namespace Log
 			std::vector<Message> cpy;
 			{
 				QMutexLocker locker(&m_mutex);
-				cpy = m_messageQueue;
+				cpy = std::move(m_messageQueue);
 				m_messageQueue.clear();
 			}
-			QMutexLocker locker(&m_mutex);
-			for (auto& m : cpy)
-				m_treeItem->onNewMessage(m);
+			m_flushScheduled.store(false);
+			m_treeItem->onNewMessages(cpy);
+
+			bool needsReschedule = false;
+			{
+				QMutexLocker locker(&m_mutex);
+				needsReschedule = !m_messageQueue.empty();
+			}
+			if (needsReschedule && !m_flushScheduled.exchange(true))
+				emit messageQueued(nullptr);
 		}
 	}
 }

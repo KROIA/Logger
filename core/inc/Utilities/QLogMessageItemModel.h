@@ -10,6 +10,8 @@
 #include <string>
 #include "LogMessage.h"
 #include <unordered_map>
+#include <QColor>
+#include <QString>
 
 namespace Log
 {
@@ -35,6 +37,8 @@ namespace Log
         QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const override;
 
         void addLog(const Message& entry);
+        void addLogs(const std::vector<Message>& entries);
+        void addLogs(std::vector<Message>&& entries);
         QModelIndex index(int row, int column, const QModelIndex& parent = QModelIndex()) const override;
         QModelIndex parent(const QModelIndex& child) const override;
         QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
@@ -42,9 +46,19 @@ namespace Log
         const Message& getElement(size_t row) const;
 
         void clear();
+        void clearLoggerCache();
     private:
+        struct CachedLoggerData
+        {
+            QString name;
+            QColor backgroundColor;
+        };
+
+        const CachedLoggerData& getCachedLoggerData(LoggerID loggerID) const;
+
         std::vector<Message> logs;
         DateTime::Format m_dateTimeFormat;
+        mutable std::unordered_map<LoggerID, CachedLoggerData> m_cachedLoggerData;
 	};
 
 
