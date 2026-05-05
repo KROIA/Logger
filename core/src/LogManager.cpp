@@ -58,8 +58,15 @@ namespace Log
 		if (emitSignal)
 		{
 			emit m.onLogMessage(message);
-			if(m.m_enableAutomaticEventProcessing)
-				processEventsIfNoEventLoopRunning();
+			if (m.m_enableAutomaticEventProcessing)
+			{
+				std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
+				if (now - m.m_lastEventProcessingTime >= m.m_minTimeBetweenEventProcessing)
+				{
+					m.m_lastEventProcessingTime = now;
+					processEventsIfNoEventLoopRunning();
+				}
+			}
 		}
 	}
 	void LogManager::onChangeParentInternal(LoggerID childID, LoggerID newParentID)

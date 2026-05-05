@@ -34,6 +34,8 @@ namespace Log
 
 		static void setEnableAutomaticEventProcessing(bool enable) { instance().m_enableAutomaticEventProcessing = enable; }
 		static bool getEnableAutomaticEventProcessing() { return instance().m_enableAutomaticEventProcessing; }
+		static void setMinTimeBetweenEventProcessing(std::chrono::milliseconds minTime) { instance().m_minTimeBetweenEventProcessing = minTime; }
+		static std::chrono::milliseconds getMinTimeBetweenEventProcessing() { return instance().m_minTimeBetweenEventProcessing; }
 
 	signals:
 		void onNewLogger(LogObject::Info loggerInfo);
@@ -53,6 +55,9 @@ namespace Log
 		LoggerID m_nextID;
 
 		bool m_enabledLevels[static_cast<size_t>(Level::__count)];
-		bool m_enableAutomaticEventProcessing = true;
+		bool m_enableAutomaticEventProcessing = false;
+
+		std::chrono::milliseconds m_minTimeBetweenEventProcessing{ 100 };
+		std::chrono::steady_clock::time_point m_lastEventProcessingTime;
 	};
 }
