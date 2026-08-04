@@ -85,6 +85,7 @@ namespace Log
 
 			class TreeData
 			{
+				friend class QContextLoggerTreeWidget;
 				public:
 					TreeData(QContextLoggerTreeWidget* root, const LogObject::Info& info);
 					TreeData(QContextLoggerTreeWidget* root, TreeData *parent, const LogObject::Info& info);
@@ -169,11 +170,27 @@ namespace Log
 
 			std::unordered_map<LoggerID, TreeData*> m_msgItems;
 
+		public:
+			int getMatchCount() const;
+			void findNext(bool forward);
+			void setContextMenuEnabled(bool enabled) { m_contextMenuEnabled = enabled; }
+			bool isContextMenuEnabled() const { return m_contextMenuEnabled; }
+			void showRowContextMenu(QTreeWidgetItem* item, const QPoint& globalPos);
+		signals:
+			void requestSoloContext(Log::LoggerID id);
+			void requestHideContext(Log::LoggerID id);
+			void requestHideMessagesLike(const QString& text);
+			void selectionChangedMessage(const Log::Message& msg, bool hasSelection);
+		private:
+			bool m_contextMenuEnabled = true;
+			std::vector<QTreeWidgetItem*> collectVisibleMessageItems() const;
+
 			QTimer m_updateTimer;
 			DateTime::Format m_timeFormat;
 			DateTimeFilter m_dateTimeFilter;
 			QString m_searchText;
 			bool m_searchUseRegex = false;
+			bool m_searchNegate = false;
 			QRegularExpression m_searchRegex;
 			bool m_messageCountDirty = false;
 		};

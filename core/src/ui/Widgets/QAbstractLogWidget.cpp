@@ -16,6 +16,9 @@
 #include <QThread>
 #include <QHBoxLayout>
 #include <QLabel>
+#include <QPushButton>
+#include <QTextBrowser>
+#include <QSplitter>
 
 
 namespace Log
@@ -27,6 +30,8 @@ namespace Log
 			, ui(new Ui::QAbstractLogWidget)
 		{
 			ui->setupUi(this);
+			for (int i = 0; i < __featureCount; ++i)
+				m_features[i] = true;
 			ui->context_scrollAreaWidgetContents->layout()->setAlignment(Qt::AlignTop);
 			ui->logLevelContent_frame->layout()->setAlignment(Qt::AlignTop);
 			ui->searchIcon_label->setPixmap(Resources::getIconSearch().pixmap(16, 16));
@@ -395,28 +400,185 @@ namespace Log
 			auto* layout = ui->content_frame->layout();
 			if (!m_searchLineEdit)
 			{
-				// Build the search bar on first content insertion so subclasses that
-				// call setContentWidget from their ctor get it above their content.
-				QWidget* searchBar = new QWidget(ui->content_frame);
-				auto* h = new QHBoxLayout(searchBar);
+				m_searchBarWidget = new QWidget(ui->content_frame);
+				auto* h = new QHBoxLayout(m_searchBarWidget);
 				h->setContentsMargins(2, 2, 2, 2);
 				h->setSpacing(4);
-				QLabel* lbl = new QLabel("Search:", searchBar);
-				m_searchLineEdit = new QLineEdit(searchBar);
-				m_searchLineEdit->setPlaceholderText("Filter messages");
+				QLabel* lbl = new QLabel("Search:", m_searchBarWidget);
+				m_searchLineEdit = new QLineEdit(m_searchBarWidget);
+				m_searchLineEdit->setPlaceholderText("Filter messages (prefix with ! to exclude)");
 				m_searchLineEdit->setClearButtonEnabled(true);
-				m_searchRegexCheckBox = new QCheckBox(".*", searchBar);
+				m_findPrevButton = new QPushButton("▲", m_searchBarWidget);
+				m_findPrevButton->setToolTip("Previous match (Shift+F3)");
+				m_findPrevButton->setFixedWidth(24);
+				m_findNextButton = new QPushButton("▼", m_searchBarWidget);
+				m_findNextButton->setToolTip("Next match (F3)");
+				m_findNextButton->setFixedWidth(24);
+				m_matchCountLabel = new QLabel("0", m_searchBarWidget);
+				m_matchCountLabel->setToolTip("Number of matches");
+				m_matchCountLabel->setMinimumWidth(40);
+				m_matchCountLabel->setAlignment(Qt::AlignCenter);
+				m_searchRegexCheckBox = new QCheckBox(".*", m_searchBarWidget);
 				m_searchRegexCheckBox->setToolTip("Interpret the search text as a regular expression");
 				h->addWidget(lbl);
 				h->addWidget(m_searchLineEdit, 1);
+				h->addWidget(m_matchCountLabel);
+				h->addWidget(m_findPrevButton);
+				h->addWidget(m_findNextButton);
 				h->addWidget(m_searchRegexCheckBox);
 				QObject::connect(m_searchLineEdit, &QLineEdit::textChanged,
 					this, &QAbstractLogWidget::onSearchLineEditChanged);
+				QObject::connect(m_searchLineEdit, &QLineEdit::returnPressed,
+					this, [this]() { findNext(true); });
 				QObject::connect(m_searchRegexCheckBox, &QCheckBox::stateChanged,
 					this, &QAbstractLogWidget::onSearchRegexToggled);
-				layout->addWidget(searchBar);
+				QObject::connect(m_findPrevButton, &QPushButton::clicked,
+					this, [this]() { findNext(false); });
+				QObject::connect(m_findNextButton, &QPushButton::clicked,
+					this, [this]() { findNext(true); });
+				layout->addWidget(m_searchBarWidget);
+
+				m_contentSplitter = new QSplitter(Qt::Vertical, ui->content_frame);
+				m_contentSplitter->setChildrenCollapsible(false);
+				if (auto* box = qobject_cast<QBoxLayout*>(layout))
+					box->addWidget(m_contentSplitter, 1);
+				else
+					layout->addWidget(m_contentSplitter);
+
+				auto* details = new QTextBrowser(m_contentSplitter);
+				details->setOpenExternalLinks(false);
+				details->setPlaceholderText("Details of the selected message will appear here.");
+				details->setMinimumHeight(60);
+				m_detailsPane = details;
+
+				// Apply any feature flags that were set before setContentWidget ran.
+				m_searchBarWidget->setVisible(m_features[SearchBar]);
+				if (m_searchRegexCheckBox) m_searchRegexCheckBox->setVisible(m_features[SearchRegexCheckBox]);
+				m_findPrevButton->setVisible(m_features[FindNextPrev]);
+				m_findNextButton->setVisible(m_features[FindNextPrev]);
+				m_matchCountLabel->setVisible(m_features[MatchCount]);
+				m_detailsPane->setVisible(m_features[DetailsPane]);
 			}
-			layout->addWidget(widget);
+			// First widget goes above the details pane.
+			int belowIdx = m_contentSplitter->indexOf(m_detailsPane);
+			m_contentSplitter->insertWidget(belowIdx, widget);
+			m_contentSplitter->setStretchFactor(belowIdx, 4);
+			m_contentSplitter->setStretchFactor(belowIdx + 1, 1);
+		}
+		void QAbstractLogWidget::setDetailsHtml(const QString& html)
+		{
+			if (auto* tb = qobject_cast<QTextBrowser*>(m_detailsPane))
+				tb->setHtml(html);
+		}
+		std::string QAbstractLogWidget::getContextNameFor(LoggerID id) const
+		{
+			auto it = m_contextData.find(id);
+			if (it != m_contextData.end())
+				return it->second.info.name;
+			return {};
+		}
+		void QAbstractLogWidget::updateDetailsFor(const Message& msg, bool hasSelection)
+		{
+			if (!hasSelection)
+			{
+				setDetailsHtml(QString());
+				return;
+			}
+			setDetailsHtml(formatMessageAsHtml(msg, getContextNameFor(msg.getLoggerID())));
+		}
+		QString QAbstractLogWidget::formatMessageAsHtml(const Message& msg, const std::string& contextName)
+		{
+			const QColor lvlColor = msg.getColor().toQColor();
+			const QString lvlName = QString::fromStdString(Utilities::getLevelStr(msg.getLevel()));
+			const QString ctx = contextName.empty()
+				? QString("(logger #%1)").arg(msg.getLoggerID())
+				: QString::fromStdString(contextName);
+			const QDateTime dt = msg.getDateTime().toQDateTime();
+			const QString tsHuman = dt.toString("yyyy-MM-dd hh:mm:ss.zzz");
+			const qint64 tsEpoch = dt.toMSecsSinceEpoch();
+			const QString textHtml = QString::fromStdString(msg.getText()).toHtmlEscaped().replace("\n", "<br>");
+			return QString(
+				"<b>Context:</b> %1 &nbsp; <b>ID:</b> %2<br>"
+				"<b>Level:</b> <span style='color:%3'>%4</span><br>"
+				"<b>Time:</b> %5 &nbsp; <span style='color:#888'>(%6 ms)</span>"
+				"<hr>"
+				"<pre style='white-space: pre-wrap;'>%7</pre>"
+			).arg(ctx.toHtmlEscaped())
+			 .arg(msg.getLoggerID())
+			 .arg(lvlColor.name())
+			 .arg(lvlName)
+			 .arg(tsHuman)
+			 .arg(tsEpoch)
+			 .arg(textHtml);
+		}
+
+		void QAbstractLogWidget::setFeatureEnabled(Feature f, bool enabled)
+		{
+			if (f < 0 || f >= __featureCount)
+				return;
+			m_features[f] = enabled;
+			if (!m_searchBarWidget)
+				return; // widgets built lazily; effect applies on first paint
+			switch (f)
+			{
+			case SearchBar:
+				m_searchBarWidget->setVisible(enabled);
+				break;
+			case SearchRegexCheckBox:
+				if (m_searchRegexCheckBox) m_searchRegexCheckBox->setVisible(enabled);
+				break;
+			case FindNextPrev:
+				if (m_findPrevButton) m_findPrevButton->setVisible(enabled);
+				if (m_findNextButton) m_findNextButton->setVisible(enabled);
+				break;
+			case MatchCount:
+				if (m_matchCountLabel) m_matchCountLabel->setVisible(enabled);
+				break;
+			case DetailsPane:
+				if (m_detailsPane) m_detailsPane->setVisible(enabled);
+				break;
+			default:
+				break; // RowContextMenu / HistogramStrip / HistogramZoom handled by concrete views
+			}
+		}
+		bool QAbstractLogWidget::isFeatureEnabled(Feature f) const
+		{
+			if (f < 0 || f >= __featureCount)
+				return false;
+			return m_features[f];
+		}
+		void QAbstractLogWidget::refreshMatchCount()
+		{
+			if (!m_matchCountLabel)
+				return;
+			m_matchCountLabel->setText(QString::number(matchCount()));
+		}
+		void QAbstractLogWidget::soloContext(LoggerID id)
+		{
+			for (auto& kv : m_contextData)
+			{
+				if (!kv.second.checkBox) continue;
+				kv.second.checkBox->setChecked(kv.first == id);
+			}
+		}
+		void QAbstractLogWidget::hideContext(LoggerID id)
+		{
+			auto it = m_contextData.find(id);
+			if (it != m_contextData.end() && it->second.checkBox)
+				it->second.checkBox->setChecked(false);
+		}
+		void QAbstractLogWidget::setContextEnabled(LoggerID id, bool enabled)
+		{
+			auto it = m_contextData.find(id);
+			if (it != m_contextData.end() && it->second.checkBox)
+				it->second.checkBox->setChecked(enabled);
+		}
+		void QAbstractLogWidget::setSearchTextProgrammatic(const QString& text, bool regex)
+		{
+			if (m_searchRegexCheckBox)
+				m_searchRegexCheckBox->setChecked(regex);
+			if (m_searchLineEdit)
+				m_searchLineEdit->setText(text);
 		}
 
 		void QAbstractLogWidget::onSearchLineEditChanged(const QString&)

@@ -19,6 +19,17 @@ namespace Log
 			setContentWidget(m_treeWidget);
 			m_treeItem = new UIWidgets::QContextLoggerTreeWidget(m_treeWidget);
 
+			connect(m_treeItem, &UIWidgets::QContextLoggerTreeWidget::requestSoloContext,
+				this, [this](Log::LoggerID id) { soloContext(id); });
+			connect(m_treeItem, &UIWidgets::QContextLoggerTreeWidget::requestHideContext,
+				this, [this](Log::LoggerID id) { hideContext(id); });
+			connect(m_treeItem, &UIWidgets::QContextLoggerTreeWidget::requestHideMessagesLike,
+				this, [this](const QString& text) {
+					setSearchTextProgrammatic(QStringLiteral("!") + text, false);
+				});
+			connect(m_treeItem, &UIWidgets::QContextLoggerTreeWidget::selectionChangedMessage,
+				this, [this](const Log::Message& msg, bool has) { updateDetailsFor(msg, has); });
+
 			connect(this, &QTreeConsoleView::messageQueued, this, &QTreeConsoleView::onMessageQueued, Qt::QueuedConnection);
 			postConstructorInit();
 		}
@@ -49,6 +60,12 @@ namespace Log
 			return instancePtr;
 		}
 
+		void QTreeConsoleView::setFeatureEnabled(Feature f, bool enabled)
+		{
+			QAbstractLogWidget::setFeatureEnabled(f, enabled);
+			if (f == RowContextMenu)
+				m_treeItem->setContextMenuEnabled(enabled);
+		}
 		void QTreeConsoleView::setDateTimeFormat(DateTime::Format format)
 		{
 			m_treeItem->setDateTimeFormat(format);
@@ -93,6 +110,15 @@ namespace Log
 		void QTreeConsoleView::onSearchTextChanged(const QString& text, bool regex)
 		{
 			m_treeItem->setTextFilter(text, regex);
+			refreshMatchCount();
+		}
+		int QTreeConsoleView::matchCount() const
+		{
+			return m_treeItem->getMatchCount();
+		}
+		void QTreeConsoleView::findNext(bool forward)
+		{
+			m_treeItem->findNext(forward);
 		}
 
 		void QTreeConsoleView::onNewLogger(LogObject::Info loggerInfo)

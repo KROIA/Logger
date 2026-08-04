@@ -7,6 +7,8 @@
 #include <QClipboard>
 #include <QLineEdit>
 #include <QStyledItemDelegate>
+#include <QMenu>
+#include <QAction>
 
 namespace {
     // Read-only in-place editor: click to enter text-selection mode; a
@@ -165,6 +167,23 @@ namespace Log
 					{
 						const int col = m_treeWidget->currentColumn();
 						m_treeWidget->openPersistentEditor(current, col >= 0 ? col : (int)HeaderPos::message);
+						// Look up MessageData for details pane.
+						for (const auto& kv : m_msgItems)
+						{
+							for (const auto& md : kv.second->msgItems)
+							{
+								if (md.item == current)
+								{
+									emit selectionChangedMessage(md.msg, true);
+									return;
+								}
+							}
+						}
+						emit selectionChangedMessage(Log::Message(), false);
+					}
+					else
+					{
+						emit selectionChangedMessage(Log::Message(), false);
 					}
 				});
 			// Double-click copies the row's message text to the clipboard.
@@ -176,6 +195,19 @@ namespace Log
 					const QString text = item->data((int)HeaderPos::message, Qt::DisplayRole).toString();
 					if (!text.isEmpty())
 						QApplication::clipboard()->setText(text);
+				});
+
+			// Right-click context menu on tree items.
+			m_treeWidget->setContextMenuPolicy(Qt::CustomContextMenu);
+			connect(m_treeWidget, &QTreeWidget::customContextMenuRequested, this,
+				[this](const QPoint& pos)
+				{
+					if (!m_contextMenuEnabled)
+						return;
+					QTreeWidgetItem* item = m_treeWidget->itemAt(pos);
+					if (!item)
+						return;
+					showRowContextMenu(item, m_treeWidget->viewport()->mapToGlobal(pos));
 				});
 		}
 
@@ -315,10 +347,14 @@ namespace Log
 		}
 		void QContextLoggerTreeWidget::setTextFilter(const QString& text, bool useRegex)
 		{
-			m_searchText = text;
+			QString effective = text;
+			m_searchNegate = effective.startsWith('!');
+			if (m_searchNegate)
+				effective = effective.mid(1);
+			m_searchText = effective;
 			m_searchUseRegex = useRegex;
-			if (useRegex && !text.isEmpty())
-				m_searchRegex = QRegularExpression(text, QRegularExpression::CaseInsensitiveOption);
+			if (useRegex && !effective.isEmpty())
+				m_searchRegex = QRegularExpression(effective, QRegularExpression::CaseInsensitiveOption);
 			else
 				m_searchRegex = QRegularExpression();
 
@@ -334,13 +370,18 @@ namespace Log
 			if (m_searchText.isEmpty())
 				return true;
 			const QString msg = QString::fromStdString(text);
+			bool hit;
 			if (m_searchUseRegex)
 			{
 				if (!m_searchRegex.isValid())
 					return true;
-				return m_searchRegex.match(msg).hasMatch();
+				hit = m_searchRegex.match(msg).hasMatch();
 			}
-			return msg.contains(m_searchText, Qt::CaseInsensitive);
+			else
+			{
+				hit = msg.contains(m_searchText, Qt::CaseInsensitive);
+			}
+			return hit != m_searchNegate;
 		}
 		void QContextLoggerTreeWidget::setParent(LoggerID childID, LoggerID parentID)
 		{
@@ -770,6 +811,93 @@ namespace Log
 				}
 			}
 			list[loggerID] = messages;
+		}
+
+		std::vector<QTreeWidgetItem*> QContextLoggerTreeWidget::collectVisibleMessageItems() const
+		{
+			std::vector<QTreeWidgetItem*> out;
+			for (const auto& kv : m_msgItems)
+			{
+				for (const auto& md : kv.second->msgItems)
+				{
+					if (md.isVisible() && md.item)
+						out.push_back(md.item);
+				}
+			}
+			return out;
+		}
+		int QContextLoggerTreeWidget::getMatchCount() const
+		{
+			if (m_searchText.isEmpty())
+				return 0;
+			int n = 0;
+			for (const auto& kv : m_msgItems)
+				for (const auto& md : kv.second->msgItems)
+					if (md.isVisible())
+						++n;
+			return n;
+		}
+		void QContextLoggerTreeWidget::findNext(bool forward)
+		{
+			auto items = collectVisibleMessageItems();
+			if (items.empty())
+				return;
+			// Sort visually — by their global row index in the tree.
+			std::sort(items.begin(), items.end(), [this](QTreeWidgetItem* a, QTreeWidgetItem* b)
+			{
+				return m_treeWidget->visualItemRect(a).y() < m_treeWidget->visualItemRect(b).y();
+			});
+			QTreeWidgetItem* cur = m_treeWidget->currentItem();
+			int idx = -1;
+			for (size_t i = 0; i < items.size(); ++i)
+				if (items[i] == cur) { idx = static_cast<int>(i); break; }
+			int nextIdx;
+			if (forward) nextIdx = (idx + 1) % static_cast<int>(items.size());
+			else         nextIdx = (idx <= 0) ? static_cast<int>(items.size()) - 1 : idx - 1;
+			QTreeWidgetItem* target = items[nextIdx];
+			m_treeWidget->setCurrentItem(target);
+			m_treeWidget->scrollToItem(target, QAbstractItemView::PositionAtCenter);
+		}
+		void QContextLoggerTreeWidget::showRowContextMenu(QTreeWidgetItem* item, const QPoint& globalPos)
+		{
+			if (!item)
+				return;
+			// Find the MessageData / logger ID for this item.
+			LoggerID id = 0;
+			QString msgText;
+			for (const auto& kv : m_msgItems)
+			{
+				for (const auto& md : kv.second->msgItems)
+				{
+					if (md.item == item)
+					{
+						id = kv.first;
+						msgText = QString::fromStdString(md.msg.getText());
+						break;
+					}
+				}
+				if (id != 0) break;
+			}
+			if (msgText.isEmpty())
+				msgText = item->data((int)HeaderPos::message, Qt::DisplayRole).toString();
+
+			QMenu menu;
+			QAction* copyText = menu.addAction("Copy message text");
+			menu.addSeparator();
+			QAction* soloCtx = id != 0 ? menu.addAction("Solo this context") : nullptr;
+			QAction* hideCtx = id != 0 ? menu.addAction("Hide this context") : nullptr;
+			menu.addSeparator();
+			QAction* hideLike = menu.addAction("Hide messages like this");
+			QAction* chosen = menu.exec(globalPos);
+			if (!chosen) return;
+			if (chosen == copyText)
+				QApplication::clipboard()->setText(msgText);
+			else if (soloCtx && chosen == soloCtx)
+				emit requestSoloContext(id);
+			else if (hideCtx && chosen == hideCtx)
+				emit requestHideContext(id);
+			else if (chosen == hideLike)
+				emit requestHideMessagesLike(msgText);
 		}
 	}
 }

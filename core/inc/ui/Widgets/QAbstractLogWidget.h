@@ -12,11 +12,16 @@
 #include <QTreeWidget>
 #include <QTimer>
 #include <QCheckBox>
+#include <QLabel>
+#include <QPushButton>
+#include <QLineEdit>
 #include <unordered_map>
 #include <QMutex>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class QAbstractLogWidget; }
+class QSplitter;
+class QTextBrowser;
 QT_END_NAMESPACE
 
 namespace Log 
@@ -38,6 +43,25 @@ namespace Log
                 contentFrame,
 				__count
             };
+
+            // Toggleable feature set. Applications can strip a view down (e.g.
+            // hide the regex checkbox on a simplified read-only console) or
+            // enable optional features (e.g. details pane) at construction
+            // time. Defaults are set by each view's ctor.
+            enum Feature
+            {
+                SearchBar,           // whole search row visible
+                SearchRegexCheckBox, // ".*" checkbox in the search row
+                FindNextPrev,        // ▲/▼ jump-to-match buttons
+                MatchCount,          // "N matches" label
+                DetailsPane,         // multi-line details view for selected row
+                RowContextMenu,      // right-click menu on message rows
+                HistogramStrip,      // density histogram (timeline only)
+                HistogramZoom,       // drag-on-histogram to zoom (timeline only)
+                __featureCount
+            };
+            virtual void setFeatureEnabled(Feature f, bool enabled);
+            bool isFeatureEnabled(Feature f) const;
 
             QAbstractLogWidget(QWidget* parent = nullptr);
             ~QAbstractLogWidget();
@@ -105,7 +129,22 @@ namespace Log
             // Called when the search text or regex-mode toggle changes.
             // Subclasses override to forward to their content widget's text filter.
             virtual void onSearchTextChanged(const QString& text, bool regex);
+            // Optional overrides for match-count / find-next-prev on the search bar.
+            // Default implementations return 0 / no-op so views can opt in.
+            virtual int matchCount() const { return 0; }
+            virtual void findNext(bool forward) { (void)forward; }
+            // Views call this after their internal search state changes.
+            void refreshMatchCount();
 
+        public:
+            // Programmatic filter helpers. Public so composed views (e.g. the
+            // combined view forwarding filter changes to embedded sub-views)
+            // can drive filter state on unrelated QAbstractLogWidget instances.
+            void soloContext(LoggerID id);
+            void hideContext(LoggerID id);
+            void setContextEnabled(LoggerID id, bool enabled);
+            void setSearchTextProgrammatic(const QString& text, bool regex = false);
+        protected:
 
             Ui::QAbstractLogWidget* ui;
         private slots:
@@ -118,6 +157,21 @@ namespace Log
             std::vector<QLineEdit*> m_filterTextEdits;
             QLineEdit* m_searchLineEdit = nullptr;
             QCheckBox* m_searchRegexCheckBox = nullptr;
+            QLabel* m_matchCountLabel = nullptr;
+            QPushButton* m_findPrevButton = nullptr;
+            QPushButton* m_findNextButton = nullptr;
+            QWidget* m_searchBarWidget = nullptr;
+            QWidget* m_detailsPane = nullptr;
+            QSplitter* m_contentSplitter = nullptr;
+            bool m_features[__featureCount];
+        protected:
+            // Views call this after their selection changes so the details pane
+            // can update. Text is HTML-formatted (safe subset).
+            void setDetailsHtml(const QString& html);
+            // Format a message as HTML for the details pane.
+            static QString formatMessageAsHtml(const Message& msg, const std::string& contextName);
+            std::string getContextNameFor(LoggerID id) const;
+            void updateDetailsFor(const Message& msg, bool hasSelection);
 
             std::unordered_map<LoggerID, ContextData> m_contextData;
             DateTimeFilter m_dateTimeFilter;

@@ -24,11 +24,57 @@ namespace Log
             m_treeItem = new UIWidgets::QContextLoggerTreeWidget(m_treeWidget);
             m_tabs->addTab(m_treeWidget, "Tree");
 
+            // Timeline tab: embed a standalone QTimelineConsoleView but strip
+            // its chrome so only the timeline canvas + zoom controls show.
+            m_timelineView = new QTimelineConsoleView();
+            m_timelineView->disableSubWidget(SubWidget::settingsFrame);
+            m_timelineView->disableSubWidget(SubWidget::logLevelFilter);
+            m_timelineView->disableSubWidget(SubWidget::contextFilter);
+            m_timelineView->disableSubWidget(SubWidget::dateTimeFilter);
+            m_timelineView->disableSubWidget(SubWidget::editFrame);
+            m_timelineView->setFeatureEnabled(SearchBar, false);
+            m_timelineView->setFeatureEnabled(DetailsPane, false);
+            m_tabs->addTab(m_timelineView, "Timeline");
+
+            // Stats tab: same treatment for QStatsConsoleView.
+            m_statsView = new QStatsConsoleView();
+            m_statsView->disableSubWidget(SubWidget::settingsFrame);
+            m_statsView->disableSubWidget(SubWidget::logLevelFilter);
+            m_statsView->disableSubWidget(SubWidget::contextFilter);
+            m_statsView->disableSubWidget(SubWidget::dateTimeFilter);
+            m_statsView->disableSubWidget(SubWidget::editFrame);
+            m_statsView->setFeatureEnabled(SearchBar, false);
+            m_statsView->setFeatureEnabled(DetailsPane, false);
+            m_tabs->addTab(m_statsView, "Stats");
+
             setContentWidget(m_tabs);
 
             connect(this, &QCombinedConsoleView::messageQueued,
                     this, &QCombinedConsoleView::onMessageQueued,
                     Qt::QueuedConnection);
+
+            connect(m_tableWidget, &UIWidgets::QConsoleWidget::filterChanged,
+                    this, &QCombinedConsoleView::refreshMatchCount);
+            connect(m_tableWidget, &UIWidgets::QConsoleWidget::requestSoloContext,
+                    this, [this](Log::LoggerID id) { soloContext(id); });
+            connect(m_tableWidget, &UIWidgets::QConsoleWidget::requestHideContext,
+                    this, [this](Log::LoggerID id) { hideContext(id); });
+            connect(m_tableWidget, &UIWidgets::QConsoleWidget::requestHideMessagesLike,
+                    this, [this](const QString& text) {
+                        setSearchTextProgrammatic(QStringLiteral("!") + text, false);
+                    });
+            connect(m_treeItem, &UIWidgets::QContextLoggerTreeWidget::requestSoloContext,
+                    this, [this](Log::LoggerID id) { soloContext(id); });
+            connect(m_treeItem, &UIWidgets::QContextLoggerTreeWidget::requestHideContext,
+                    this, [this](Log::LoggerID id) { hideContext(id); });
+            connect(m_treeItem, &UIWidgets::QContextLoggerTreeWidget::requestHideMessagesLike,
+                    this, [this](const QString& text) {
+                        setSearchTextProgrammatic(QStringLiteral("!") + text, false);
+                    });
+            connect(m_tableWidget, &UIWidgets::QConsoleWidget::selectionChangedMessage,
+                    this, [this](const Log::Message& msg, bool has) { updateDetailsFor(msg, has); });
+            connect(m_treeItem, &UIWidgets::QContextLoggerTreeWidget::selectionChangedMessage,
+                    this, [this](const Log::Message& msg, bool has) { updateDetailsFor(msg, has); });
 
             postConstructorInit();
         }
@@ -67,6 +113,15 @@ namespace Log
             return static_cast<Tab>(m_tabs->currentIndex());
         }
 
+        void QCombinedConsoleView::setFeatureEnabled(Feature f, bool enabled)
+        {
+            QAbstractLogWidget::setFeatureEnabled(f, enabled);
+            if (f == RowContextMenu)
+            {
+                m_tableWidget->setContextMenuEnabled(enabled);
+                m_treeItem->setContextMenuEnabled(enabled);
+            }
+        }
         void QCombinedConsoleView::setDateTimeFormat(DateTime::Format format)
         {
             m_tableWidget->setDateTimeFormat(format);
@@ -81,11 +136,17 @@ namespace Log
             std::unordered_map<LoggerID, std::vector<Message>>& list) const
         {
             QMutexLocker locker(&m_mutex);
-            // Prefer the currently active tab so the user saves what they see.
-            if (getCurrentTab() == Tab::tree)
+            // Save from a row-based tab (timeline/stats don't hold raw messages).
+            switch (getCurrentTab())
+            {
+            case Tab::tree:
                 m_treeItem->getSaveVisibleMessages(list);
-            else
+                break;
+            case Tab::table:
+            default:
                 m_tableWidget->getSaveVisibleMessages(list);
+                break;
+            }
         }
         void QCombinedConsoleView::clear()
         {
@@ -97,6 +158,8 @@ namespace Log
             }
             m_tableWidget->clear();
             m_treeItem->clearMessages();
+            if (m_timelineView) m_timelineView->clear();
+            if (m_statsView) m_statsView->clear();
             QAbstractLogWidget::clear();
         }
 
@@ -106,6 +169,8 @@ namespace Log
             QAbstractLogWidget::onLevelCheckBoxChanged(index, level, isChecked);
             m_tableWidget->setLevelVisibility(level, isChecked);
             m_treeItem->setLevelVisibility(level, isChecked);
+            if (m_timelineView) m_timelineView->setLevelEnabled(level, isChecked);
+            if (m_statsView) m_statsView->setLevelEnabled(level, isChecked);
         }
         void QCombinedConsoleView::onContextCheckBoxChanged(const ContextData& context, bool isChecked)
         {
@@ -113,6 +178,8 @@ namespace Log
             QAbstractLogWidget::onContextCheckBoxChanged(context, isChecked);
             m_tableWidget->setContextVisibility(context.id, isChecked);
             m_treeItem->setContextVisibility(context.id, isChecked);
+            if (m_timelineView) m_timelineView->setContextEnabled(context.id, isChecked);
+            if (m_statsView) m_statsView->setContextEnabled(context.id, isChecked);
         }
         void QCombinedConsoleView::onDateTimeFilterChanged(const DateTimeFilter& filter)
         {
@@ -124,6 +191,27 @@ namespace Log
         {
             m_tableWidget->setTextFilter(text, regex);
             m_treeItem->setTextFilter(text, regex);
+            if (m_timelineView) m_timelineView->setSearchTextProgrammatic(text, regex);
+            if (m_statsView) m_statsView->setSearchTextProgrammatic(text, regex);
+            refreshMatchCount();
+        }
+        int QCombinedConsoleView::matchCount() const
+        {
+            switch (getCurrentTab())
+            {
+            case Tab::tree:  return m_treeItem->getMatchCount();
+            case Tab::table: return m_tableWidget->getMatchCount();
+            default:         return 0; // timeline/stats: no discrete row match count
+            }
+        }
+        void QCombinedConsoleView::findNext(bool forward)
+        {
+            switch (getCurrentTab())
+            {
+            case Tab::tree:  m_treeItem->findNext(forward); break;
+            case Tab::table: m_tableWidget->findNext(forward); break;
+            default:         break;
+            }
         }
 
         void QCombinedConsoleView::onNewLogger(LogObject::Info loggerInfo)

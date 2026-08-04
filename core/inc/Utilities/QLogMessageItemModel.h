@@ -113,6 +113,7 @@ namespace Log
         DateTimeFilter m_dateTimeFilter;
         QString m_searchText;
         bool m_searchUseRegex = false;
+        bool m_searchNegate = false;
         QRegularExpression m_searchRegex;
     };
 }

@@ -5,6 +5,8 @@
 #include "ui/Widgets/QAbstractLogWidget.h"
 #include "ui/Widgets/QConsoleWidget.h"
 #include "ui/Widgets/QContextLoggerTreeWidget.h"
+#include "ui/QStatsConsoleView.h"
+#include "ui/QTimelineConsoleView.h"
 #include <QTabWidget>
 #include <QTreeWidget>
 #include <QMutex>
@@ -23,8 +25,10 @@ namespace Log
         public:
             enum class Tab
             {
-                table = 0,
-                tree  = 1
+                table    = 0,
+                tree     = 1,
+                timeline = 2,
+                stats    = 3
             };
 
             QCombinedConsoleView(QWidget* parent = nullptr);
@@ -39,6 +43,7 @@ namespace Log
 
             void setDateTimeFormat(DateTime::Format format) override;
             DateTime::Format getDateTimeFormat() const override;
+            void setFeatureEnabled(Feature f, bool enabled) override;
 
             void getSaveVisibleMessages(std::unordered_map<LoggerID, std::vector<Message>>& list) const override;
             void clear() override;
@@ -53,6 +58,8 @@ namespace Log
             void onContextCheckBoxChanged(const ContextData& context, bool isChecked) override;
             void onDateTimeFilterChanged(const DateTimeFilter& filter) override;
             void onSearchTextChanged(const QString& text, bool regex) override;
+            int matchCount() const override;
+            void findNext(bool forward) override;
 
             void onNewLogger(LogObject::Info loggerInfo) override;
             void onLoggerInfoChanged(LogObject::Info info) override;
@@ -63,6 +70,8 @@ namespace Log
             UIWidgets::QConsoleWidget* m_tableWidget;
             QTreeWidget* m_treeWidget;
             UIWidgets::QContextLoggerTreeWidget* m_treeItem;
+            QTimelineConsoleView* m_timelineView = nullptr;
+            QStatsConsoleView* m_statsView = nullptr;
 
             mutable QMutex m_mutex;
             std::vector<Message> m_messageQueue;

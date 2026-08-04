@@ -9,6 +9,12 @@
 #include <QMouseEvent>
 #include <QLineEdit>
 #include <QStyledItemDelegate>
+#include <QMenu>
+#include <QAction>
+#include <QContextMenuEvent>
+#include <QJsonObject>
+#include <QJsonArray>
+#include <QJsonDocument>
 
 
 namespace {
@@ -201,7 +207,38 @@ namespace Log
         }
         void QConsoleWidget::setTextFilter(const QString& text, bool useRegex)
         {
+            m_lastSearchText = text;
             m_proxyModel->setTextFilter(text, useRegex);
+            emit filterChanged();
+        }
+
+        int QConsoleWidget::getMatchCount() const
+        {
+            if (m_lastSearchText.isEmpty())
+                return 0;
+            return m_proxyModel->rowCount();
+        }
+        void QConsoleWidget::findNext(bool forward)
+        {
+            const int n = m_proxyModel->rowCount();
+            if (n == 0)
+                return;
+            int startRow = -1;
+            const QModelIndex cur = currentIndex();
+            if (cur.isValid())
+                startRow = cur.row();
+            int nextRow;
+            if (forward)
+                nextRow = (startRow + 1) % n;
+            else
+                nextRow = (startRow <= 0) ? (n - 1) : (startRow - 1);
+            const QModelIndex target = m_proxyModel->index(nextRow, cur.isValid() ? cur.column() : 0);
+            setCurrentIndex(target);
+            scrollTo(target, QAbstractItemView::PositionAtCenter);
+        }
+        void QConsoleWidget::setContextMenuEnabled(bool enabled)
+        {
+            m_contextMenuEnabled = enabled;
         }
 
         void QConsoleWidget::onNewLogger(const LogObject::Info& info)
@@ -272,10 +309,74 @@ namespace Log
             {
                 openPersistentEditor(current);
                 m_persistentEditorIndex = QPersistentModelIndex(current);
+                const QModelIndex src = m_proxyModel->mapToSource(current);
+                if (src.row() >= 0 && src.row() < m_model->rowCount())
+                    emit selectionChangedMessage(m_model->getElement(src.row()), true);
             }
             else
             {
                 m_persistentEditorIndex = QPersistentModelIndex();
+                emit selectionChangedMessage(Message(), false);
+            }
+        }
+
+        void QConsoleWidget::contextMenuEvent(QContextMenuEvent* event)
+        {
+            if (!m_contextMenuEnabled)
+            {
+                QTableView::contextMenuEvent(event);
+                return;
+            }
+            const QModelIndex idx = indexAt(event->pos());
+            if (!idx.isValid())
+            {
+                QTableView::contextMenuEvent(event);
+                return;
+            }
+            const QModelIndex src = m_proxyModel->mapToSource(idx);
+            const int row = src.row();
+            if (row < 0 || row >= m_model->rowCount())
+                return;
+            const Message& msg = m_model->getElement(row);
+            const QString msgText = QString::fromStdString(msg.getText());
+            const LoggerID id = msg.getLoggerID();
+
+            QMenu menu(this);
+            QAction* copyText = menu.addAction("Copy message text");
+            QAction* copyJson = menu.addAction("Copy row as JSON");
+            menu.addSeparator();
+            QAction* soloCtx = menu.addAction("Solo this context");
+            QAction* hideCtx = menu.addAction("Hide this context");
+            menu.addSeparator();
+            QAction* hideLike = menu.addAction("Hide messages like this");
+
+            QAction* chosen = menu.exec(event->globalPos());
+            if (!chosen)
+                return;
+            if (chosen == copyText)
+            {
+                QApplication::clipboard()->setText(msgText);
+            }
+            else if (chosen == copyJson)
+            {
+                const QJsonValue v = msg.toJson();
+                QJsonDocument doc;
+                if (v.isObject()) doc = QJsonDocument(v.toObject());
+                else if (v.isArray()) doc = QJsonDocument(v.toArray());
+                else doc = QJsonDocument(QJsonObject{{"value", v}});
+                QApplication::clipboard()->setText(QString::fromUtf8(doc.toJson(QJsonDocument::Indented)));
+            }
+            else if (chosen == soloCtx)
+            {
+                emit requestSoloContext(id);
+            }
+            else if (chosen == hideCtx)
+            {
+                emit requestHideContext(id);
+            }
+            else if (chosen == hideLike)
+            {
+                emit requestHideMessagesLike(msgText);
             }
         }
 
@@ -319,6 +420,7 @@ namespace Log
                 m_messageQueue.clear();
             }
             m_model->addLogs(std::move(cpy));
+            emit filterChanged();
 
             m_flushScheduled.store(false);
             bool needsReschedule = false;

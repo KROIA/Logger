@@ -17,6 +17,20 @@ namespace Log
 			setWindowTitle("Console");
 			m_consoleWidget = new UIWidgets::QConsoleWidget(this);
 			setContentWidget(m_consoleWidget);
+
+			connect(m_consoleWidget, &UIWidgets::QConsoleWidget::filterChanged,
+				this, &QConsoleView::refreshMatchCount);
+			connect(m_consoleWidget, &UIWidgets::QConsoleWidget::requestSoloContext,
+				this, [this](Log::LoggerID id) { soloContext(id); });
+			connect(m_consoleWidget, &UIWidgets::QConsoleWidget::requestHideContext,
+				this, [this](Log::LoggerID id) { hideContext(id); });
+			connect(m_consoleWidget, &UIWidgets::QConsoleWidget::requestHideMessagesLike,
+				this, [this](const QString& text) {
+					setSearchTextProgrammatic(QStringLiteral("!") + text, false);
+				});
+			connect(m_consoleWidget, &UIWidgets::QConsoleWidget::selectionChangedMessage,
+				this, [this](const Log::Message& msg, bool has) { updateDetailsFor(msg, has); });
+
 			postConstructorInit();
 		}
 		QConsoleView::~QConsoleView()
@@ -46,6 +60,12 @@ namespace Log
 			return instancePtr;
 		}
 
+		void QConsoleView::setFeatureEnabled(Feature f, bool enabled)
+		{
+			QAbstractLogWidget::setFeatureEnabled(f, enabled);
+			if (f == RowContextMenu)
+				m_consoleWidget->setContextMenuEnabled(enabled);
+		}
 		void QConsoleView::setDateTimeFormat(DateTime::Format format)
 		{
 			m_consoleWidget->setDateTimeFormat(format);
@@ -87,6 +107,15 @@ namespace Log
 		void QConsoleView::onSearchTextChanged(const QString& text, bool regex)
 		{
 			m_consoleWidget->setTextFilter(text, regex);
+			refreshMatchCount();
+		}
+		int QConsoleView::matchCount() const
+		{
+			return m_consoleWidget->getMatchCount();
+		}
+		void QConsoleView::findNext(bool forward)
+		{
+			m_consoleWidget->findNext(forward);
 		}
 
 		void QConsoleView::onNewLogger(LogObject::Info loggerInfo)

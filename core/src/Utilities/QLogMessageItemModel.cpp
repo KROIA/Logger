@@ -268,10 +268,15 @@ namespace Log
 
     void QLogMessageItemProxyModel::setTextFilter(const QString& text, bool useRegex)
     {
-        m_searchText = text;
+        // A leading '!' inverts the match (exclude rows containing the term).
+        QString effective = text;
+        m_searchNegate = effective.startsWith('!');
+        if (m_searchNegate)
+            effective = effective.mid(1);
+        m_searchText = effective;
         m_searchUseRegex = useRegex;
-        if (useRegex && !text.isEmpty())
-            m_searchRegex = QRegularExpression(text, QRegularExpression::CaseInsensitiveOption);
+        if (useRegex && !effective.isEmpty())
+            m_searchRegex = QRegularExpression(effective, QRegularExpression::CaseInsensitiveOption);
         else
             m_searchRegex = QRegularExpression();
         invalidateFilter();
@@ -346,16 +351,13 @@ namespace Log
         if (!m_searchText.isEmpty())
         {
             const QString msg = QString::fromStdString(data.getText());
+            bool hit;
             if (m_searchUseRegex)
-            {
-                if (!m_searchRegex.isValid() || !m_searchRegex.match(msg).hasMatch())
-                    return false;
-            }
+                hit = m_searchRegex.isValid() && m_searchRegex.match(msg).hasMatch();
             else
-            {
-                if (!msg.contains(m_searchText, Qt::CaseInsensitive))
-                    return false;
-            }
+                hit = msg.contains(m_searchText, Qt::CaseInsensitive);
+            if (hit == m_searchNegate)
+                return false;
         }
 
         return m_dateTimeFilter.matches(data.getDateTime());

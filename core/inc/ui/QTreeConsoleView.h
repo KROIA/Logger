@@ -26,6 +26,7 @@ namespace Log
 
             void setDateTimeFormat(DateTime::Format format) override;
             DateTime::Format getDateTimeFormat() const override;
+            void setFeatureEnabled(Feature f, bool enabled) override;
 
             void getSaveVisibleMessages(std::unordered_map<LoggerID, std::vector<Message>>& list) const override;
 			void clear() override;
@@ -42,6 +43,8 @@ namespace Log
             void onContextCheckBoxChanged(const ContextData& context, bool isChecked) override;
             void onDateTimeFilterChanged(const DateTimeFilter& filter) override;
             void onSearchTextChanged(const QString& text, bool regex) override;
+            int matchCount() const override;
+            void findNext(bool forward) override;
 
             void onNewLogger(LogObject::Info loggerInfo) override;
             void onLogMessage(Message message) override;
