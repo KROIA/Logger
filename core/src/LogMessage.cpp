@@ -1,6 +1,7 @@
 #include "LogMessage.h"
 #include <algorithm>
 #include <QJsonObject>
+#include <QDateTime>
 
 namespace Log
 {
@@ -227,7 +228,7 @@ namespace Log
 		obj["level"] = (int)getLevel();
 		obj["text"] = QString::fromUtf8(m_message.c_str(), m_message.size());
 		obj["color"] = getColor().getRGBStr().c_str();
-		obj["dateTime"] = getDateTime().toString(Log::DateTime::Format::yearMonthDay | Log::DateTime::Format::hourMinuteSecondMillisecond).c_str();
+		obj["dateTime"] = static_cast<double>(getDateTime().toQDateTime().toMSecsSinceEpoch());
 		return obj;
 	}
 	bool Message::fromJson(const QJsonValue& value)
@@ -242,7 +243,23 @@ namespace Log
 		m_message = obj["text"].toString().toUtf8().toStdString();
 		m_customColor.fromRGBStr(obj["color"].toString().toStdString());
 		m_useCustomColor = true;
-		m_dateTime.fromString(obj["dateTime"].toString().toStdString(), Log::DateTime::Format::yearMonthDay | Log::DateTime::Format::hourMinuteSecondMillisecond);
+		const QJsonValue dt = obj["dateTime"];
+		if (dt.isDouble())
+		{
+			m_dateTime = QDateTime::fromMSecsSinceEpoch(static_cast<qint64>(dt.toDouble()));
+		}
+		else if (dt.isString())
+		{
+			const QString s = dt.toString();
+			bool numeric = false;
+			const qint64 ms = s.toLongLong(&numeric);
+			if (numeric)
+				m_dateTime = QDateTime::fromMSecsSinceEpoch(ms);
+			else
+				m_dateTime.fromString(s.toStdString(), Log::DateTime::Format::yearMonthDay | Log::DateTime::Format::hourMinuteSecondMillisecond);
+		}
+		else
+			return false;
 		return true;
 	}
 

@@ -89,11 +89,13 @@ namespace Log
 		{
 			LOGGER_RECEIVER_PROFILING_FUNCTION(LOGGER_COLOR_STAGE_1);
 			QAbstractLogWidget::onNewLogger(loggerInfo);
+			m_consoleWidget->onNewLogger(loggerInfo);
 		}
 		void QConsoleView::onLoggerInfoChanged(LogObject::Info info)
 		{
 			LOGGER_RECEIVER_PROFILING_FUNCTION(LOGGER_COLOR_STAGE_1);
 			QAbstractLogWidget::onLoggerInfoChanged(info);
+			m_consoleWidget->onNewLogger(info);
 		}
 		void QConsoleView::onLogMessage(Message message)
 		{

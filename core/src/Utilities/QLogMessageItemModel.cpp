@@ -109,6 +109,14 @@ namespace Log
         return QVariant();
     }
 
+    Qt::ItemFlags QLogMessageItemModel::flags(const QModelIndex& index) const
+    {
+        if (!index.isValid())
+            return Qt::NoItemFlags;
+        // ItemIsEditable is required so that the read-only line-edit editor
+        // (installed by the view for mouse text selection) can be opened.
+        return QAbstractItemModel::flags(index) | Qt::ItemIsEditable;
+    }
     void QLogMessageItemModel::addLog(const Message& entry)
     {
         beginInsertRows(QModelIndex(), logs.size(), logs.size());
@@ -187,6 +195,14 @@ namespace Log
     void QLogMessageItemModel::clearLoggerCache()
     {
         m_cachedLoggerData.clear();
+    }
+    void QLogMessageItemModel::setLoggerInfo(const LogObject::Info& info)
+    {
+        static const float colorFactor = 0.5f;
+        CachedLoggerData data;
+        data.name = QString::fromStdString(info.name);
+        data.backgroundColor = (info.color * colorFactor).toQColor();
+        m_cachedLoggerData[info.id] = std::move(data);
     }
     const QLogMessageItemModel::CachedLoggerData& QLogMessageItemModel::getCachedLoggerData(LoggerID loggerID) const
     {

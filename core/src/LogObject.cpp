@@ -1,6 +1,7 @@
 #include "LogObject.h"
 #include "LogManager.h"
 #include <QJsonObject>
+#include <QDateTime>
 
 namespace Log
 {
@@ -10,7 +11,7 @@ namespace Log
 		obj["id"] = (int)id;
 		obj["parentId"] = (int)parentId;
 		obj["name"] = name.c_str();
-		obj["creationTime"] = creationTime.toString(Log::DateTime::Format::yearMonthDay | Log::DateTime::Format::hourMinuteSecondMillisecond).c_str();
+		obj["creationTime"] = static_cast<double>(creationTime.toQDateTime().toMSecsSinceEpoch());
 		obj["color"] = color.getRGBStr().c_str();
 		obj["enabled"] = enabled;
 		return obj;
@@ -25,7 +26,23 @@ namespace Log
 		id = (LoggerID)obj["id"].toInt();
 		parentId = (LoggerID)obj["parentId"].toInt();
 		name = obj["name"].toString().toStdString();
-		creationTime.fromString(obj["creationTime"].toString().toStdString(), Log::DateTime::Format::yearMonthDay | Log::DateTime::Format::hourMinuteSecondMillisecond);
+		const QJsonValue ct = obj["creationTime"];
+		if (ct.isDouble())
+		{
+			creationTime = QDateTime::fromMSecsSinceEpoch(static_cast<qint64>(ct.toDouble()));
+		}
+		else if (ct.isString())
+		{
+			const QString s = ct.toString();
+			bool numeric = false;
+			const qint64 ms = s.toLongLong(&numeric);
+			if (numeric)
+				creationTime = QDateTime::fromMSecsSinceEpoch(ms);
+			else
+				creationTime.fromString(s.toStdString(), Log::DateTime::Format::yearMonthDay | Log::DateTime::Format::hourMinuteSecondMillisecond);
+		}
+		else
+			return false;
 		color.fromRGBStr(obj["color"].toString().toStdString());
 		enabled = obj["enabled"].toBool();
 		return true;

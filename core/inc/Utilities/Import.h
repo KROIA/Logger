@@ -10,6 +10,9 @@ namespace Log
 	{
 	public:
 		static bool loadFromFile(std::vector<std::pair<LogObject::Info, std::vector<Message>>>& contexts, const std::string& file);
+		static bool loadFromFile(std::vector<std::pair<LogObject::Info, std::vector<Message>>>& contexts,
+			std::vector<std::pair<LoggerID, LoggerID>>& reparents,
+			const std::string& file);
 
 
 

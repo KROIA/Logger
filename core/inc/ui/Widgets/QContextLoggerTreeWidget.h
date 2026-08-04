@@ -79,13 +79,13 @@ namespace Log
 			class TreeData
 			{
 				public:
-					TreeData(QContextLoggerTreeWidget* root, LoggerID loggerID);
-					TreeData(QContextLoggerTreeWidget* root, TreeData *parent, LoggerID loggerID);
+					TreeData(QContextLoggerTreeWidget* root, const LogObject::Info& info);
+					TreeData(QContextLoggerTreeWidget* root, TreeData *parent, const LogObject::Info& info);
 					~TreeData();
 					void updateDateTime();
 					void onNewMessage(const Message& m);
 
-					TreeData* createChild(LoggerID loggerID);
+					TreeData* createChild(const LogObject::Info& info);
 					//void changeParent(LoggerID childID, TreeData* newParent);
 					void setParent(TreeData* newParent);
 
@@ -150,6 +150,7 @@ namespace Log
 				TreeData *parent = nullptr;
 				QContextLoggerTreeWidget *root = nullptr;
 				LoggerID loggerID;
+				LogObject::Info m_info;
 				QColor m_contextColor;
 				QColor m_messageBackgroundColor;
 			};

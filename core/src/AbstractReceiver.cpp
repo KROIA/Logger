@@ -18,6 +18,29 @@ namespace Log
 
 			for (size_t i = 0; i < m_levelFilter.size(); i++)
 				m_levelFilter[i] = true;
+
+			// Snapshot loggers that were registered before this receiver subscribed.
+			// Queue the forwarding through the event loop so it runs after the
+			// derived AbstractReceiver is fully constructed (avoids pure-virtual dispatch).
+			// Handlers on the receiver side must tolerate duplicates for the small
+			// window between connect() and the snapshot.
+			AbstractReceiver* rcv = receiver;
+			std::vector<LogObject::Info> existing = LogManager::getLogObjectsInfo();
+			for (const LogObject::Info& info : existing)
+			{
+				LogObject::Info infoCopy = info;
+				QMetaObject::invokeMethod(this, [rcv, infoCopy]() {
+					rcv->onNewLogger(infoCopy);
+				}, Qt::QueuedConnection);
+				if (info.parentId != 0)
+				{
+					LoggerID cid = info.id;
+					LoggerID pid = info.parentId;
+					QMetaObject::invokeMethod(this, [rcv, cid, pid]() {
+						rcv->onChangeParent(cid, pid);
+					}, Qt::QueuedConnection);
+				}
+			}
 		}
 
 		void SignalReceiver::setLevelFilter(Level level, bool enable)

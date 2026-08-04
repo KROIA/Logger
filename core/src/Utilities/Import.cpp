@@ -8,6 +8,13 @@ namespace Log
 {
 	bool Import::loadFromFile(std::vector<std::pair<LogObject::Info, std::vector<Message>>>& contexts, const std::string& file)
 	{
+		std::vector<std::pair<LoggerID, LoggerID>> reparents;
+		return loadFromFile(contexts, reparents, file);
+	}
+	bool Import::loadFromFile(std::vector<std::pair<LogObject::Info, std::vector<Message>>>& contexts,
+		std::vector<std::pair<LoggerID, LoggerID>>& reparents,
+		const std::string& file)
+	{
 		QFile inFile(QString::fromStdString(file));
 		if (!inFile.open(QIODevice::ReadOnly | QIODevice::Text))
 		{
@@ -29,6 +36,7 @@ namespace Log
 			}
         }
 		contexts.clear();
+		reparents.clear();
 
 		std::map<LoggerID, LogObject::Info> logObjectsInfo;
 		std::vector<Message> messages;
@@ -46,6 +54,18 @@ namespace Log
 			{
 				messages.emplace_back(messageData);
 				continue;
+			}
+			// Reparent record: {"childID": X, "newParentID": Y}
+			if (value.isObject())
+			{
+				QJsonObject obj = value.toObject();
+				if (obj.contains("childID") && obj.contains("newParentID"))
+				{
+					LoggerID childID = (LoggerID)obj.value("childID").toInt();
+					LoggerID newParentID = (LoggerID)obj.value("newParentID").toInt();
+					reparents.emplace_back(childID, newParentID);
+					continue;
+				}
 			}
 		}
 
@@ -71,7 +91,7 @@ namespace Log
     QJsonArray  Import::parseLargeJson(const std::string& filePath)
 	{
         QFile file(QString::fromStdString(filePath));
-        if (!file.open(QIODevice::ReadOnly)) {  // No Text mode — handle bytes raw
+        if (!file.open(QIODevice::ReadOnly)) {  // No Text mode ï¿½ handle bytes raw
             qWarning() << "Cannot open file";
             return QJsonArray();
         }
@@ -167,11 +187,11 @@ namespace Log
             {
                 unsigned char byte = (unsigned char)buffer[i];
 
-                if ((byte & 0x80) == 0x00) break;          // plain ASCII — no issue
+                if ((byte & 0x80) == 0x00) break;          // plain ASCII ï¿½ no issue
 
-                if ((byte & 0xC0) == 0x80) continue;       // continuation byte — keep looking back
+                if ((byte & 0xC0) == 0x80) continue;       // continuation byte ï¿½ keep looking back
 
-                // Found a leading byte — check if all expected continuations are present
+                // Found a leading byte ï¿½ check if all expected continuations are present
                 int expectedLen = 0;
                 if ((byte & 0xE0) == 0xC0) expectedLen = 2;
                 else if ((byte & 0xF0) == 0xE0) expectedLen = 3;
@@ -179,7 +199,7 @@ namespace Log
 
                 int actualLen = buffer.size() - i;
                 if (actualLen < expectedLen) {
-                    // Incomplete sequence — carry it over to next iteration
+                    // Incomplete sequence ï¿½ carry it over to next iteration
                     cutAt = i;
                 }
                 break;

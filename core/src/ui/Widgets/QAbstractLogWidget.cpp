@@ -126,12 +126,19 @@ namespace Log
 		{
 			std::unordered_map<LoggerID, std::vector<Message>> list;
 			getSaveVisibleMessages(list);
-			return Export::saveToFile(list, outputFile);
+			// Use the Info we already have on each context so file-loaded loggers
+			// (not in the LogManager singleton) still export correctly.
+			std::vector<LogObject::Info> infos;
+			infos.reserve(m_contextData.size());
+			for (const auto& kv : m_contextData)
+				infos.push_back(kv.second.info);
+			return Export::saveToFile(infos, list, outputFile);
 		}
 		bool QAbstractLogWidget::loadMessagesFromFile(const std::string& inputFile)
 		{
 			std::vector<std::pair<LogObject::Info, std::vector<Message>>> list;
-			if(Import::loadFromFile(list, inputFile))
+			std::vector<std::pair<LoggerID, LoggerID>> reparents;
+			if(Import::loadFromFile(list, reparents, inputFile))
 			{
 				clear();
 				for (const auto& context : list)
@@ -141,6 +148,10 @@ namespace Log
 					{
 						onLogMessage(message);
 					}
+				}
+				for (const auto& r : reparents)
+				{
+					onChangeParent(r.first, r.second);
 				}
 				return true;
 			}
@@ -352,6 +363,7 @@ namespace Log
 			data.checkBox->setChecked(true);
 			data.checkBox->setText(loggerInfo.name.c_str());
 			data.id = loggerInfo.id;
+			data.info = loggerInfo;
 			QObject::connect(data.checkBox, &QCheckBox::stateChanged,
 				this, &QAbstractLogWidget::onCheckBoxStateChangedSlot);
 			m_contextData[loggerInfo.id] = data;
@@ -359,7 +371,9 @@ namespace Log
 		}
 		void QAbstractLogWidget::onLoggerInfoChanged(LogObject::Info info)
 		{
-			LOGGER_UNUSED(info);
+			auto it = m_contextData.find(info.id);
+			if (it != m_contextData.end())
+				it->second.info = info;
 		}
 		void QAbstractLogWidget::onLogMessage(Message message)
 		{
@@ -367,8 +381,9 @@ namespace Log
 		}
 		void QAbstractLogWidget::onChangeParent(LoggerID childID, LoggerID newParentID)
 		{
-			LOGGER_UNUSED(childID);
-			LOGGER_UNUSED(newParentID);
+			auto it = m_contextData.find(childID);
+			if (it != m_contextData.end())
+				it->second.info.parentId = newParentID;
 		}
 
 

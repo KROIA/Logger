@@ -3,6 +3,117 @@
 #include <algorithm>
 
 #ifdef QT_WIDGETS_LIB
+#include <QApplication>
+#include <QClipboard>
+#include <QLineEdit>
+#include <QStyledItemDelegate>
+
+namespace {
+    // Read-only in-place editor: click to enter text-selection mode; a
+    // double-click (view or editor) copies the row's message text.
+    class ReadOnlyLineEditDelegate : public QStyledItemDelegate
+    {
+    public:
+        ReadOnlyLineEditDelegate(int messageColumn, QObject* parent)
+            : QStyledItemDelegate(parent), m_messageColumn(messageColumn) {}
+
+        QWidget* createEditor(QWidget* parent, const QStyleOptionViewItem& option, const QModelIndex& index) const override
+        {
+            QLineEdit* editor = new QLineEdit(parent);
+            editor->setReadOnly(true);
+            editor->setFrame(false);
+            editor->setFont(option.font);
+            editor->setAutoFillBackground(true);
+            editor->setContextMenuPolicy(Qt::NoContextMenu);
+            editor->setTextMargins(0, 0, 0, 0);
+            editor->setContentsMargins(0, 0, 0, 0);
+            editor->setAlignment(option.displayAlignment != 0 ? option.displayAlignment : (Qt::AlignLeft | Qt::AlignVCenter));
+
+            QPalette pal = editor->palette();
+            const QVariant bg = index.data(Qt::BackgroundRole);
+            if (bg.isValid() && bg.canConvert<QBrush>())
+            {
+                const QColor bgc = bg.value<QBrush>().color();
+                if (bgc.isValid())
+                {
+                    pal.setColor(QPalette::Base, bgc);
+                    pal.setColor(QPalette::Window, bgc);
+                }
+            }
+            const QVariant fg = index.data(Qt::ForegroundRole);
+            if (fg.isValid() && fg.canConvert<QBrush>())
+            {
+                const QColor fgc = fg.value<QBrush>().color();
+                if (fgc.isValid() && fgc.alpha() > 0)
+                    pal.setColor(QPalette::Text, fgc);
+            }
+            // Keep selection highlight visible even when the editor loses focus
+            // (Qt would otherwise switch to the Inactive palette group, which on
+            // most themes renders the selection as invisible or nearly so).
+            pal.setColor(QPalette::Inactive, QPalette::Highlight,
+                pal.color(QPalette::Active, QPalette::Highlight));
+            pal.setColor(QPalette::Inactive, QPalette::HighlightedText,
+                pal.color(QPalette::Active, QPalette::HighlightedText));
+            editor->setPalette(pal);
+
+            editor->setText(index.data(Qt::DisplayRole).toString());
+            editor->setProperty("__persistentIndex", QVariant::fromValue(QPersistentModelIndex(index)));
+            editor->installEventFilter(const_cast<ReadOnlyLineEditDelegate*>(this));
+            return editor;
+        }
+        void setModelData(QWidget*, QAbstractItemModel*, const QModelIndex&) const override {}
+        // Override to preserve the QLineEdit's text selection and cursor across
+        // model refreshes. Qt calls setEditorData on the persistent editor whenever
+        // the view thinks the underlying data may have changed (e.g. when siblings
+        // are inserted); the default implementation calls setText() which resets
+        // selection — that's what was clearing the user's selection on new messages.
+        void setEditorData(QWidget* editor, const QModelIndex& index) const override
+        {
+            QLineEdit* le = qobject_cast<QLineEdit*>(editor);
+            if (!le)
+            {
+                QStyledItemDelegate::setEditorData(editor, index);
+                return;
+            }
+            const QString newText = index.data(Qt::DisplayRole).toString();
+            if (le->text() == newText)
+                return;
+            const int selStart = le->selectionStart();
+            const int selLen = le->selectedText().length();
+            const int cursor = le->cursorPosition();
+            const bool wasBlocked = le->blockSignals(true);
+            le->setText(newText);
+            if (selStart >= 0 && selLen > 0)
+                le->setSelection(selStart, selLen);
+            else
+                le->setCursorPosition(qMin(cursor, newText.length()));
+            le->blockSignals(wasBlocked);
+        }
+
+        bool eventFilter(QObject* obj, QEvent* ev) override
+        {
+            if (ev->type() == QEvent::MouseButtonDblClick)
+            {
+                QLineEdit* editor = qobject_cast<QLineEdit*>(obj);
+                if (editor)
+                {
+                    QPersistentModelIndex idx = editor->property("__persistentIndex").value<QPersistentModelIndex>();
+                    if (idx.isValid())
+                    {
+                        const QString text = idx.model()->index(idx.row(), m_messageColumn, idx.parent())
+                            .data(Qt::DisplayRole).toString();
+                        if (!text.isEmpty())
+                            QApplication::clipboard()->setText(text);
+                        return true;
+                    }
+                }
+            }
+            return QStyledItemDelegate::eventFilter(obj, ev);
+        }
+    private:
+        int m_messageColumn;
+    };
+}
 
 namespace Log
 {
@@ -33,6 +144,39 @@ namespace Log
 				m_treeWidget->setColumnWidth(i, getHeaderWidth((HeaderPos)i));
 			}
 			m_treeWidget->setHeaderLabels(headerLables);
+
+			// In-cell text selection: a persistent read-only line editor is opened
+			// on whichever cell the user clicks, so drag-select works and survives
+			// new messages arriving. Row selection is disabled — the user selects
+			// text, not rows.
+			m_treeWidget->setItemDelegate(new ReadOnlyLineEditDelegate((int)HeaderPos::message, m_treeWidget));
+			m_treeWidget->setEditTriggers(QAbstractItemView::NoEditTriggers);
+			m_treeWidget->setSelectionMode(QAbstractItemView::NoSelection);
+
+			connect(m_treeWidget, &QTreeWidget::currentItemChanged, this,
+				[this](QTreeWidgetItem* current, QTreeWidgetItem* previous)
+				{
+					if (previous)
+					{
+						for (int col = 0; col < (int)HeaderPos::__count; ++col)
+							m_treeWidget->closePersistentEditor(previous, col);
+					}
+					if (current)
+					{
+						const int col = m_treeWidget->currentColumn();
+						m_treeWidget->openPersistentEditor(current, col >= 0 ? col : (int)HeaderPos::message);
+					}
+				});
+			// Double-click copies the row's message text to the clipboard.
+			connect(m_treeWidget, &QTreeWidget::itemDoubleClicked, this,
+				[](QTreeWidgetItem* item, int /*column*/)
+				{
+					if (!item)
+						return;
+					const QString text = item->data((int)HeaderPos::message, Qt::DisplayRole).toString();
+					if (!text.isEmpty())
+						QApplication::clipboard()->setText(text);
+				});
 		}
 
 		QContextLoggerTreeWidget::~QContextLoggerTreeWidget()
@@ -88,16 +232,16 @@ namespace Log
 				const auto& parentIt = m_msgItems.find(parentID);
 				if (parentIt == m_msgItems.end())
 				{
-					TreeData* treeData = new TreeData(this, newContext.id);
+					TreeData* treeData = new TreeData(this, newContext);
 					m_msgItems[newContext.id] = treeData;
 					return;
 				}
 
 				TreeData* parentTreeData = parentIt->second;
-				m_msgItems[newContext.id] = parentTreeData->createChild(newContext.id);
+				m_msgItems[newContext.id] = parentTreeData->createChild(newContext);
 				return;
-			}			
-			TreeData *treeData = new TreeData(this, newContext.id);
+			}
+			TreeData *treeData = new TreeData(this, newContext);
 			m_msgItems[newContext.id] = treeData;
 		}
 		void QContextLoggerTreeWidget::onNewMessage(const Message& m)
@@ -268,21 +412,22 @@ namespace Log
 
 
 
-		QContextLoggerTreeWidget::TreeData::TreeData(QContextLoggerTreeWidget* root, LoggerID loggerID)
+		QContextLoggerTreeWidget::TreeData::TreeData(QContextLoggerTreeWidget* root, const LogObject::Info& info)
 			: parent(nullptr)
 		{
 			this->root = root;
 			msgItems.reserve(1024);
-			
+
 			childRoot = new QTreeWidgetItem(root->m_treeWidget);
 			thisMessagesRoot = new QTreeWidgetItem(childRoot);
 
-			this->loggerID = loggerID;
+			this->loggerID = info.id;
+			this->m_info = info;
 
 			setupChildRoot();
 			setupMessageRoot();
 		}
-		QContextLoggerTreeWidget::TreeData::TreeData(QContextLoggerTreeWidget* root, TreeData* parent, LoggerID loggerID)
+		QContextLoggerTreeWidget::TreeData::TreeData(QContextLoggerTreeWidget* root, TreeData* parent, const LogObject::Info& info)
 			: parent(parent)
 		{
 			this->root = root;
@@ -297,7 +442,8 @@ namespace Log
 			}
 			thisMessagesRoot = new QTreeWidgetItem(childRoot);
 
-			this->loggerID = loggerID;
+			this->loggerID = info.id;
+			this->m_info = info;
 
 			setupChildRoot();
 			setupMessageRoot();
@@ -331,7 +477,7 @@ namespace Log
 		}
 		void QContextLoggerTreeWidget::TreeData::setupChildRoot()
 		{
-			LogObject::Info info = LogManager::getLogObjectInfo(loggerID);
+			const LogObject::Info& info = m_info;
 			m_contextColor = info.color.toQColor();
 			m_messageBackgroundColor = (info.color * 0.5f).toQColor();
 			childRoot->setData((int)HeaderPos::contextName, Qt::DisplayRole, info.name.c_str());
@@ -349,9 +495,7 @@ namespace Log
 		}
 		void QContextLoggerTreeWidget::TreeData::updateDateTime()
 		{
-			//childRoot->setData((int)HeaderPos::timestamp, Qt::DisplayRole, logger->getCreationDateTime().toString(parent->m_timeFormat).c_str());
-			LogObject::Info info = LogManager::getLogObjectInfo(loggerID);
-			childRoot->setData((int)HeaderPos::timestamp, Qt::DisplayRole, info.creationTime.toString(root->m_timeFormat).c_str());
+			childRoot->setData((int)HeaderPos::timestamp, Qt::DisplayRole, m_info.creationTime.toString(root->m_timeFormat).c_str());
 			for (size_t i = 0; i < msgItems.size(); ++i)
 			{
 				//const Message& m = logger->getMessages()[i];
@@ -364,6 +508,8 @@ namespace Log
 		void QContextLoggerTreeWidget::TreeData::onNewMessage(const Message& m)
 		{
 			QTreeWidgetItem* line = new QTreeWidgetItem(thisMessagesRoot);
+			// Editable flag lets the read-only editor open for in-cell text selection.
+			line->setFlags(line->flags() | Qt::ItemIsEditable);
 			line->setData((int)HeaderPos::timestamp, Qt::DisplayRole, m.getDateTime().toString(root->m_timeFormat).c_str());
 			line->setData((int)HeaderPos::message, Qt::DisplayRole, QString::fromStdString(m.getText()));
 
@@ -398,9 +544,9 @@ namespace Log
 
 			msgItems.push_back(data);
 		}
-		QContextLoggerTreeWidget::TreeData* QContextLoggerTreeWidget::TreeData::createChild(LoggerID loggerID)
+		QContextLoggerTreeWidget::TreeData* QContextLoggerTreeWidget::TreeData::createChild(const LogObject::Info& info)
 		{
-			TreeData *child = new TreeData(root, this, loggerID);
+			TreeData *child = new TreeData(root, this, info);
 			children.push_back(child);
 			return child;
 		}

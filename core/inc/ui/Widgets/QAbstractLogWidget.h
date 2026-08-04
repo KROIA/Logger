@@ -86,6 +86,7 @@ namespace Log
                 LoggerID id = 0;
                 std::vector<Message> messages;
                 QCheckBox* checkBox = nullptr;
+                LogObject::Info info;
             };
 
             

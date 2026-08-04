@@ -42,6 +42,8 @@ doxygen
 out
 include
 lib
+.claude
+CLAUDE.md
 
 LICENSE.APACHE
 LICENSE.MIT

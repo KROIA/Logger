@@ -10,16 +10,26 @@
 namespace Log
 {
 	bool Export::saveToFile(
-		const std::unordered_map<LoggerID, std::vector<Message>>& contexts, 
+		const std::unordered_map<LoggerID, std::vector<Message>>& contexts,
+		const std::string& file)
+	{
+		std::vector<LogObject::Info> infos;
+		infos.reserve(contexts.size());
+		for (const auto& context : contexts)
+			infos.push_back(LogManager::getLogObjectInfo(context.first));
+		return saveToFile(infos, contexts, file);
+	}
+	bool Export::saveToFile(
+		const std::vector<LogObject::Info>& infos,
+		const std::unordered_map<LoggerID, std::vector<Message>>& contexts,
 		const std::string& file)
 	{
 		QJsonArray objs;
 
 		objs.append(getFileHeader());
-		for(const auto& context : contexts)
+		for (const auto& info : infos)
 		{
-			const LogObject::Info &metaInfo = LogManager::getLogObjectInfo(context.first);
-			objs.append(metaInfo.toJson());
+			objs.append(info.toJson());
 		}
 		std::vector<Message> messages;
 		for (const auto& context : contexts)
@@ -30,7 +40,7 @@ namespace Log
 			}
 		}
 		// Sort messages by date and time
-		std::sort(messages.begin(), messages.end(), [](const Message& a, const Message& b) 
+		std::sort(messages.begin(), messages.end(), [](const Message& a, const Message& b)
 			{ return a.getDateTime() < b.getDateTime(); });
 
 		for (const auto& message : messages)

@@ -29,6 +29,7 @@ namespace Log
             void setDateTimeFilter(const DateTimeFilter& filter);
 
             void onNewMessage(const Message& m);
+            void onNewLogger(const LogObject::Info& info);
             void clear();
 
             void getSaveVisibleMessages(std::unordered_map<LoggerID, std::vector<Message>>& list);
@@ -44,8 +45,15 @@ namespace Log
 
             // Get the resize event
             void resizeEvent(QResizeEvent* event) override;
+            // Double-click copies the clicked row's message text to the clipboard.
+            void mouseDoubleClickEvent(QMouseEvent* event) override;
+        protected:
+            // Open a persistent read-only editor on the current cell so users can
+            // drag-select text; keep it open across model updates.
+            void currentChanged(const QModelIndex& current, const QModelIndex& previous) override;
         private:
-            
+            QPersistentModelIndex m_persistentEditorIndex;
+
             QLogMessageItemModel* m_model;
             QLogMessageItemProxyModel * m_proxyModel;
 

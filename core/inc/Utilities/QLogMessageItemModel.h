@@ -35,6 +35,7 @@ namespace Log
 
         int columnCount(const QModelIndex& parent = QModelIndex()) const override;
         QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const override;
+        Qt::ItemFlags flags(const QModelIndex& index) const override;
 
         void addLog(const Message& entry);
         void addLogs(const std::vector<Message>& entries);
@@ -47,6 +48,11 @@ namespace Log
 
         void clear();
         void clearLoggerCache();
+
+        // Pre-populate the context cache from a known LogObject::Info,
+        // so file-loaded loggers (which are not in the LogManager singleton)
+        // still render their name/color correctly.
+        void setLoggerInfo(const LogObject::Info& info);
     private:
         struct CachedLoggerData
         {
