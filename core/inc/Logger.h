@@ -23,6 +23,7 @@
 #include "ui/NativeConsoleView.h"
 #include "ui/QTreeConsoleView.h"
 #include "ui/QConsoleView.h"
+#include "ui/QCombinedConsoleView.h"
 #include "ui/StaticObjs.h"
 //	 File
 #include "FilePlotter.h"
