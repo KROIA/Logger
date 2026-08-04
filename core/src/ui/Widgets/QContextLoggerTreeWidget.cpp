@@ -313,6 +313,35 @@ namespace Log
 		{
 			return m_dateTimeFilter.active;
 		}
+		void QContextLoggerTreeWidget::setTextFilter(const QString& text, bool useRegex)
+		{
+			m_searchText = text;
+			m_searchUseRegex = useRegex;
+			if (useRegex && !text.isEmpty())
+				m_searchRegex = QRegularExpression(text, QRegularExpression::CaseInsensitiveOption);
+			else
+				m_searchRegex = QRegularExpression();
+
+			auto matcher = [this](const std::string& text) { return matchesSearchText(text); };
+			m_treeWidget->setUpdatesEnabled(false);
+			for (auto& it : m_msgItems)
+				it.second->applyTextFilter(matcher);
+			m_treeWidget->setUpdatesEnabled(true);
+			m_messageCountDirty = true;
+		}
+		bool QContextLoggerTreeWidget::matchesSearchText(const std::string& text) const
+		{
+			if (m_searchText.isEmpty())
+				return true;
+			const QString msg = QString::fromStdString(text);
+			if (m_searchUseRegex)
+			{
+				if (!m_searchRegex.isValid())
+					return true;
+				return m_searchRegex.match(msg).hasMatch();
+			}
+			return msg.contains(m_searchText, Qt::CaseInsensitive);
+		}
 		void QContextLoggerTreeWidget::setParent(LoggerID childID, LoggerID parentID)
 		{
 			TreeData* child = nullptr;
@@ -541,6 +570,8 @@ namespace Log
 			}
 			if (!root->m_dateTimeFilter.matches(data.msg.getDateTime()))
 				data.setVisibilityFilter(MessageData::VisibilityBitMask::dateTimeVisibility, false);
+			if (!root->matchesSearchText(data.msg.getText()))
+				data.setVisibilityFilter(MessageData::VisibilityBitMask::textVisibility, false);
 
 			msgItems.push_back(data);
 		}
@@ -716,6 +747,14 @@ namespace Log
 				{
 					msgItems[i].setVisibilityFilter(MessageData::VisibilityBitMask::dateTimeVisibility, true);
 				}
+			}
+		}
+		void QContextLoggerTreeWidget::TreeData::applyTextFilter(const std::function<bool(const std::string&)>& matcher)
+		{
+			for (size_t i = 0; i < msgItems.size(); ++i)
+			{
+				const bool visible = matcher(msgItems[i].msg.getText());
+				msgItems[i].setVisibilityFilter(MessageData::VisibilityBitMask::textVisibility, visible);
 			}
 		}
 		void QContextLoggerTreeWidget::TreeData::saveVisibleMessages(std::unordered_map<LoggerID, std::vector<Message>>& list) const

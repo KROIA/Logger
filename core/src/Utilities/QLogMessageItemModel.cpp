@@ -266,6 +266,17 @@ namespace Log
     }
 
 
+    void QLogMessageItemProxyModel::setTextFilter(const QString& text, bool useRegex)
+    {
+        m_searchText = text;
+        m_searchUseRegex = useRegex;
+        if (useRegex && !text.isEmpty())
+            m_searchRegex = QRegularExpression(text, QRegularExpression::CaseInsensitiveOption);
+        else
+            m_searchRegex = QRegularExpression();
+        invalidateFilter();
+    }
+
     void QLogMessageItemProxyModel::setDateTimeFilter(const DateTimeFilter& filter)
     {
         m_dateTimeFilter = filter;
@@ -331,6 +342,21 @@ namespace Log
 
         if(!getContextVisibility(data.getLoggerID()))
             return false;
+
+        if (!m_searchText.isEmpty())
+        {
+            const QString msg = QString::fromStdString(data.getText());
+            if (m_searchUseRegex)
+            {
+                if (!m_searchRegex.isValid() || !m_searchRegex.match(msg).hasMatch())
+                    return false;
+            }
+            else
+            {
+                if (!msg.contains(m_searchText, Qt::CaseInsensitive))
+                    return false;
+            }
+        }
 
         return m_dateTimeFilter.matches(data.getDateTime());
     }

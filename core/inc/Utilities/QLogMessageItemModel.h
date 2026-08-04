@@ -6,6 +6,7 @@
 #include <QAbstractItemModel>
 #include <QVariant>
 #include <QSortFilterProxyModel>
+#include <QRegularExpression>
 #include <vector>
 #include <string>
 #include "LogMessage.h"
@@ -83,6 +84,10 @@ namespace Log
         void setContextVisibility(LoggerID loggerID, bool isVisible);
         bool getContextVisibility(LoggerID loggerID) const;
 
+        // Filter messages by substring or regex on the message text.
+        // Empty text disables the filter.
+        void setTextFilter(const QString& text, bool useRegex);
+
         void setDateTimeFilter(const DateTimeFilter &filter);
         const DateTimeFilter & getDateTimeFilter() const;
         void setDateTimeFilter(DateTime min, DateTime max, DateTime::Range rangeType);
@@ -103,9 +108,12 @@ namespace Log
         QLogMessageItemModel *m_sourceModel;
         bool m_levelActivated[static_cast<int>(Level::__count)];
         std::unordered_map<LoggerID, bool> m_contextVisibility; // Key unique Logger id
-       
-        
+
+
         DateTimeFilter m_dateTimeFilter;
+        QString m_searchText;
+        bool m_searchUseRegex = false;
+        QRegularExpression m_searchRegex;
     };
 }
 #endif

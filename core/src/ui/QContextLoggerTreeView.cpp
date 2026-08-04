@@ -90,6 +90,10 @@ namespace Log
 			LOGGER_RECEIVER_PROFILING_FUNCTION(LOGGER_COLOR_STAGE_1);
 			m_treeItem->setDateTimeFilter(filter);
 		}
+		void QTreeConsoleView::onSearchTextChanged(const QString& text, bool regex)
+		{
+			m_treeItem->setTextFilter(text, regex);
+		}
 
 		void QTreeConsoleView::onNewLogger(LogObject::Info loggerInfo)
 		{

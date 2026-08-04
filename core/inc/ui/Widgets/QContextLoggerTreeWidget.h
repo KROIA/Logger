@@ -10,6 +10,8 @@
 #include "LogLevel.h"
 #include <QDebug>
 #include <QColor>
+#include <QRegularExpression>
+#include <functional>
 
 
 namespace Log
@@ -49,6 +51,11 @@ namespace Log
 
 			void setDateTimeFilter(const DateTimeFilter& filter);
 			const DateTimeFilter& getDateTimeFilter() const;
+
+			// Filter messages by substring or regex on the message text.
+			// Empty text disables the filter.
+			void setTextFilter(const QString& text, bool useRegex);
+			bool matchesSearchText(const std::string& text) const;
 			void setDateTimeFilter(DateTime min, DateTime max, DateTime::Range rangeType);
 			void clearDateTimeFilter();
 			const DateTime& getDateTimeFilterMin() const;
@@ -106,6 +113,7 @@ namespace Log
 					TreeData *getParent() const;
 
 					void updateDateTimeFilter(const DateTimeFilter &filter);
+					void applyTextFilter(const std::function<bool(const std::string&)>& matcher);
 
 					void saveVisibleMessages(std::unordered_map<LoggerID, std::vector<Message>>& list) const;
 			
@@ -124,7 +132,8 @@ namespace Log
 					enum VisibilityBitMask
 					{
 						levelVisibility = 0,
-						dateTimeVisibility = 1
+						dateTimeVisibility = 1,
+						textVisibility = 2
 					};
 					int hideFilter = 0;
 					void setVisibilityFilter(VisibilityBitMask mask, bool isVisible)
@@ -163,6 +172,9 @@ namespace Log
 			QTimer m_updateTimer;
 			DateTime::Format m_timeFormat;
 			DateTimeFilter m_dateTimeFilter;
+			QString m_searchText;
+			bool m_searchUseRegex = false;
+			QRegularExpression m_searchRegex;
 			bool m_messageCountDirty = false;
 		};
 	}

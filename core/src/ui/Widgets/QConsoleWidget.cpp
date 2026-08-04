@@ -199,6 +199,10 @@ namespace Log
         {
             m_proxyModel->setDateTimeFilter(filter);
         }
+        void QConsoleWidget::setTextFilter(const QString& text, bool useRegex)
+        {
+            m_proxyModel->setTextFilter(text, useRegex);
+        }
 
         void QConsoleWidget::onNewLogger(const LogObject::Info& info)
         {

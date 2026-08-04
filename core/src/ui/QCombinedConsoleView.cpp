@@ -120,6 +120,11 @@ namespace Log
             m_tableWidget->setDateTimeFilter(filter);
             m_treeItem->setDateTimeFilter(filter);
         }
+        void QCombinedConsoleView::onSearchTextChanged(const QString& text, bool regex)
+        {
+            m_tableWidget->setTextFilter(text, regex);
+            m_treeItem->setTextFilter(text, regex);
+        }
 
         void QCombinedConsoleView::onNewLogger(LogObject::Info loggerInfo)
         {

@@ -102,12 +102,22 @@ namespace Log
             virtual void onFilterTextChanged(size_t index, QLineEdit* lineEdit, const std::string& text);
             virtual void onContextCheckBoxChanged(const ContextData& context, bool isChecked);
             virtual void onDateTimeFilterChanged(const DateTimeFilter& filter) = 0;
+            // Called when the search text or regex-mode toggle changes.
+            // Subclasses override to forward to their content widget's text filter.
+            virtual void onSearchTextChanged(const QString& text, bool regex);
 
 
             Ui::QAbstractLogWidget* ui;
+        private slots:
+            void onSearchLineEditChanged(const QString& text);
+            void onSearchRegexToggled(int state);
         private:
+            void emitSearchFilter();
+
             QCheckBox* m_levelCheckBoxes[Level::__count];
             std::vector<QLineEdit*> m_filterTextEdits;
+            QLineEdit* m_searchLineEdit = nullptr;
+            QCheckBox* m_searchRegexCheckBox = nullptr;
 
             std::unordered_map<LoggerID, ContextData> m_contextData;
             DateTimeFilter m_dateTimeFilter;

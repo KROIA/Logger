@@ -27,6 +27,7 @@ namespace Log
             void setLevelVisibility(Level level, bool isVisible);
             void setContextVisibility(LoggerID loggerID, bool isVisible);
             void setDateTimeFilter(const DateTimeFilter& filter);
+            void setTextFilter(const QString& text, bool useRegex);
 
             void onNewMessage(const Message& m);
             void onNewLogger(const LogObject::Info& info);

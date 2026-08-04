@@ -84,6 +84,10 @@ namespace Log
 			LOGGER_RECEIVER_PROFILING_FUNCTION(LOGGER_COLOR_STAGE_1);
 			m_consoleWidget->setDateTimeFilter(filter);
 		}
+		void QConsoleView::onSearchTextChanged(const QString& text, bool regex)
+		{
+			m_consoleWidget->setTextFilter(text, regex);
+		}
 
 		void QConsoleView::onNewLogger(LogObject::Info loggerInfo)
 		{

@@ -41,6 +41,7 @@ namespace Log
             void onLevelCheckBoxChanged(size_t index, Level level, bool isChecked) override;
             void onContextCheckBoxChanged(const ContextData& context, bool isChecked) override;
             void onDateTimeFilterChanged(const DateTimeFilter& filter) override;
+            void onSearchTextChanged(const QString& text, bool regex) override;
 
             void onNewLogger(LogObject::Info loggerInfo) override;
             void onLogMessage(Message message) override;

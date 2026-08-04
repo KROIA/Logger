@@ -14,6 +14,8 @@
 #include <fstream>
 #include <QApplication>
 #include <QThread>
+#include <QHBoxLayout>
+#include <QLabel>
 
 
 namespace Log
@@ -390,7 +392,51 @@ namespace Log
 
 		void QAbstractLogWidget::setContentWidget(QWidget* widget)
 		{
-			ui->content_frame->layout()->addWidget(widget);
+			auto* layout = ui->content_frame->layout();
+			if (!m_searchLineEdit)
+			{
+				// Build the search bar on first content insertion so subclasses that
+				// call setContentWidget from their ctor get it above their content.
+				QWidget* searchBar = new QWidget(ui->content_frame);
+				auto* h = new QHBoxLayout(searchBar);
+				h->setContentsMargins(2, 2, 2, 2);
+				h->setSpacing(4);
+				QLabel* lbl = new QLabel("Search:", searchBar);
+				m_searchLineEdit = new QLineEdit(searchBar);
+				m_searchLineEdit->setPlaceholderText("Filter messages");
+				m_searchLineEdit->setClearButtonEnabled(true);
+				m_searchRegexCheckBox = new QCheckBox(".*", searchBar);
+				m_searchRegexCheckBox->setToolTip("Interpret the search text as a regular expression");
+				h->addWidget(lbl);
+				h->addWidget(m_searchLineEdit, 1);
+				h->addWidget(m_searchRegexCheckBox);
+				QObject::connect(m_searchLineEdit, &QLineEdit::textChanged,
+					this, &QAbstractLogWidget::onSearchLineEditChanged);
+				QObject::connect(m_searchRegexCheckBox, &QCheckBox::stateChanged,
+					this, &QAbstractLogWidget::onSearchRegexToggled);
+				layout->addWidget(searchBar);
+			}
+			layout->addWidget(widget);
+		}
+
+		void QAbstractLogWidget::onSearchLineEditChanged(const QString&)
+		{
+			emitSearchFilter();
+		}
+		void QAbstractLogWidget::onSearchRegexToggled(int)
+		{
+			emitSearchFilter();
+		}
+		void QAbstractLogWidget::emitSearchFilter()
+		{
+			if (!m_searchLineEdit || !m_searchRegexCheckBox)
+				return;
+			onSearchTextChanged(m_searchLineEdit->text(), m_searchRegexCheckBox->isChecked());
+		}
+		void QAbstractLogWidget::onSearchTextChanged(const QString& text, bool regex)
+		{
+			LOGGER_UNUSED(text);
+			LOGGER_UNUSED(regex);
 		}
 	
 
