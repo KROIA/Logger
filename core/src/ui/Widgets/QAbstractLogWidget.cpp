@@ -538,7 +538,7 @@ namespace Log
 				if (m_detailsPane) m_detailsPane->setVisible(enabled);
 				break;
 			default:
-				break; // RowContextMenu / HistogramStrip / HistogramZoom handled by concrete views
+				break; // RowContextMenu handled by concrete views
 			}
 		}
 		bool QAbstractLogWidget::isFeatureEnabled(Feature f) const

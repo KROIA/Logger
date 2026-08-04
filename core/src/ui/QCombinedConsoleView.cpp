@@ -24,17 +24,16 @@ namespace Log
             m_treeItem = new UIWidgets::QContextLoggerTreeWidget(m_treeWidget);
             m_tabs->addTab(m_treeWidget, "Tree");
 
-            // Timeline tab: embed a standalone QTimelineConsoleView but strip
-            // its chrome so only the timeline canvas + zoom controls show.
-            m_timelineView = new QTimelineConsoleView();
-            m_timelineView->disableSubWidget(SubWidget::settingsFrame);
-            m_timelineView->disableSubWidget(SubWidget::logLevelFilter);
-            m_timelineView->disableSubWidget(SubWidget::contextFilter);
-            m_timelineView->disableSubWidget(SubWidget::dateTimeFilter);
-            m_timelineView->disableSubWidget(SubWidget::editFrame);
-            m_timelineView->setFeatureEnabled(SearchBar, false);
-            m_timelineView->setFeatureEnabled(DetailsPane, false);
-            m_tabs->addTab(m_timelineView, "Timeline");
+            // Vertical timeline tab
+            m_verticalTimelineView = new QVerticalTimelineView();
+            m_verticalTimelineView->disableSubWidget(SubWidget::settingsFrame);
+            m_verticalTimelineView->disableSubWidget(SubWidget::logLevelFilter);
+            m_verticalTimelineView->disableSubWidget(SubWidget::contextFilter);
+            m_verticalTimelineView->disableSubWidget(SubWidget::dateTimeFilter);
+            m_verticalTimelineView->disableSubWidget(SubWidget::editFrame);
+            m_verticalTimelineView->setFeatureEnabled(SearchBar, false);
+            m_verticalTimelineView->setFeatureEnabled(DetailsPane, false);
+            m_tabs->addTab(m_verticalTimelineView, "Vertical timeline");
 
             // Stats tab: same treatment for QStatsConsoleView.
             m_statsView = new QStatsConsoleView();
@@ -158,7 +157,7 @@ namespace Log
             }
             m_tableWidget->clear();
             m_treeItem->clearMessages();
-            if (m_timelineView) m_timelineView->clear();
+            if (m_verticalTimelineView) m_verticalTimelineView->clear();
             if (m_statsView) m_statsView->clear();
             QAbstractLogWidget::clear();
         }
@@ -169,7 +168,7 @@ namespace Log
             QAbstractLogWidget::onLevelCheckBoxChanged(index, level, isChecked);
             m_tableWidget->setLevelVisibility(level, isChecked);
             m_treeItem->setLevelVisibility(level, isChecked);
-            if (m_timelineView) m_timelineView->setLevelEnabled(level, isChecked);
+            if (m_verticalTimelineView) m_verticalTimelineView->setLevelEnabled(level, isChecked);
             if (m_statsView) m_statsView->setLevelEnabled(level, isChecked);
         }
         void QCombinedConsoleView::onContextCheckBoxChanged(const ContextData& context, bool isChecked)
@@ -178,7 +177,7 @@ namespace Log
             QAbstractLogWidget::onContextCheckBoxChanged(context, isChecked);
             m_tableWidget->setContextVisibility(context.id, isChecked);
             m_treeItem->setContextVisibility(context.id, isChecked);
-            if (m_timelineView) m_timelineView->setContextEnabled(context.id, isChecked);
+            if (m_verticalTimelineView) m_verticalTimelineView->setContextEnabled(context.id, isChecked);
             if (m_statsView) m_statsView->setContextEnabled(context.id, isChecked);
         }
         void QCombinedConsoleView::onDateTimeFilterChanged(const DateTimeFilter& filter)
@@ -191,7 +190,7 @@ namespace Log
         {
             m_tableWidget->setTextFilter(text, regex);
             m_treeItem->setTextFilter(text, regex);
-            if (m_timelineView) m_timelineView->setSearchTextProgrammatic(text, regex);
+            if (m_verticalTimelineView) m_verticalTimelineView->setSearchTextProgrammatic(text, regex);
             if (m_statsView) m_statsView->setSearchTextProgrammatic(text, regex);
             refreshMatchCount();
         }

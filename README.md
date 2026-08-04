@@ -10,11 +10,22 @@
   * [Basic example](#basic-example)
   * [Nested loggers](#nested-loggers)
   * [Custom colors](#custom-colors)
+  * [Enabling / disabling a logger](#enabling--disabling-a-logger)
+  * [LogObject API](#logobject-api)
+  * [Available colors](#available-colors)
+  * [Customising level colors](#customising-level-colors)
+  * [Dark / light mode](#dark--light-mode)
+  * [LogManager](#logmanager)
+  * [Threading](#threading)
+  * [Linking against the library](#linking-against-the-library)
+  * [Sandbox example](#sandbox-example)
+  * [Advanced: logger-ID filters](#advanced-logger-id-filters)
+  * [Optional: easy_profiler integration](#optional-easy_profiler-integration)
 * [Receiver types](#receiver-types)
   * [QConsoleView](#qconsoleview)
   * [QTreeConsoleView](#qtreeconsoleview)
   * [QCombinedConsoleView](#qcombinedconsoleview)
-  * [QTimelineConsoleView](#qtimelineconsoleview)
+  * [QVerticalTimelineView](#qverticaltimelineview)
   * [QStatsConsoleView](#qstatsconsoleview)
   * [NativeConsoleView](#nativeconsoleview)
   * [FilePlotter](#fileplotter)
@@ -139,6 +150,149 @@ l.logInfo("plain info");                    // orange in the views
 l.log("This one is red",  Log::Level::info, Log::Colors::red); // per-message override
 ```
 
+#### Enabling / disabling a logger
+A disabled logger emits no messages — useful for silencing a subsystem at runtime without recompiling.
+``` C++
+Log::LogObject net("network");
+net.setEnabled(false);        // net stops emitting
+net.logWarning("suppressed"); // dropped, no receiver sees this
+net.setEnabled(true);         // resumes
+```
+
+#### LogObject API
+Public methods available on every `LogObject`:
+
+| Method | Description |
+|---|---|
+| `LogObject(const std::string& name)`                                | Root-level logger with the given name |
+| `LogObject(LoggerID parentID, const std::string& name)`             | Logger nested under an existing one |
+| `LogObject(const LogObject& parent, const std::string& name)`       | Same as above; parent by reference |
+| `void log(msg [, Level [, Color]])`                                 | Emit a message; level defaults to `info` |
+| `logTrace / logDebug / logInfo / logWarning / logError / logCustom` | Level-specific convenience wrappers |
+| `void setName(const std::string&)` · `std::string getName() const`  | Rename the logger; visible in all views |
+| `void setColor(const Color&)` · `Color getColor() const`            | Per-logger color used in every view |
+| `void setEnabled(bool)` · `bool isEnabled() const`                  | Toggle whether this logger emits |
+| `LoggerID getID() const` · `LoggerID getParentID() const`           | Identity queries |
+
+Changing a logger's `name`, `color`, or `enabled` at runtime is broadcast to every receiver so views update in place.
+
+#### Available colors
+The `Log::Colors` namespace exposes a set of predefined `Color` constants suitable for both terminal and Qt output:
+
+| Bright | Light variant |
+|---|---|
+| `red`, `green`, `blue`               | `lightRed`, `lightGreen`, `lightBlue` |
+| `yellow`, `magenta`, `cyan`          | `lightMagenta`, `lightCyan` |
+| `white`, `black`, `brown`, `orange`  | `lightGray`, `darkGray` |
+
+There are also `Colors::Console::Foreground::*` and `Colors::Console::Background::*` subnamespaces for use with `NativeConsoleView`. A `Log::Color` value can be constructed from RGB directly:
+
+``` C++
+Log::Color teal(0x0d, 0x9a, 0x8f);
+logger.setColor(teal);
+```
+
+#### Customising level colors
+Every level has a default color; you can override the entire set at process start:
+
+``` C++
+Log::LevelColors custom {
+    Log::Colors::lightGray,   // trace
+    Log::Colors::lightMagenta,// debug
+    Log::Colors::white,       // info
+    Log::Colors::orange,      // warning
+    Log::Colors::lightRed,    // error
+    Log::Colors::lightGreen   // custom
+};
+Log::Message::setLevelColors(custom);
+```
+The new palette applies to every subsequent message and to how every view renders per-level accents (dot fills, bubble borders, stats bars).
+
+#### Dark / light mode
+The library ships a ready-made dark stylesheet for the Qt views:
+
+``` C++
+qApp->setStyleSheet(Log::Resources::getDarkStylesheet());
+Log::Color::setDarkMode(true);       // biases default color mappings for dark
+Log::Color::setDarkModeFactor(0.8f); // optional: intensity of the bias
+```
+Every widget-based view detects the active palette at paint time and picks appropriate contrasts:
+
+* Stats bars use a light track in light mode, dark in dark mode.
+* The vertical timeline's bubble fill uses HSL lightness `220/255` in light mode, `60/255` in dark mode; border / header text darken in light mode so near-white level colors stay readable.
+* Grid lines and axis lines use `QPalette::Mid`, so they adapt automatically.
+
+Nothing needs to be reconfigured after a theme change — the next paint picks it up.
+
+#### LogManager
+`Log::LogManager` is the singleton hub that connects loggers to receivers. In normal use you don't touch it — instantiating a `LogObject` or an `AbstractReceiver` registers with it automatically. It is exposed for cases like introspection:
+
+``` C++
+// Snapshot every logger currently known to the process.
+std::vector<Log::LogObject::Info> loggers = Log::LogManager::getLogObjectsInfo();
+for (const auto& l : loggers)
+    qDebug() << l.id << QString::fromStdString(l.name);
+
+// Look up one logger's info by ID (returns a default-constructed Info if unknown).
+Log::LogObject::Info info = Log::LogManager::getLogObjectInfo(someId);
+```
+
+#### Threading
+`LogObject::log(...)` may be called from any thread. The library dispatches messages via Qt's queued signal system, so each receiver sees them on **its own** thread (typically the GUI thread for the widget receivers).
+
+Two consequences worth knowing:
+
+* You never need locks around `log*(...)` calls yourself.
+* The widget receivers stay non-blocking under high message rates — messages queue up and are drained in batches. If the GUI thread is starved, throughput drops gracefully; the sender never blocks.
+
+Late-subscribed receivers (constructed *after* some `LogObject`s already exist) automatically receive a snapshot of the existing loggers on the receiver's thread before the live stream starts, so their views pre-populate correctly.
+
+#### Linking against the library
+Two build targets are produced per configuration:
+
+* `Logger_shared`   — dynamic library (`Logger.dll` / `libLogger.so`)
+* `Logger_static`   — static library
+* `Logger_static_profile` — static build with easy_profiler hooks (only when the optional dependency is present)
+
+In a consumer's CMake:
+``` cmake
+find_package(Logger CONFIG REQUIRED)
+target_link_libraries(myapp PRIVATE Logger::Logger_shared)  # or _static
+```
+The library requires the Qt modules listed in [Dependencies](#dependencies); consumers should also `find_package(Qt5 COMPONENTS Core Widgets REQUIRED)` (or Qt6).
+
+Every public API is reachable via one include:
+``` C++
+#include "Logger.h"
+```
+
+#### Sandbox example
+A working reference application lives at `Examples/LoggerSandbox/`. It spins up several loggers (including one on a worker thread), instantiates each Qt view, and demonstrates the standalone views side-by-side. Build the project and run `LoggerSandbox` to see everything in one place.
+
+#### Advanced: logger-ID filters
+For programmatic filtering (independent of the view checkboxes), `Log::LoggerIDFilter` filters messages by logger identity. Useful for feeding a receiver only a subset of loggers:
+
+``` C++
+Log::LoggerIDFilter filter;
+filter.setMode(Log::LoggerIDFilter::Include);
+filter.setIncludeChildren(true);         // implicitly cover nested loggers
+filter.addLoggerID(myLogger.getID());
+
+// Attach the filter to any receiver that supports it.
+```
+`Mode::Include` only lets listed IDs through; `Mode::Exclude` drops them. With `setIncludeChildren(true)`, adding a parent ID automatically covers every descendant.
+
+#### Optional: easy_profiler integration
+If [easy_profiler](https://github.com/yse/easy_profiler) is present at build time, an additional `Logger_static_profile` target is produced with profiling hooks compiled in. Wrap the application in `Log::Profiler::start()` / `Log::Profiler::stop(path)` and open the resulting `.prof` file in the easy_profiler GUI. Without easy_profiler the hooks compile to no-ops.
+
+``` C++
+int main(int argc, char* argv[]) {
+    Log::Profiler::start();
+    // ... application ...
+    Log::Profiler::stop("app.prof");
+}
+```
+
 ---
 
 ## Receiver types
@@ -147,8 +301,8 @@ The library ships several receivers. They all attach to the shared `LogManager` 
 
 * [`QConsoleView`](#qconsoleview) — flat table
 * [`QTreeConsoleView`](#qtreeconsoleview) — parent/child tree
-* [`QCombinedConsoleView`](#qcombinedconsoleview) — Table + Tree + Timeline + Stats tabs in one window
-* [`QTimelineConsoleView`](#qtimelineconsoleview) — swimlane timeline with a density histogram
+* [`QCombinedConsoleView`](#qcombinedconsoleview) — Table + Tree + Vertical timeline + Stats tabs in one window
+* [`QVerticalTimelineView`](#qverticaltimelineview) — per-context columns with always-visible message bubbles along a vertical time axis
 * [`QStatsConsoleView`](#qstatsconsoleview) — counters and rate dashboard
 * [`NativeConsoleView`](#nativeconsoleview) — plain terminal output
 * [`FilePlotter`](#fileplotter) — writes JSON log file to disk
@@ -196,47 +350,65 @@ net.logInfo("Connected");
 </div>
 
 #### QCombinedConsoleView
-Four tabs — Table, Tree, Timeline, Stats — sharing one filter panel. Level and context checkboxes, the search bar, and the details pane apply to all four tabs at once.
+Four tabs — Table, Tree, Vertical timeline, Stats — sharing one filter panel. Level and context checkboxes, the search bar, and the details pane apply to all four tabs at once.
 
 ``` C++
 Log::UI::QCombinedConsoleView combined;
 combined.show();
-combined.setCurrentTab(Log::UI::QCombinedConsoleView::Tab::timeline);
+combined.setCurrentTab(Log::UI::QCombinedConsoleView::Tab::verticalTime);
 ```
+
+<div style="text-align: center;">
+    <img src="documentation/Images/QCombinedConsoleView.png" alt="QCombinedConsoleView" width="900"/>
+</div>
+
 
 Available tabs:
 
-| `Tab` value | Description |
+| `Tab` value          | Description |
 |---|---|
-| `Tab::table`    | Flat table view (same as `QConsoleView`) |
-| `Tab::tree`     | Tree view (same as `QTreeConsoleView`)   |
-| `Tab::timeline` | Swimlane timeline (same as `QTimelineConsoleView`) |
-| `Tab::stats`    | Counter dashboard (same as `QStatsConsoleView`) |
+| `Tab::table`         | Flat table view (same as `QConsoleView`) |
+| `Tab::tree`          | Tree view (same as `QTreeConsoleView`)   |
+| `Tab::verticalTime`  | Per-context columns with message bubbles (same as `QVerticalTimelineView`) |
+| `Tab::stats`         | Counter dashboard (same as `QStatsConsoleView`) |
 
-Saving visible messages (`saveVisibleMessages(path)`) exports rows from whichever row-based tab is active (table or tree). Timeline and stats tabs don't hold raw messages.
+Saving visible messages (`saveVisibleMessages(path)`) exports rows from whichever row-based tab is active (table or tree). The other tabs don't hold raw messages.
 
-#### QTimelineConsoleView
-Swimlane timeline: one horizontal lane per logger context, one dot per message drawn at its timestamp. Dot color = the lane's color so different loggers stay visually distinct; warnings and errors get a colored ring in the level color and grow with severity.
+#### QVerticalTimelineView
+Per-context columns arranged left-to-right, with a vertical time axis running through each. Every message renders as a colored dot on its column's axis plus an always-visible bubble to its right showing timestamp, level, and full multi-line text.
 
 ``` C++
-Log::UI::QTimelineConsoleView timeline;
-timeline.show();
+Log::UI::QVerticalTimelineView vt;
+vt.show();
+vt.setDirection(Log::UI::QVerticalTimelineView::Direction::Down); // default
 ```
 
 Interactions:
 
 | Action | Result |
 |---|---|
-| Left-drag inside the density histogram at the bottom | Rubber-band zoom to that time range |
-| Mouse wheel over the timeline                        | Zoom in / out, anchored at the cursor |
-| Right-click anywhere                                 | Reset to follow-live |
-| Left-click a dot                                     | Pin a popup callout with the message text, anchored to that timestamp |
-| Left-click a pinned dot again                        | Remove the callout |
-| Hover a dot                                          | Tooltip with context, timestamp, level, message |
-| "Window (s)" spinbox                                 | Set the visible time span |
-| "Follow live" checkbox                               | Auto-scroll to newest |
+| Mouse wheel                     | Zoom in / out, anchored under the cursor |
+| Shift + wheel                   | Horizontal scroll (pan between columns) |
+| Left-drag                       | Pan the time axis; auto-scroll pauses |
+| Right-click                     | Resume auto-scroll to the leading edge |
+| Release drag near leading edge  | Auto-scroll re-engages |
+| Double-click a bubble           | Copy the message text to the clipboard |
+| Hover a bubble or dot           | Tooltip with context, timestamp, level, and message |
 
-A **density histogram** below the swimlanes shows message counts per time bucket, stacked and colored by level. It honors the current level / context / text filters. Toggle it with `setFeatureEnabled(HistogramStrip, false)`; toggle drag-to-zoom with `setFeatureEnabled(HistogramZoom, false)`.
+Rendering:
+
+* Dot **fill** = level color (severity), 2-px outer **ring** = context color. Radius scales with severity.
+* Bubble **border + connector** = level color, **fill** = opaque grayish tint of the level color.
+* Column **background** = translucent context color so identity is visible at a glance in both dark and light palettes.
+* When zoomed way out (< 3 px/s) or when the column is narrower than a bubble fits, only dots render — a footer hint indicates the mode.
+* Overlap resolution: bubbles for messages arriving within the same time slot stack downward from the first visible one; connector lines still point back to each dot's true timestamp.
+
+`setDirection(Direction::Up)` flips the flow so newer messages appear at the top and auto-scroll clamps to the top edge. Default is `Direction::Down`.
+
+<div style="text-align: center;">
+    <img src="documentation/Images/QVerticalTimelineView.png" alt="QVerticalTimelineView" width="900"/>
+</div>
+
 
 #### QStatsConsoleView
 Counter dashboard: total messages, rolling msg/s rate, per-level bar chart, per-context bar chart. Level bars scale to the busiest level; context bars scale to the busiest context so relative volumes read at a glance. Disabled contexts appear struck-through; darkened bars indicate filtered-out levels.
@@ -247,6 +419,7 @@ stats.show();
 ```
 
 Nothing is emitted by user actions on this view — it is a read-only overview.
+
 
 #### NativeConsoleView
 Basic terminal output; no tree, no filtering.
@@ -262,7 +435,11 @@ console.show();
 Writes messages as JSON to a file. See [file format](#file-format).
 ``` C++
 Log::FilePlotter plotter("outputFile.log");
+// Optional: override the timestamp format used inside the file.
+Log::FilePlotter plotterHiRes("hires.log",
+    Log::DateTime::Format::hourMinuteSecondMillisecond | Log::DateTime::Format::yearMonthDay);
 ```
+Intermediate directories are created if they don't exist. Every message and every logger-info change is flushed to disk as it arrives; the file is a well-formed JSON array at all times.
 
 #### Custom receiver implementation
 Subclass `AbstractReceiver` and override the callbacks you care about:
@@ -352,21 +529,17 @@ view.setFeatureEnabled(F::FindNextPrev,       false);
 view.setFeatureEnabled(F::MatchCount,         false);
 view.setFeatureEnabled(F::DetailsPane,        false);
 view.setFeatureEnabled(F::RowContextMenu,     false);
-// Timeline-only flags:
-view.setFeatureEnabled(F::HistogramStrip,     false);
-view.setFeatureEnabled(F::HistogramZoom,      false);
 
 bool on = view.isFeatureEnabled(F::SearchBar);
 ```
 
 Flag applicability:
 
-| Feature | Table | Tree | Combined | Timeline | Stats |
+| Feature | Table | Tree | Combined | Vertical timeline | Stats |
 |---|:---:|:---:|:---:|:---:|:---:|
 | `SearchBar` / `SearchRegexCheckBox` / `MatchCount` / `FindNextPrev` | ✓ | ✓ | ✓ | ✓ (search only) | ✓ (search only) |
 | `DetailsPane`      | ✓ | ✓ | ✓ | — | — |
 | `RowContextMenu`   | ✓ | ✓ | ✓ | — | — |
-| `HistogramStrip` / `HistogramZoom` | — | — | — | ✓ | — |
 
 #### Sub-widget toggles
 For coarser stripping, hide entire sidebar sections:

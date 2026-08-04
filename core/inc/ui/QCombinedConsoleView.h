@@ -6,7 +6,7 @@
 #include "ui/Widgets/QConsoleWidget.h"
 #include "ui/Widgets/QContextLoggerTreeWidget.h"
 #include "ui/QStatsConsoleView.h"
-#include "ui/QTimelineConsoleView.h"
+#include "ui/QVerticalTimelineView.h"
 #include <QTabWidget>
 #include <QTreeWidget>
 #include <QMutex>
@@ -25,10 +25,10 @@ namespace Log
         public:
             enum class Tab
             {
-                table    = 0,
-                tree     = 1,
-                timeline = 2,
-                stats    = 3
+                table        = 0,
+                tree         = 1,
+                verticalTime = 2,
+                stats        = 3
             };
 
             QCombinedConsoleView(QWidget* parent = nullptr);
@@ -70,7 +70,7 @@ namespace Log
             UIWidgets::QConsoleWidget* m_tableWidget;
             QTreeWidget* m_treeWidget;
             UIWidgets::QContextLoggerTreeWidget* m_treeItem;
-            QTimelineConsoleView* m_timelineView = nullptr;
+            QVerticalTimelineView* m_verticalTimelineView = nullptr;
             QStatsConsoleView* m_statsView = nullptr;
 
             mutable QMutex m_mutex;

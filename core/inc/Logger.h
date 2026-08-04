@@ -25,7 +25,7 @@
 #include "ui/QConsoleView.h"
 #include "ui/QCombinedConsoleView.h"
 #include "ui/QStatsConsoleView.h"
-#include "ui/QTimelineConsoleView.h"
+#include "ui/QVerticalTimelineView.h"
 #include "ui/StaticObjs.h"
 //	 File
 #include "FilePlotter.h"

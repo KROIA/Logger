@@ -7,6 +7,7 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QHeaderView>
+#include <QApplication>
 #include <QProgressBar>
 #include <QDateTime>
 #include <QFont>
@@ -38,10 +39,18 @@ namespace Log
                 bar->setTextVisible(true);
                 bar->setFormat(QString::number(value));
                 bar->setAlignment(Qt::AlignCenter);
+                // Track colors follow the app palette so the widget looks right
+                // in both dark and light themes.
+                const QPalette pal = parent ? parent->palette() : QApplication::palette();
+                const bool light = pal.color(QPalette::Base).lightness() > 128;
+                const QColor track  = light ? QColor(230, 230, 230) : QColor(34, 34, 34);
+                const QColor border = light ? QColor(180, 180, 180) : QColor(70, 70, 70);
+                const QColor text   = light ? QColor(20, 20, 20)    : QColor(240, 240, 240);
                 QString css = QString(
-                    "QProgressBar { border: 1px solid #444; border-radius: 2px; background: #222; text-align: center; color: white; }"
-                    "QProgressBar::chunk { background-color: %1; }"
-                ).arg(color.name());
+                    "QProgressBar { border: 1px solid %1; border-radius: 2px; background: %2;"
+                    " text-align: center; color: %3; }"
+                    "QProgressBar::chunk { background-color: %4; }"
+                ).arg(border.name(), track.name(), text.name(), color.name());
                 bar->setStyleSheet(css);
                 return bar;
             }

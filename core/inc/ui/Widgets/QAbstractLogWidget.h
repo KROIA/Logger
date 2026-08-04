@@ -56,8 +56,6 @@ namespace Log
                 MatchCount,          // "N matches" label
                 DetailsPane,         // multi-line details view for selected row
                 RowContextMenu,      // right-click menu on message rows
-                HistogramStrip,      // density histogram (timeline only)
-                HistogramZoom,       // drag-on-histogram to zoom (timeline only)
                 __featureCount
             };
             virtual void setFeatureEnabled(Feature f, bool enabled);

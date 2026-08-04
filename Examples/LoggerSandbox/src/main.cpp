@@ -63,6 +63,7 @@ int main(int argc, char* argv[])
     //logger2.setIcon(QIcon(":\\icons\\trace.png"));
 	logger1.setColor(Log::Colors::orange);
 	logger2.setColor(Log::Colors::cyan);
+    logger3.setColor(Log::Colors::brown);
 	Log::UI::QTreeConsoleView* view = new Log::UI::QTreeConsoleView();
 	view->show();
 
@@ -78,9 +79,6 @@ int main(int argc, char* argv[])
 
     Log::UI::QStatsConsoleView* stats = new Log::UI::QStatsConsoleView();
     stats->show();
-
-    Log::UI::QTimelineConsoleView* timeline = new Log::UI::QTimelineConsoleView();
-    timeline->show();
 
     logger3.logError("Hello, this is a long message that should be wrapped in the console view\nmultiple lines shuld also be possible");
 
