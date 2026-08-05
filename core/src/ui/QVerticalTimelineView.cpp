@@ -18,6 +18,7 @@
 #include <cmath>
 #include <climits>
 #include <cstdlib>
+#include <functional>
 #include <limits>
 
 namespace Log
@@ -119,11 +120,27 @@ namespace Log
             update();
         }
 
+        bool QVerticalTimelineCanvas::isHiddenByAncestorCollapse(LoggerID id) const
+        {
+            auto it = m_lanes.find(id);
+            if (it == m_lanes.end()) return false;
+            LoggerID cur = it->second.parentId;
+            // Guard against pathological cycles.
+            for (int i = 0; i < 1024 && cur != 0; ++i)
+            {
+                auto pIt = m_lanes.find(cur);
+                if (pIt == m_lanes.end()) return false;
+                if (pIt->second.collapsed) return true;
+                cur = pIt->second.parentId;
+            }
+            return false;
+        }
+
         void QVerticalTimelineCanvas::updateWidthHint()
         {
             int nVisible = 0;
             for (const auto& kv : m_lanes)
-                if (kv.second.enabled)
+                if (kv.second.enabled && !isHiddenByAncestorCollapse(kv.first))
                     ++nVisible;
             const int desired = timeStripWidth() + std::max(1, nVisible) * minColumnWidth() + 8;
             if (minimumWidth() != desired)
@@ -134,6 +151,7 @@ namespace Log
             Lane& lane = m_lanes[info.id];
             lane.name = info.name;
             lane.color = info.color;
+            lane.parentId = info.parentId;
             lane.enabled = info.enabled;
             updateWidthHint();
             scheduleUpdate();
@@ -228,11 +246,11 @@ namespace Log
             QPainter p(this);
             p.setRenderHint(QPainter::Antialiasing, true);
             m_lastDrawn.clear();
+            m_headerHits.clear();
+            m_groupHits.clear();
 
             const int w = width();
             const int h = height();
-            const int T = contentTop();
-            const int B = bottomMargin();
             const int stripW = timeStripWidth();
 
             // Header — leading time + status
@@ -244,13 +262,67 @@ namespace Log
             p.drawText(4, 14, QString("Leading: %1  %2%3  ·  %4 px/s")
                        .arg(leadStr, dirStr, liveStr).arg(m_pxPerSec, 0, 'f', 1));
 
-            // Build visible-lane list (enabled contexts).
-            std::vector<std::pair<LoggerID, const Lane*>> visible;
+            // Build children map from all known lanes (parents may exist even
+            // when disabled — we still need them for tree structure).
+            std::unordered_map<LoggerID, std::vector<LoggerID>> children;
+            std::vector<LoggerID> roots;
             for (const auto& kv : m_lanes)
-                if (kv.second.enabled)
-                    visible.push_back({ kv.first, &kv.second });
-            std::sort(visible.begin(), visible.end(),
-                [](const auto& a, const auto& b) { return a.second->name < b.second->name; });
+            {
+                const LoggerID pid = kv.second.parentId;
+                if (pid != 0 && m_lanes.find(pid) != m_lanes.end())
+                    children[pid].push_back(kv.first);
+                else
+                    roots.push_back(kv.first);
+            }
+            auto sortByName = [&](std::vector<LoggerID>& v)
+            {
+                std::sort(v.begin(), v.end(), [&](LoggerID a, LoggerID b)
+                {
+                    return m_lanes.at(a).name < m_lanes.at(b).name;
+                });
+            };
+            sortByName(roots);
+            for (auto& kv : children) sortByName(kv.second);
+
+            // DFS: emit visible lanes in tree order and track per-lane depth.
+            // Descendants of a collapsed lane are hidden as their own columns
+            // but mapped to the collapsed ancestor for dot/bubble re-routing.
+            std::vector<std::pair<LoggerID, const Lane*>> visible;
+            std::vector<int> visibleDepth;
+            std::unordered_map<LoggerID, LoggerID> hiddenTo; // descendant -> collapsed ancestor column
+            std::unordered_map<LoggerID, int> visibleIndex;
+            int maxDepth = 0;
+
+            std::function<void(LoggerID, int, LoggerID)> dfs =
+                [&](LoggerID id, int depth, LoggerID collapsedRoot)
+            {
+                auto it = m_lanes.find(id);
+                if (it == m_lanes.end()) return;
+                const Lane& lane = it->second;
+                if (collapsedRoot != 0)
+                {
+                    hiddenTo[id] = collapsedRoot;
+                }
+                else if (lane.enabled)
+                {
+                    visibleIndex[id] = static_cast<int>(visible.size());
+                    visible.push_back({ id, &lane });
+                    visibleDepth.push_back(depth);
+                    if (depth > maxDepth) maxDepth = depth;
+                }
+                const LoggerID nextCollapsed = (collapsedRoot != 0) ? collapsedRoot
+                    : (lane.collapsed ? id : LoggerID(0));
+                auto cIt = children.find(id);
+                if (cIt != children.end())
+                    for (LoggerID c : cIt->second)
+                        dfs(c, depth + 1, nextCollapsed);
+            };
+            for (LoggerID r : roots) dfs(r, 0, 0);
+
+            m_groupRows = maxDepth; // depths 0..maxDepth-1 need one row each
+
+            const int T = contentTop();
+            const int B = bottomMargin();
 
             const int nCols = static_cast<int>(visible.size());
             if (nCols == 0)
@@ -328,6 +400,9 @@ namespace Log
                 const QString ellided = fmHdr.elidedText(name, Qt::ElideRight, colW - 8);
                 p.drawText(cx + 4, topMargin() + 14, ellided);
 
+                m_headerHits.push_back({ QRect(cx, topMargin(), colW, columnHeaderHeight()),
+                                          visible[i].first });
+
                 // Divider between columns
                 if (i > 0)
                 {
@@ -338,6 +413,102 @@ namespace Log
                 // both dark and light backgrounds.
                 p.setPen(palette().color(QPalette::Mid));
                 p.drawLine(axisX, T, axisX, h - B);
+            }
+
+            // Group-header rows: one row per tree depth in use. Shallowest depth
+            // sits at the top (breadcrumb-style). Each bar spans the visible
+            // descendant columns of one ancestor at that depth.
+            if (m_groupRows > 0)
+            {
+                // For each visible column, walk its ancestor chain to build a
+                // per-(depth,ancestor) column-range and note ancestors that are
+                // themselves visible columns.
+                struct GroupSpan
+                {
+                    int minCol = std::numeric_limits<int>::max();
+                    int maxCol = std::numeric_limits<int>::min();
+                    bool ancestorVisible = false;
+                };
+                std::vector<std::unordered_map<LoggerID, GroupSpan>> byDepth(m_groupRows);
+                auto extend = [](GroupSpan& s, int col)
+                {
+                    if (col < s.minCol) s.minCol = col;
+                    if (col > s.maxCol) s.maxCol = col;
+                };
+                for (int i = 0; i < nCols; ++i)
+                {
+                    LoggerID cur = visible[i].first;
+                    int d = visibleDepth[i];
+                    while (d > 0)
+                    {
+                        auto laneIt = m_lanes.find(cur);
+                        if (laneIt == m_lanes.end()) break;
+                        LoggerID pid = laneIt->second.parentId;
+                        if (pid == 0 || m_lanes.find(pid) == m_lanes.end()) break;
+                        --d;
+                        extend(byDepth[d][pid], i);
+                        cur = pid;
+                    }
+                }
+                // If the ancestor is itself a visible column, include its own column.
+                for (int d = 0; d < m_groupRows; ++d)
+                {
+                    for (auto& kv : byDepth[d])
+                    {
+                        auto vIt = visibleIndex.find(kv.first);
+                        if (vIt != visibleIndex.end())
+                        {
+                            extend(kv.second, vIt->second);
+                            kv.second.ancestorVisible = true;
+                        }
+                    }
+                }
+
+                const int colsAreaX0 = stripW;
+                const QFontMetrics fmG(p.font());
+                for (int d = 0; d < m_groupRows; ++d)
+                {
+                    const int y = baseTopMargin() + d * groupRowHeight();
+                    for (const auto& kv : byDepth[d])
+                    {
+                        const LoggerID aid = kv.first;
+                        const GroupSpan& s = kv.second;
+                        // Skip degenerate single-column groups where the ancestor
+                        // isn't itself visible — avoids noise for single-child chains.
+                        if (s.minCol == s.maxCol && !s.ancestorVisible) continue;
+
+                        auto aIt = m_lanes.find(aid);
+                        if (aIt == m_lanes.end()) continue;
+                        const Lane& aLane = aIt->second;
+                        const int x0 = colsAreaX0 + s.minCol * colW;
+                        const int x1 = colsAreaX0 + (s.maxCol + 1) * colW;
+                        const QRect bar(x0, y, x1 - x0, groupRowHeight() - 1);
+                        QColor tint = aLane.color.toQColor();
+                        tint.setAlpha(90);
+                        p.fillRect(bar, tint);
+                        p.setPen(palette().color(QPalette::Mid));
+                        p.drawRect(bar);
+
+                        // [-]/[+] glyph on the left.
+                        const QRect glyph(bar.left() + 2, bar.top() + 1,
+                                          groupRowHeight() - 2, groupRowHeight() - 2);
+                        p.setPen(palette().color(QPalette::WindowText));
+                        p.drawText(glyph, Qt::AlignCenter, aLane.collapsed ? "+" : "-");
+                        m_groupHits.push_back({ glyph, aid });
+
+                        // Ancestor name, elided.
+                        p.setPen(aLane.color.toQColor());
+                        const int textX = glyph.right() + 4;
+                        const int textW = bar.right() - textX - 2;
+                        if (textW > 8)
+                        {
+                            const QString nm = QString::fromStdString(aLane.name);
+                            p.drawText(QRect(textX, bar.top(), textW, bar.height()),
+                                       Qt::AlignVCenter | Qt::AlignLeft,
+                                       fmG.elidedText(nm, Qt::ElideRight, textW));
+                        }
+                    }
+                }
             }
 
             const QFontMetrics fm(p.font());
@@ -358,13 +529,31 @@ namespace Log
             {
                 if (!matchesFilter(e))
                     return;
+                bool fromDescendant = false;
                 auto colIt = colIndexById.find(e.id);
                 if (colIt == colIndexById.end())
-                    return;
+                {
+                    // Entry's own lane isn't a visible column — see if it was
+                    // routed to a collapsed ancestor.
+                    auto hIt = hiddenTo.find(e.id);
+                    if (hIt == hiddenTo.end()) return;
+                    colIt = colIndexById.find(hIt->second);
+                    if (colIt == colIndexById.end()) return;
+                    fromDescendant = true;
+                }
                 const int col = colIt->second;
                 const int cx = colsAreaX + col * colW;
                 const int axisX = cx + 14;
-                const QColor laneColor = visible[col].second->color.toQColor();
+                // Outer ring keeps the true source-context color (already the
+                // design); when routed from a descendant we still use the
+                // originating lane's color for the ring so the source is legible.
+                QColor laneColor = visible[col].second->color.toQColor();
+                if (fromDescendant)
+                {
+                    auto srcIt = m_lanes.find(e.id);
+                    if (srcIt != m_lanes.end())
+                        laneColor = srcIt->second.color.toQColor();
+                }
                 const int naturalY = yFor(e.ms);
 
                 // Skip entries above the visible viewport so their off-screen
@@ -396,6 +585,11 @@ namespace Log
                     p.setBrush(Message::getLevelColor(e.level).toQColor());
                     p.setPen(QPen(laneColor, 2));
                     p.drawEllipse(QPoint(axisX, naturalY), r, r);
+                    if (fromDescendant)
+                    {
+                        p.setPen(laneColor);
+                        p.drawText(QPoint(axisX + r + 2, naturalY + 4), QStringLiteral("›"));
+                    }
                 }
 
                 if (!bubblesOn)
@@ -553,6 +747,39 @@ namespace Log
         {
             if (e->button() == Qt::LeftButton)
             {
+                // Group-bar [+]/[-] glyph or per-context header toggles collapse.
+                for (const auto& g : m_groupHits)
+                {
+                    if (g.glyphRect.contains(e->pos()))
+                    {
+                        auto it = m_lanes.find(g.id);
+                        if (it != m_lanes.end())
+                        {
+                            it->second.collapsed = !it->second.collapsed;
+                            updateWidthHint();
+                            scheduleUpdate();
+                            update();
+                        }
+                        e->accept();
+                        return;
+                    }
+                }
+                for (const auto& hh : m_headerHits)
+                {
+                    if (hh.rect.contains(e->pos()))
+                    {
+                        auto it = m_lanes.find(hh.id);
+                        if (it != m_lanes.end())
+                        {
+                            it->second.collapsed = !it->second.collapsed;
+                            updateWidthHint();
+                            scheduleUpdate();
+                            update();
+                        }
+                        e->accept();
+                        return;
+                    }
+                }
                 m_dragging = true;
                 m_dragStartY = e->pos().y();
                 if (m_followLive)

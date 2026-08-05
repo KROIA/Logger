@@ -41,7 +41,9 @@ namespace Log
             {
                 std::string name;
                 Color color;
+                LoggerID parentId = 0;
                 bool enabled = true;
+                bool collapsed = false;
             };
 
             QVerticalTimelineCanvas(QWidget* parent = nullptr);
@@ -78,7 +80,9 @@ namespace Log
 
         private:
             int timeStripWidth() const { return 62; }
-            int topMargin() const { return 22; }
+            int baseTopMargin() const { return 22; }
+            int groupRowHeight() const { return 16; }
+            int topMargin() const { return baseTopMargin() + m_groupRows * groupRowHeight(); }
             int columnHeaderHeight() const { return 20; }
             int contentTop() const { return topMargin() + columnHeaderHeight(); }
             int bottomMargin() const { return 18; }
@@ -89,6 +93,7 @@ namespace Log
             void maybeReenableFollowLive();
             bool matchesFilter(const Entry& e) const;
             void updateWidthHint();
+            bool isHiddenByAncestorCollapse(LoggerID id) const;
 
             struct DrawnBubble
             {
@@ -101,6 +106,12 @@ namespace Log
                 QString text;
             };
             mutable std::vector<DrawnBubble> m_lastDrawn;
+
+            struct HeaderHit { QRect rect; LoggerID id; };
+            struct GroupHit  { QRect glyphRect; LoggerID id; };
+            std::vector<HeaderHit> m_headerHits;
+            std::vector<GroupHit>  m_groupHits;
+            int m_groupRows = 0;
 
             std::deque<Entry> m_entries;
             std::unordered_map<LoggerID, Lane> m_lanes;
