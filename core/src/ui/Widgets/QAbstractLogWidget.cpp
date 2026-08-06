@@ -361,6 +361,12 @@ namespace Log
 
 		void QAbstractLogWidget::onNewLogger(LogObject::Info loggerInfo)
 		{
+			// A logger can be delivered twice for pre-existing loggers: once by the
+			// view's constructor replay (postConstructorInit) and once by the
+			// SignalReceiver replay. Guard against duplicate rows/checkboxes.
+			if (m_contextData.find(loggerInfo.id) != m_contextData.end())
+				return;
+
 			ContextData data;
 			data.checkBox = new QCheckBox(this);
 			QPalette p = data.checkBox->palette();
