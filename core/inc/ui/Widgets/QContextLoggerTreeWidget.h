@@ -67,6 +67,17 @@ namespace Log
 
 			void getSaveVisibleMessages(std::unordered_map<LoggerID, std::vector<Message>>& list) const;
 
+			// True while the view is anchored to the newest message (auto-scroll
+			// follows incoming logs). Cleared when the user scrolls up, re-set
+			// when the user scrolls back to the bottom.
+			bool isStickToBottom() const { return m_stickToBottom; }
+			// True while an in-cell text-selection editor is open. Following
+			// pauses for its lifetime so the selection isn't torn away.
+			bool hasActiveTextSelection() const { return m_editorItem != nullptr; }
+			// Close the in-cell editor and clear the current item (bound to the
+			// Escape key). Releases the follow-pause the selection caused.
+			void clearTextSelection();
+
 
 		public slots:
 			void setContextVisibility(LoggerID id, bool isVisible);
@@ -75,10 +86,14 @@ namespace Log
 			void setLevelVisibility(Level level, bool isVisible);
 			bool getLevelVisibility(Level level) const;
 
+		protected:
+			bool eventFilter(QObject* obj, QEvent* ev) override;
+
 		private slots:
-			void onUpdateTimer();		
+			void onUpdateTimer();
 
 		private:
+			void scrollToBottomGuarded();
 			//void addContextRecursive(Logger::ContextLogger& newContext);
 			void updateMessageCount(unsigned int& countOut);
 			void updateDateTimeFilter();
@@ -184,6 +199,16 @@ namespace Log
 		private:
 			bool m_contextMenuEnabled = true;
 			std::vector<QTreeWidgetItem*> collectVisibleMessageItems() const;
+
+			// In-cell text-selection editor bookkeeping (opened on click only).
+			QTreeWidgetItem* m_editorItem = nullptr;
+			int m_editorColumn = -1;
+			// Stick-to-bottom mechanic — same design as QConsoleWidget: the flag
+			// is driven only by genuine user scroll actions; programmatic scrolls
+			// are guarded so they can't feed back into it.
+			bool m_stickToBottom = true;
+			bool m_programmaticScroll = false;
+			bool m_userScrollAction = false;
 
 			QTimer m_updateTimer;
 			DateTime::Format m_timeFormat;

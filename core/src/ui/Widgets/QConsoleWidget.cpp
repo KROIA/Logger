@@ -15,6 +15,8 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QJsonDocument>
+#include <QKeyEvent>
+#include <functional>
 
 
 namespace {
@@ -22,12 +24,13 @@ namespace {
     // A double-click anywhere (on the view OR on an open editor) copies the
     // whole message text of the clicked row to the clipboard. The delegate
     // installs an event filter on every editor it creates so double-click
-    // works even after an editor has taken focus.
+    // works even after an editor has taken focus. Escape (pressed while the
+    // editor has focus) invokes the owner's deselect handler.
     class ReadOnlyLineEditDelegate : public QStyledItemDelegate
     {
     public:
-        ReadOnlyLineEditDelegate(int messageColumn, QObject* parent)
-            : QStyledItemDelegate(parent), m_messageColumn(messageColumn) {}
+        ReadOnlyLineEditDelegate(int messageColumn, std::function<void()> onEscape, QObject* parent)
+            : QStyledItemDelegate(parent), m_messageColumn(messageColumn), m_onEscape(std::move(onEscape)) {}
 
         QWidget* createEditor(QWidget* parent, const QStyleOptionViewItem& option, const QModelIndex& index) const override
         {
@@ -106,6 +109,18 @@ namespace {
 
         bool eventFilter(QObject* obj, QEvent* ev) override
         {
+            if (ev->type() == QEvent::KeyPress)
+            {
+                QKeyEvent* ke = static_cast<QKeyEvent*>(ev);
+                if (ke->key() == Qt::Key_Escape && m_onEscape)
+                {
+                    // Consume before QStyledItemDelegate's default Escape
+                    // handling, which would close the editor widget but leave
+                    // the owner's selection bookkeeping (and follow-pause) set.
+                    m_onEscape();
+                    return true;
+                }
+            }
             if (ev->type() == QEvent::MouseButtonDblClick)
             {
                 QLineEdit* editor = qobject_cast<QLineEdit*>(obj);
@@ -127,6 +142,7 @@ namespace {
         }
     private:
         int m_messageColumn;
+        std::function<void()> m_onEscape;
     };
 }
 
@@ -163,7 +179,36 @@ namespace Log
             vHeader->setDefaultSectionSize(10);
             vHeader->setMinimumSectionSize(15);
 
-            connect(verticalScrollBar(), &QScrollBar::valueChanged, this, &QConsoleWidget::onVertialSliderMoved);
+            // Simple sticky-to-bottom: flip TRUE when the scrollbar reaches
+            // the max, FALSE when the user drags it above the max.
+            // Neither Qt signal alone can drive the flag safely:
+            //  - actionTriggered fires only for user actions, but BEFORE the
+            //    value is applied, so sampling it later races against message
+            //    batches growing the range (re-engaging stickiness at the
+            //    bottom becomes impossible under load).
+            //  - valueChanged samples value+max at the same instant, but also
+            //    fires for Qt-internal scrolls (layout restore after a tab
+            //    switch, geometry updates), which must never flip the flag.
+            // So: actionTriggered arms m_userScrollAction, and the directly
+            // following valueChanged (same call stack) evaluates the flag.
+            // Value changes that were not armed by a user action are ignored.
+            connect(verticalScrollBar(), &QAbstractSlider::actionTriggered,
+                    this, [this](int) { m_userScrollAction = true; });
+            connect(verticalScrollBar(), &QAbstractSlider::valueChanged,
+                    this, &QConsoleWidget::onScrollValueChanged);
+            // The scrollbar range updates lazily: while the view is hidden or
+            // mid-relayout (e.g. returning from another tab), maximum() is
+            // stale and scrollToBottom() lands short. rangeChanged fires at
+            // the exact moment Qt finalizes the real range, so re-clamp there.
+            connect(verticalScrollBar(), &QScrollBar::rangeChanged,
+                    this, [this](int, int max) {
+                        if (m_stickToBottom && !m_persistentEditorIndex.isValid())
+                        {
+                            m_programmaticScroll = true;
+                            verticalScrollBar()->setValue(max);
+                            m_programmaticScroll = false;
+                        }
+                    });
             m_autoScrollTimer.setInterval(100);
             connect(&m_autoScrollTimer, &QTimer::timeout, this, &QConsoleWidget::onAutoScrollTimerTimeout);
             m_autoScrollTimer.start();
@@ -174,10 +219,34 @@ namespace Log
             // read-only line editor over it, so users can drag-select individual
             // text. The editor persists across model updates (new messages don't
             // clear the user's selection).
-            setItemDelegate(new ReadOnlyLineEditDelegate(QLogMessageItemModel::Column::MessageColumn, this));
-            setEditTriggers(QAbstractItemView::NoEditTriggers); // we open editors manually in currentChanged
+            setItemDelegate(new ReadOnlyLineEditDelegate(
+                QLogMessageItemModel::Column::MessageColumn,
+                [this]() { clearTextSelection(); },
+                this));
+            setEditTriggers(QAbstractItemView::NoEditTriggers); // we open editors manually on cell click
             setSelectionMode(QAbstractItemView::NoSelection);   // no row highlight — user selects text, not rows
             setTextElideMode(Qt::ElideNone);
+
+            // Open the persistent editor only on a genuine cell CLICK.
+            // currentChanged is NOT a safe trigger: Qt also moves the current
+            // index on focus restore (e.g. returning from another tab), and an
+            // editor opened by that is invisible to the user (it looks exactly
+            // like the cell) while silently blocking stick-to-bottom.
+            connect(this, &QAbstractItemView::pressed,
+                    this, [this](const QModelIndex& idx) {
+                        if (!idx.isValid())
+                            return;
+                        if (!(QGuiApplication::mouseButtons() & Qt::LeftButton))
+                            return;
+                        if (m_persistentEditorIndex.isValid())
+                        {
+                            if (QModelIndex(m_persistentEditorIndex) == idx)
+                                return; // already open on this cell
+                            closePersistentEditor(QModelIndex(m_persistentEditorIndex));
+                        }
+                        openPersistentEditor(idx);
+                        m_persistentEditorIndex = QPersistentModelIndex(idx);
+                    });
         }
         QConsoleWidget::~QConsoleWidget()
         {
@@ -280,15 +349,39 @@ namespace Log
             // scrolling would tear it out from under them.
             if (m_persistentEditorIndex.isValid())
                 return;
-            scrollToBottom();
+            // Only reconcile to bottom when the user hasn't scrolled up. Without
+            // this guard the timer would fight the user's scroll every 100ms.
+            if (!m_stickToBottom)
+                return;
+            scrollToBottomGuarded();
         }
 
-        void QConsoleWidget::onVertialSliderMoved(int value)
+        void QConsoleWidget::onScrollValueChanged(int value)
         {
-            if (verticalScrollBar()->maximum() - value <= 1)
-                m_autoScrollTimer.start();
-            else
-                m_autoScrollTimer.stop();
+            // Consume the "armed by a user scroll action" marker regardless of
+            // the early-outs below so a stale marker can't linger.
+            const bool userAction = m_userScrollAction;
+            m_userScrollAction = false;
+            if (m_programmaticScroll)
+                return;
+            // Only value changes directly caused by a user scroll action may
+            // drive the flag; Qt-internal scrolls (layout restore after a tab
+            // switch, geometry updates) are ignored.
+            if (!userAction)
+                return;
+            // Ignore anything sampled while hidden or mid tab-switch: the
+            // scrollbar geometry is unreliable there and must never unstick us.
+            if (!isVisible())
+                return;
+            const int max = verticalScrollBar()->maximum();
+            m_stickToBottom = (max - value <= 1);
+        }
+
+        void QConsoleWidget::scrollToBottomGuarded()
+        {
+            m_programmaticScroll = true;
+            scrollToBottom();
+            m_programmaticScroll = false;
         }
 
         void QConsoleWidget::resizeEvent(QResizeEvent* event)
@@ -296,28 +389,72 @@ namespace Log
             QTableView::resizeEvent(event);
             // Resize the row height to fit the text
             this->resizeRowsToContents();
+            if (m_stickToBottom)
+                scrollToBottomGuarded();
+        }
+
+        void QConsoleWidget::showEvent(QShowEvent* event)
+        {
+            QTableView::showEvent(event);
+            // Coming back from another tab: Qt has just laid the widget out
+            // again. Any scrollToBottom() we did while hidden won't have taken
+            // effect against the current geometry. Re-anchor once the pending
+            // layout has settled.
+            if (m_stickToBottom)
+            {
+                QMetaObject::invokeMethod(this,
+                    [this]() { if (m_stickToBottom) scrollToBottomGuarded(); },
+                    Qt::QueuedConnection);
+            }
         }
 
         void QConsoleWidget::currentChanged(const QModelIndex& current, const QModelIndex& previous)
         {
             QTableView::currentChanged(current, previous);
-            if (m_persistentEditorIndex.isValid())
+            // Close the editor of the cell we're leaving. The new editor (if
+            // any) is opened by the click handler, not here — currentChanged
+            // also fires for focus-driven index changes that must not spawn one.
+            if (m_persistentEditorIndex.isValid() && QModelIndex(m_persistentEditorIndex) != current)
             {
                 closePersistentEditor(QModelIndex(m_persistentEditorIndex));
+                m_persistentEditorIndex = QPersistentModelIndex();
             }
             if (current.isValid())
             {
-                openPersistentEditor(current);
-                m_persistentEditorIndex = QPersistentModelIndex(current);
                 const QModelIndex src = m_proxyModel->mapToSource(current);
                 if (src.row() >= 0 && src.row() < m_model->rowCount())
                     emit selectionChangedMessage(m_model->getElement(src.row()), true);
             }
             else
             {
-                m_persistentEditorIndex = QPersistentModelIndex();
                 emit selectionChangedMessage(Message(), false);
             }
+        }
+
+        void QConsoleWidget::clearTextSelection()
+        {
+            if (m_persistentEditorIndex.isValid())
+            {
+                closePersistentEditor(QModelIndex(m_persistentEditorIndex));
+                m_persistentEditorIndex = QPersistentModelIndex();
+            }
+            // Clearing the current index also clears the details pane via
+            // currentChanged. With no editor left, auto-follow resumes on the
+            // next reconciliation if the view is still stick-to-bottom.
+            setCurrentIndex(QModelIndex());
+            setFocus();
+        }
+
+        void QConsoleWidget::keyPressEvent(QKeyEvent* event)
+        {
+            if (event->key() == Qt::Key_Escape &&
+                (m_persistentEditorIndex.isValid() || currentIndex().isValid()))
+            {
+                clearTextSelection();
+                event->accept();
+                return;
+            }
+            QTableView::keyPressEvent(event);
         }
 
         void QConsoleWidget::contextMenuEvent(QContextMenuEvent* event)
@@ -419,7 +556,15 @@ namespace Log
                 cpy = std::move(m_messageQueue);
                 m_messageQueue.clear();
             }
+            // Suppress sticky updates for the entire insert-and-scroll sequence.
+            // Growing the row range can trigger valueChanged (Qt clamping /
+            // geometry updates) which would otherwise be mistaken for a user
+            // scroll and flip the flag off. Scroll first, THEN release the guard.
+            m_programmaticScroll = true;
             m_model->addLogs(std::move(cpy));
+            if (m_stickToBottom && !m_persistentEditorIndex.isValid())
+                scrollToBottom();
+            m_programmaticScroll = false;
             emit filterChanged();
 
             m_flushScheduled.store(false);

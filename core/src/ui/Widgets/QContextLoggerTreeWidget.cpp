@@ -9,15 +9,20 @@
 #include <QStyledItemDelegate>
 #include <QMenu>
 #include <QAction>
+#include <QScrollBar>
+#include <QKeyEvent>
+#include <functional>
 
 namespace {
     // Read-only in-place editor: click to enter text-selection mode; a
-    // double-click (view or editor) copies the row's message text.
+    // double-click (view or editor) copies the row's message text. Escape
+    // (pressed while the editor has focus) invokes the owner's deselect
+    // handler.
     class ReadOnlyLineEditDelegate : public QStyledItemDelegate
     {
     public:
-        ReadOnlyLineEditDelegate(int messageColumn, QObject* parent)
-            : QStyledItemDelegate(parent), m_messageColumn(messageColumn) {}
+        ReadOnlyLineEditDelegate(int messageColumn, std::function<void()> onEscape, QObject* parent)
+            : QStyledItemDelegate(parent), m_messageColumn(messageColumn), m_onEscape(std::move(onEscape)) {}
 
         QWidget* createEditor(QWidget* parent, const QStyleOptionViewItem& option, const QModelIndex& index) const override
         {
@@ -94,6 +99,18 @@ namespace {
 
         bool eventFilter(QObject* obj, QEvent* ev) override
         {
+            if (ev->type() == QEvent::KeyPress)
+            {
+                QKeyEvent* ke = static_cast<QKeyEvent*>(ev);
+                if (ke->key() == Qt::Key_Escape && m_onEscape)
+                {
+                    // Consume before QStyledItemDelegate's default Escape
+                    // handling, which would close the editor widget but leave
+                    // the owner's selection bookkeeping (and follow-pause) set.
+                    m_onEscape();
+                    return true;
+                }
+            }
             if (ev->type() == QEvent::MouseButtonDblClick)
             {
                 QLineEdit* editor = qobject_cast<QLineEdit*>(obj);
@@ -114,6 +131,7 @@ namespace {
         }
     private:
         int m_messageColumn;
+        std::function<void()> m_onEscape;
     };
 }
 
@@ -151,22 +169,48 @@ namespace Log
 			// on whichever cell the user clicks, so drag-select works and survives
 			// new messages arriving. Row selection is disabled — the user selects
 			// text, not rows.
-			m_treeWidget->setItemDelegate(new ReadOnlyLineEditDelegate((int)HeaderPos::message, m_treeWidget));
+			m_treeWidget->setItemDelegate(new ReadOnlyLineEditDelegate(
+				(int)HeaderPos::message,
+				[this]() { clearTextSelection(); },
+				m_treeWidget));
 			m_treeWidget->setEditTriggers(QAbstractItemView::NoEditTriggers);
 			m_treeWidget->setSelectionMode(QAbstractItemView::NoSelection);
+
+			// Open the persistent editor only on a genuine cell CLICK.
+			// currentItemChanged is NOT a safe trigger: Qt also moves the
+			// current item on focus restore (e.g. returning from another tab),
+			// and an editor opened by that is invisible to the user while
+			// silently blocking stick-to-bottom.
+			connect(m_treeWidget, &QTreeWidget::itemPressed, this,
+				[this](QTreeWidgetItem* item, int column)
+				{
+					if (!item)
+						return;
+					if (!(QGuiApplication::mouseButtons() & Qt::LeftButton))
+						return;
+					if (m_editorItem == item && m_editorColumn == column)
+						return; // already open on this cell
+					if (m_editorItem)
+						m_treeWidget->closePersistentEditor(m_editorItem, m_editorColumn);
+					m_treeWidget->openPersistentEditor(item, column);
+					m_editorItem = item;
+					m_editorColumn = column;
+				});
 
 			connect(m_treeWidget, &QTreeWidget::currentItemChanged, this,
 				[this](QTreeWidgetItem* current, QTreeWidgetItem* previous)
 				{
-					if (previous)
+					Q_UNUSED(previous);
+					// Close the editor of the item we're leaving. The new
+					// editor (if any) is opened by the click handler, not here.
+					if (m_editorItem && m_editorItem != current)
 					{
-						for (int col = 0; col < (int)HeaderPos::__count; ++col)
-							m_treeWidget->closePersistentEditor(previous, col);
+						m_treeWidget->closePersistentEditor(m_editorItem, m_editorColumn);
+						m_editorItem = nullptr;
+						m_editorColumn = -1;
 					}
 					if (current)
 					{
-						const int col = m_treeWidget->currentColumn();
-						m_treeWidget->openPersistentEditor(current, col >= 0 ? col : (int)HeaderPos::message);
 						// Look up MessageData for details pane.
 						for (const auto& kv : m_msgItems)
 						{
@@ -186,6 +230,45 @@ namespace Log
 						emit selectionChangedMessage(Log::Message(), false);
 					}
 				});
+
+			// Stick-to-bottom mechanic (same design as QConsoleWidget):
+			//  - actionTriggered fires only for user scroll input and arms the
+			//    marker; the directly following valueChanged (same call stack)
+			//    evaluates the flag with value and maximum sampled together.
+			//  - Qt-internal value changes (layout, tab switches) are unarmed
+			//    and therefore ignored.
+			//  - rangeChanged re-clamps to the new maximum while sticky, which
+			//    also covers geometry settling after a tab switch.
+			connect(m_treeWidget->verticalScrollBar(), &QAbstractSlider::actionTriggered,
+				this, [this](int) { m_userScrollAction = true; });
+			connect(m_treeWidget->verticalScrollBar(), &QAbstractSlider::valueChanged,
+				this, [this](int value)
+				{
+					const bool userAction = m_userScrollAction;
+					m_userScrollAction = false;
+					if (m_programmaticScroll)
+						return;
+					if (!userAction)
+						return;
+					if (!m_treeWidget->isVisible())
+						return;
+					const int max = m_treeWidget->verticalScrollBar()->maximum();
+					m_stickToBottom = (max - value <= 1);
+				});
+			connect(m_treeWidget->verticalScrollBar(), &QScrollBar::rangeChanged,
+				this, [this](int, int max)
+				{
+					if (m_stickToBottom && !m_editorItem)
+					{
+						m_programmaticScroll = true;
+						m_treeWidget->verticalScrollBar()->setValue(max);
+						m_programmaticScroll = false;
+					}
+				});
+
+			// Escape clears the in-cell selection (when the tree itself has
+			// focus; the delegate handles Escape while an editor has focus).
+			m_treeWidget->installEventFilter(this);
 			// Double-click copies the row's message text to the clipboard.
 			connect(m_treeWidget, &QTreeWidget::itemDoubleClicked, this,
 				[](QTreeWidgetItem* item, int /*column*/)
@@ -294,9 +377,54 @@ namespace Log
 			for (const Message& message : messages)
 				onNewMessage(message);
 			m_treeWidget->setUpdatesEnabled(true);
+			// Keep the view anchored to the newest message unless the user
+			// scrolled up or is holding an in-cell text selection.
+			if (m_stickToBottom && !m_editorItem)
+				scrollToBottomGuarded();
 		}
+		void QContextLoggerTreeWidget::clearTextSelection()
+		{
+			if (m_editorItem)
+			{
+				m_treeWidget->closePersistentEditor(m_editorItem, m_editorColumn);
+				m_editorItem = nullptr;
+				m_editorColumn = -1;
+			}
+			// Clearing the current item also clears the details pane via
+			// currentItemChanged. With no editor left, auto-follow resumes on
+			// the next reconciliation if the view is still stick-to-bottom.
+			m_treeWidget->setCurrentItem(nullptr);
+			m_treeWidget->setFocus();
+		}
+
+		bool QContextLoggerTreeWidget::eventFilter(QObject* obj, QEvent* ev)
+		{
+			if (obj == m_treeWidget && ev->type() == QEvent::KeyPress)
+			{
+				QKeyEvent* ke = static_cast<QKeyEvent*>(ev);
+				if (ke->key() == Qt::Key_Escape &&
+					(m_editorItem || m_treeWidget->currentItem()))
+				{
+					clearTextSelection();
+					return true;
+				}
+			}
+			return QWidget::eventFilter(obj, ev);
+		}
+
+		void QContextLoggerTreeWidget::scrollToBottomGuarded()
+		{
+			m_programmaticScroll = true;
+			m_treeWidget->scrollToBottom();
+			m_programmaticScroll = false;
+		}
+
 		void QContextLoggerTreeWidget::clearMessages()
 		{
+			// The editor's item is about to be deleted — drop the bookkeeping
+			// so it can't dangle.
+			m_editorItem = nullptr;
+			m_editorColumn = -1;
 			m_treeWidget->setUpdatesEnabled(false);
 			for (auto& it : m_msgItems)
 			{
@@ -446,6 +574,11 @@ namespace Log
 		}
 		void QContextLoggerTreeWidget::onUpdateTimer()
 		{
+			// Periodic reconciliation to the bottom — catches range changes the
+			// event-driven paths miss (row expansion, delayed layout).
+			if (m_stickToBottom && !m_editorItem && m_treeWidget->isVisible())
+				scrollToBottomGuarded();
+
 			if (!m_messageCountDirty)
 				return;
 

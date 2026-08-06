@@ -332,9 +332,12 @@ namespace Log
                 return;
             }
 
-            // Time window
+            // Time window. Grid and background span the FULL widget height:
+            // the leading edge stays at h - B, but dots/bubbles are allowed to
+            // reach below it, so the painted background must reach the bottom
+            // edge too.
             const qint64 topMs = msAt(T);
-            const qint64 botMs = msAt(h - B);
+            const qint64 botMs = msAt(h);
             const qint64 viewStart = std::min(topMs, botMs);
             const qint64 viewEnd   = std::max(topMs, botMs);
 
@@ -360,14 +363,18 @@ namespace Log
                 for (qint64 t = firstTick; t <= viewEnd + stepMsInt; t += stepMsInt)
                 {
                     const int y = yFor(t);
-                    if (y < T - 10 || y > h - B + 10) continue;
+                    if (y < T - 10 || y > h + 10) continue;
                     p.setPen(palette().color(QPalette::Mid));
                     p.drawLine(stripW, y, w - 4, y);
-                    p.setPen(palette().color(QPalette::WindowText));
-                    const QDateTime dt = QDateTime::fromMSecsSinceEpoch(t);
-                    p.drawText(2, y + 4, subSec
-                        ? dt.toString("mm:ss.zzz")
-                        : dt.toString("hh:mm:ss"));
+                    // Skip the label when it would be clipped by the bottom edge.
+                    if (y <= h - 4)
+                    {
+                        p.setPen(palette().color(QPalette::WindowText));
+                        const QDateTime dt = QDateTime::fromMSecsSinceEpoch(t);
+                        p.drawText(2, y + 4, subSec
+                            ? dt.toString("mm:ss.zzz")
+                            : dt.toString("hh:mm:ss"));
+                    }
                 }
                 p.setFont(QApplication::font());
             }
@@ -391,7 +398,7 @@ namespace Log
                 // header stripe uses a slightly stronger tint.
                 QColor bodyTint = c;
                 bodyTint.setAlpha(22);
-                p.fillRect(QRect(cx, T, colW, (h - B) - T), bodyTint);
+                p.fillRect(QRect(cx, T, colW, h - T), bodyTint);
                 QColor headerTint = c;
                 headerTint.setAlpha(70);
                 p.fillRect(QRect(cx, topMargin(), colW, columnHeaderHeight()), headerTint);
@@ -407,12 +414,12 @@ namespace Log
                 if (i > 0)
                 {
                     p.setPen(palette().color(QPalette::Mid));
-                    p.drawLine(cx, T, cx, h - B);
+                    p.drawLine(cx, T, cx, h);
                 }
                 // Axis line — dim, using the palette's mid tone so it reads on
                 // both dark and light backgrounds.
                 p.setPen(palette().color(QPalette::Mid));
-                p.drawLine(axisX, T, axisX, h - B);
+                p.drawLine(axisX, T, axisX, h);
             }
 
             // Group-header rows: one row per tree depth in use. Shallowest depth
@@ -861,9 +868,12 @@ namespace Log
                 : contentTop();
             const int yOfNow = yFor(nowMs());
             const int distFromLeadingPx = (m_direction == Direction::Down)
-                ? (yOfNow - leadingY)   // >= 0 means "now" is at or below the bottom
-                : (leadingY - yOfNow);
-            if (distFromLeadingPx >= -6)
+                ? (yOfNow - leadingY)   // > 0 means "now" is past the leading edge (time
+                : (leadingY - yOfNow);  // advanced while paused — user has NOT caught up).
+            // Only snap to live when the user has actually scrolled to the leading edge:
+            // m_leadingMs must be at or ahead of nowMs (dist <= small tolerance). A positive
+            // distance means the paused view is trailing real-time and should stay paused.
+            if (distFromLeadingPx <= 6)
             {
                 m_followLive = true;
                 m_leadingMs = nowMs();
