@@ -157,7 +157,11 @@ namespace Log
             }
             m_tableWidget->clear();
             m_treeItem->clearMessages();
-            if (m_verticalTimelineView) m_verticalTimelineView->clear();
+            if (m_verticalTimelineView)
+            {
+                m_verticalTimelineView->clear();
+                m_verticalTimelineView->setMode(QVerticalTimelineView::Mode::Present);
+            }
             if (m_statsView) m_statsView->clear();
             QAbstractLogWidget::clear();
         }
@@ -219,6 +223,13 @@ namespace Log
             QAbstractLogWidget::onNewLogger(loggerInfo);
             m_tableWidget->onNewLogger(loggerInfo);
             m_treeItem->addContext(loggerInfo);
+            // Live data reaches timeline/stats directly from LogManager; during
+            // a file load it doesn't, so forward loaded loggers to them here.
+            if (m_loading)
+            {
+                if (m_verticalTimelineView) m_verticalTimelineView->canvas()->addLogger(loggerInfo);
+                if (m_statsView) m_statsView->ingestLoadedLogger(loggerInfo);
+            }
         }
         void QCombinedConsoleView::onLoggerInfoChanged(LogObject::Info info)
         {
@@ -239,12 +250,31 @@ namespace Log
             }
             if (!m_flushScheduled.exchange(true))
                 emit messageQueued(nullptr);
+            // Live data reaches timeline/stats directly from LogManager; during
+            // a file load it doesn't, so forward loaded messages to them here.
+            if (m_loading)
+            {
+                if (m_verticalTimelineView) m_verticalTimelineView->canvas()->addMessage(message.getLoggerID(), message);
+                if (m_statsView) m_statsView->ingestLoadedMessage(message);
+            }
         }
         void QCombinedConsoleView::onChangeParent(LoggerID childID, LoggerID newParentID)
         {
             LOGGER_RECEIVER_PROFILING_FUNCTION(LOGGER_COLOR_STAGE_1);
             QAbstractLogWidget::onChangeParent(childID, newParentID);
             m_treeItem->setParent(childID, newParentID);
+        }
+
+        void QCombinedConsoleView::onMessagesLoadStarted()
+        {
+            m_loading = true;
+        }
+        void QCombinedConsoleView::onMessagesLoaded()
+        {
+            m_loading = false;
+            // Anchor the timeline to the loaded (past) data span.
+            if (m_verticalTimelineView)
+                m_verticalTimelineView->setMode(QVerticalTimelineView::Mode::Past);
         }
 
         void QCombinedConsoleView::onMessageQueued(QPrivateSignal*)

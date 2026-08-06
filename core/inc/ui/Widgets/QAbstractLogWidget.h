@@ -15,6 +15,8 @@
 #include <QLabel>
 #include <QPushButton>
 #include <QLineEdit>
+#include <QList>
+#include <QSize>
 #include <unordered_map>
 #include <QMutex>
 
@@ -22,6 +24,8 @@ QT_BEGIN_NAMESPACE
 namespace Ui { class QAbstractLogWidget; }
 class QSplitter;
 class QTextBrowser;
+class QToolButton;
+class QFrame;
 QT_END_NAMESPACE
 
 namespace Log 
@@ -76,9 +80,39 @@ namespace Log
 			void disableSubWidget(SubWidget widget);
 			void enableSubWidget(SubWidget widget);
 
+			// Collapsible left settings column. The whole settings_frame collapses
+			// horizontally "to the left" into a thin persistent strip (~24px) that
+			// always holds a toggle button, so the console (content_frame) reclaims
+			// the freed width and the user can always re-expand. Only
+			// SubWidget::settingsFrame is collapsible; the four inner filter panels
+			// (logLevel/context/dateTime/edit) and contentFrame are NOT collapsible
+			// anymore. The column starts EXPANDED; call
+			// setSubWidgetCollapsed(settingsFrame, true) to start collapsed.
+			//
+			// setSubWidgetCollapsible() is retained for source compatibility but is
+			// a no-op except for settingsFrame (deprecated per-element behavior).
+			void setSubWidgetCollapsible(SubWidget widget, bool collapsible);
+			void setSubWidgetCollapsed(SubWidget widget, bool collapsed);
+			bool isSubWidgetCollapsed(SubWidget widget) const;
+
             virtual void clear();
+        signals:
+            void subWidgetCollapsedChanged(SubWidget widget, bool collapsed);
+        public:
         protected:
             void postConstructorInit();
+
+            // Called at the start of a successful loadMessagesFromFile(), right
+            // after clear() and before any loggers/messages are fed in.
+            // Subclasses override to mark a "loading" state so per-message
+            // callbacks can route loaded data to sub-views that otherwise only
+            // receive live data.
+            virtual void onMessagesLoadStarted() {}
+            // Called at the end of a successful loadMessagesFromFile(), after
+            // all loggers/messages/reparents have been fed in. Subclasses
+            // override to react to a completed file load (e.g. switch a
+            // timeline into a past/loaded anchoring mode).
+            virtual void onMessagesLoaded() {}
 
             
 
@@ -151,6 +185,16 @@ namespace Log
         private:
             void emitSearchFilter();
 
+            // Whole-column collapse bookkeeping. settings_frame is hidden while a
+            // persistent thin strip (m_collapseStrip) keeps the toggle reachable.
+            bool m_settingsCollapsed = false;   // collapse state of settings_frame
+            bool m_settingsEnabled = true;      // enable/disableSubWidget state
+            QFrame* m_collapseStrip = nullptr;  // persistent left strip
+            QToolButton* m_collapseToggleButton = nullptr; // expand/collapse toggle
+
+            void buildCollapseStrip();
+            void applySettingsCollapse();
+
             QCheckBox* m_levelCheckBoxes[Level::__count];
             std::vector<QLineEdit*> m_filterTextEdits;
             QLineEdit* m_searchLineEdit = nullptr;
@@ -179,4 +223,5 @@ namespace Log
         };
     }
 }
+Q_DECLARE_METATYPE(Log::UIWidgets::QAbstractLogWidget::SubWidget)
 #endif

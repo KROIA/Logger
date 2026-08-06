@@ -112,11 +112,56 @@ namespace Log
             update();
         }
 
+        void QVerticalTimelineCanvas::setMode(Mode m)
+        {
+            m_mode = m;
+            if (m == Mode::Past)
+            {
+                m_followLive = false;
+                fitToData();
+            }
+            else
+            {
+                m_followLive = true;
+                m_leadingMs = nowMs();
+            }
+            emit followLiveChanged(m_followLive);
+            update();
+        }
+
+        void QVerticalTimelineCanvas::fitToData()
+        {
+            if (m_entries.empty())
+                return;
+            qint64 minMs = std::numeric_limits<qint64>::max();
+            qint64 maxMs = std::numeric_limits<qint64>::min();
+            for (const auto& e : m_entries)
+            {
+                if (e.ms < minMs) minMs = e.ms;
+                if (e.ms > maxMs) maxMs = e.ms;
+            }
+            m_followLive = false;
+            // Small pad so the newest bubble isn't flush against the leading edge.
+            m_leadingMs = maxMs + 500;
+            const qint64 span = maxMs - minMs;
+            if (span > 0)
+            {
+                const int drawable = std::max(1, height() - contentTop() - bottomMargin());
+                // Fit the whole data span into the drawable height (px/sec is
+                // clamped by setPixelsPerSecond to valid bounds).
+                setPixelsPerSecond(static_cast<double>(drawable) /
+                                   (static_cast<double>(span) / 1000.0));
+            }
+            update();
+        }
+
         void QVerticalTimelineCanvas::setPixelsPerSecond(double px)
         {
             // Allow deep zoom-in so users can separate messages that arrived
-            // within the same millisecond. 20000 px/s = 20 px per millisecond.
-            m_pxPerSec = std::max(0.05, std::min(20000.0, px));
+            // within the same millisecond. 200000 px/s = 200 px per millisecond,
+            // giving plenty of vertical room to spread bursts of simultaneous
+            // events so their cascaded bubbles stay individually readable.
+            m_pxPerSec = std::max(0.05, std::min(200000.0, px));
             update();
         }
 
@@ -258,7 +303,8 @@ namespace Log
             const qint64 lead = m_followLive ? nowMs() : m_leadingMs;
             const QString leadStr = QDateTime::fromMSecsSinceEpoch(lead).toString("hh:mm:ss.zzz");
             const QString dirStr = m_direction == Direction::Down ? "↓ newest at bottom" : "↑ newest at top";
-            const QString liveStr = m_followLive ? " · live" : " · paused";
+            const QString liveStr = m_mode == Mode::Past ? " · past (loaded)"
+                                  : (m_followLive ? " · live" : " · paused");
             p.drawText(4, 14, QString("Leading: %1  %2%3  ·  %4 px/s")
                        .arg(leadStr, dirStr, liveStr).arg(m_pxPerSec, 0, 'f', 1));
 
@@ -801,6 +847,12 @@ namespace Log
             }
             if (e->button() == Qt::RightButton)
             {
+                // In Past mode auto-follow must never re-engage.
+                if (m_mode == Mode::Past)
+                {
+                    e->accept();
+                    return;
+                }
                 // Right-click resumes live.
                 if (!m_followLive)
                 {
@@ -858,6 +910,9 @@ namespace Log
         }
         void QVerticalTimelineCanvas::maybeReenableFollowLive()
         {
+            // In Past mode auto-follow must never re-engage.
+            if (m_mode == Mode::Past)
+                return;
             if (m_followLive)
                 return;
             // Pixel-based snap: check whether "now" would render at (or past)
@@ -976,10 +1031,18 @@ namespace Log
         {
             LOGGER_RECEIVER_PROFILING_FUNCTION(LOGGER_COLOR_STAGE_1);
             m_canvas->clearAll();
+            m_canvas->setMode(Mode::Present);
             QAbstractLogWidget::clear();
         }
         void QVerticalTimelineView::setDirection(Direction d) { m_canvas->setDirection(d); }
         QVerticalTimelineView::Direction QVerticalTimelineView::direction() const { return m_canvas->direction(); }
+        void QVerticalTimelineView::setMode(Mode m) { m_canvas->setMode(m); }
+        QVerticalTimelineView::Mode QVerticalTimelineView::mode() const { return m_canvas->mode(); }
+        void QVerticalTimelineView::onMessagesLoaded()
+        {
+            // Entries are already appended by load time; anchor to that data.
+            m_canvas->setMode(Mode::Past);
+        }
 
         void QVerticalTimelineView::onLevelCheckBoxChanged(size_t index, Level level, bool isChecked)
         {

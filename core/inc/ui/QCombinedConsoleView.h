@@ -48,6 +48,10 @@ namespace Log
             void getSaveVisibleMessages(std::unordered_map<LoggerID, std::vector<Message>>& list) const override;
             void clear() override;
 
+            // Access the embedded vertical-timeline sub-view so callers can
+            // drive its Present/Past mode (e.g. a manual View-menu toggle).
+            QVerticalTimelineView* verticalTimelineView() const { return m_verticalTimelineView; }
+
         signals:
             void messageQueued(QPrivateSignal*);
         private slots:
@@ -65,6 +69,8 @@ namespace Log
             void onLoggerInfoChanged(LogObject::Info info) override;
             void onLogMessage(Message message) override;
             void onChangeParent(LoggerID childID, LoggerID newParentID) override;
+            void onMessagesLoadStarted() override;
+            void onMessagesLoaded() override;
 
             QTabWidget* m_tabs;
             UIWidgets::QConsoleWidget* m_tableWidget;
@@ -76,6 +82,11 @@ namespace Log
             mutable QMutex m_mutex;
             std::vector<Message> m_messageQueue;
             std::atomic<bool> m_flushScheduled{ false };
+            // True while a file load is populating this view. Live data reaches
+            // the timeline/stats sub-views directly from LogManager, so during a
+            // load we forward loaded loggers/messages to them too — but only
+            // then, to avoid double-feeding live data.
+            bool m_loading = false;
         };
     }
 }

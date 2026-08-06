@@ -25,6 +25,16 @@ namespace Log
                 Up      // newer messages appear at the top; auto-scroll clamps to top
             };
 
+            // Present: axis anchored to wall-clock "now" and auto-follows live
+            // data. Past: axis anchored to loaded data (fit to its time span),
+            // auto-follow permanently disabled — used for file-loaded logs
+            // whose timestamps lie in the past.
+            enum class Mode
+            {
+                Present,
+                Past
+            };
+
             struct Entry
             {
                 qint64 ms;
@@ -63,6 +73,9 @@ namespace Log
             void setFollowLive(bool follow);
             bool followLive() const { return m_followLive; }
 
+            void setMode(Mode m);
+            Mode mode() const { return m_mode; }
+
             void setPixelsPerSecond(double px);
             double pixelsPerSecond() const { return m_pxPerSec; }
 
@@ -91,6 +104,9 @@ namespace Log
             int yFor(qint64 ms) const;
             qint64 msAt(int y) const;
             void maybeReenableFollowLive();
+            // Scan m_entries for their min/max timestamp and anchor the axis so
+            // the whole span fits the drawable height. Used by Past mode.
+            void fitToData();
             bool matchesFilter(const Entry& e) const;
             void updateWidthHint();
             bool isHiddenByAncestorCollapse(LoggerID id) const;
@@ -123,6 +139,7 @@ namespace Log
             QRegularExpression m_searchRegex;
 
             Direction m_direction = Direction::Down;
+            Mode m_mode = Mode::Present;
             bool m_followLive = true;
             qint64 m_leadingMs = 0;   // time at the leading edge (bottom for Down, top for Up)
             double m_pxPerSec = 20.0;
@@ -144,6 +161,7 @@ namespace Log
             Q_OBJECT
         public:
             using Direction = QVerticalTimelineCanvas::Direction;
+            using Mode = QVerticalTimelineCanvas::Mode;
 
             QVerticalTimelineView(QWidget* parent = nullptr);
             ~QVerticalTimelineView();
@@ -162,9 +180,14 @@ namespace Log
             void setDirection(Direction d);
             Direction direction() const;
 
+            // Present (live, wall-clock anchored) vs Past (fit to loaded data).
+            void setMode(Mode m);
+            Mode mode() const;
+
             QVerticalTimelineCanvas* canvas() const { return m_canvas; }
 
         private:
+            void onMessagesLoaded() override;
             void onLevelCheckBoxChanged(size_t index, Level level, bool isChecked) override;
             void onContextCheckBoxChanged(const ContextData& context, bool isChecked) override;
             void onDateTimeFilterChanged(const DateTimeFilter& filter) override;

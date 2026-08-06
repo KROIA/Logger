@@ -20,6 +20,9 @@ set(QT_MODULES
 
 ## USER_SECTION_START 2
 
+## Build LogViewer as a Windows GUI-subsystem app (no native console window)
+set(EXAMPLE_WIN32_GUI ON)
+
 ## USER_SECTION_END
 
 ## Enable/disable QT

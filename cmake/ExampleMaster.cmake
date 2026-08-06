@@ -108,6 +108,21 @@ if(QT_ENABLE)
         AUTORCC ON)
 endif()
 
+# Opt-in Windows GUI subsystem (no console window). Default OFF preserves
+# console behavior for all other examples. Examples request it via
+# set(EXAMPLE_WIN32_GUI ON) in their USER_SECTION before exampleMaster().
+if(WIN32 AND EXAMPLE_WIN32_GUI)
+    set_target_properties(${PROJECT_NAME} PROPERTIES WIN32_EXECUTABLE ON)
+    # Ensure the correct Qt entry point is linked so standard main() still works
+    if(QT_ENABLE)
+        if(TARGET ${QT_PACKAGE_NAME}::EntryPoint)          # Qt6
+            target_link_libraries(${PROJECT_NAME} ${QT_PACKAGE_NAME}::EntryPoint)
+        elseif(TARGET ${QT_PACKAGE_NAME}::WinMain)         # Qt5
+            target_link_libraries(${PROJECT_NAME} ${QT_PACKAGE_NAME}::WinMain)
+        endif()
+    endif()
+endif()
+
 
 if(${PROFILING_NAME})
     if(NOT TARGET ${PARENT_LIBRARY_STATIC_PROFILE})

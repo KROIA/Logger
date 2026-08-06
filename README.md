@@ -555,6 +555,34 @@ view.disableSubWidget(SW::editFrame);
 view.enableSubWidget(SW::logLevelFilter);
 ```
 
+#### Collapsible settings panel
+The whole left settings column collapses horizontally "to the left" into a thin
+persistent strip (~24 px) so the console (`contentFrame`) reclaims the freed
+width. The strip always shows a toggle button (▶ to expand when collapsed, ◀ to
+collapse when expanded), so the panel can always be re-opened. Per-element
+collapse of the individual filter panels has been removed.
+
+``` C++
+using SW = Log::UIWidgets::QAbstractLogWidget;
+
+// Collapse / expand the entire settings column to the thin left strip:
+view.setSubWidgetCollapsed(SW::settingsFrame, true);
+bool collapsed = view.isSubWidgetCollapsed(SW::settingsFrame);
+
+// React to collapse changes (only settingsFrame fires):
+QObject::connect(&view, &Log::UIWidgets::QAbstractLogWidget::subWidgetCollapsedChanged,
+    [](SW::SubWidget w, bool collapsed){ /* ... */ });
+```
+
+**Defaults:** the settings column starts **expanded** (normal look); call
+`setSubWidgetCollapsed(SW::settingsFrame, true)` to start collapsed. Only
+`settingsFrame` is collapsible — the inner filter panels (`logLevelFilter`,
+`contextFilter`, `dateTimeFilter`, `editFrame`) and `contentFrame` are not.
+`setSubWidgetCollapsible()` is retained as a deprecated no-op for source
+compatibility. Collapse is orthogonal to `enable/disableSubWidget` (whole-frame
+visibility): disabling the settings frame hides the strip too, and re-enabling
+restores the stored collapse state.
+
 ---
 
 ## Persisting logs

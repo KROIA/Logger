@@ -15,10 +15,14 @@
 #include <QApplication>
 #include <QThread>
 #include <QHBoxLayout>
+#include <QVBoxLayout>
+#include <QGridLayout>
 #include <QLabel>
 #include <QPushButton>
+#include <QToolButton>
 #include <QTextBrowser>
 #include <QSplitter>
+#include <QFrame>
 
 
 namespace Log
@@ -30,6 +34,7 @@ namespace Log
 			, ui(new Ui::QAbstractLogWidget)
 		{
 			ui->setupUi(this);
+			qRegisterMetaType<QAbstractLogWidget::SubWidget>("QAbstractLogWidget::SubWidget");
 			for (int i = 0; i < __featureCount; ++i)
 				m_features[i] = true;
 			ui->context_scrollAreaWidgetContents->layout()->setAlignment(Qt::AlignTop);
@@ -110,6 +115,30 @@ namespace Log
 			connect(ui->dateTimeFilterType_comboBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
 				this, &QAbstractLogWidget::onDateTimeFilterType_changed);
 
+			// Size the log-level list to fit all level rows exactly (no scroll):
+			// the scrollbar is disabled in the .ui and the frame uses a Maximum
+			// vertical size policy, so pin the scroll area to its content height.
+			if (auto* content = ui->logLevelContent_frame->layout())
+			{
+				const int h = content->sizeHint().height();
+				ui->logLevel_scrollArea->setMinimumHeight(h);
+				ui->logLevel_scrollArea->setMaximumHeight(h);
+			}
+
+			// Left column: only the context filter grows; the other three panels
+			// stay at their content size. Context therefore absorbs all slack, so
+			// no trailing spacer is needed.
+			if (auto* col = qobject_cast<QVBoxLayout*>(ui->settings_frame->layout()))
+			{
+				col->setStretch(0, 0); // logLevel_frame
+				col->setStretch(1, 1); // contextFilter_frame
+				col->setStretch(2, 0); // dateTimeFilter_frame
+				col->setStretch(3, 0); // edit_frame
+			}
+
+			// Persistent thin strip on the left that always holds the collapse /
+			// expand toggle for the whole settings column.
+			buildCollapseStrip();
 		}
 		QAbstractLogWidget::~QAbstractLogWidget()
 		{
@@ -127,6 +156,84 @@ namespace Log
 			{
 				onNewLogger(logger);
 			}
+
+			// The settings column starts EXPANDED; app code may collapse it via
+			// setSubWidgetCollapsed(settingsFrame, true).
+			applySettingsCollapse();
+		}
+
+		void QAbstractLogWidget::buildCollapseStrip()
+		{
+			if (m_collapseStrip)
+				return;
+
+			// A persistent ~24px strip inserted as the leftmost splitter child.
+			// It always holds the toggle button, so the settings column can be
+			// re-expanded even while collapsed.
+			static const int kStripWidth = 24;
+			m_collapseStrip = new QFrame(this);
+			m_collapseStrip->setFrameShape(QFrame::NoFrame);
+			m_collapseStrip->setFixedWidth(kStripWidth);
+
+			QVBoxLayout* stripLayout = new QVBoxLayout(m_collapseStrip);
+			stripLayout->setContentsMargins(1, 1, 1, 1);
+			stripLayout->setAlignment(Qt::AlignTop);
+
+			m_collapseToggleButton = new QToolButton(m_collapseStrip);
+			m_collapseToggleButton->setAutoRaise(true);
+			m_collapseToggleButton->setFocusPolicy(Qt::NoFocus);
+			m_collapseToggleButton->setArrowType(Qt::LeftArrow);
+			m_collapseToggleButton->setToolTip(tr("Collapse / expand the settings panel"));
+			m_collapseToggleButton->setFixedSize(kStripWidth - 2, kStripWidth - 2);
+			stripLayout->addWidget(m_collapseToggleButton);
+
+			QObject::connect(m_collapseToggleButton, &QToolButton::clicked, this,
+				[this]() { setSubWidgetCollapsed(SubWidget::settingsFrame, !m_settingsCollapsed); });
+
+			// Place the strip immediately left of the settings column.
+			if (ui->splitter)
+			{
+				ui->splitter->insertWidget(0, m_collapseStrip);
+				ui->splitter->setStretchFactor(0, 0);
+			}
+		}
+
+		void QAbstractLogWidget::setSubWidgetCollapsible(SubWidget /*widget*/, bool /*collapsible*/)
+		{
+			// Deprecated no-op. Only the whole settings column collapses now, and
+			// it is always collapsible via its persistent strip toggle. Retained
+			// for source compatibility with the former per-element API.
+		}
+
+		void QAbstractLogWidget::setSubWidgetCollapsed(SubWidget widget, bool collapsed)
+		{
+			// Only the settings column collapses. Per-element collapse was removed.
+			if (widget != SubWidget::settingsFrame)
+				return;
+			m_settingsCollapsed = collapsed;
+			applySettingsCollapse();
+			emit subWidgetCollapsedChanged(SubWidget::settingsFrame, collapsed);
+		}
+
+		bool QAbstractLogWidget::isSubWidgetCollapsed(SubWidget widget) const
+		{
+			if (widget == SubWidget::settingsFrame)
+				return m_settingsCollapsed;
+			return false;
+		}
+
+		void QAbstractLogWidget::applySettingsCollapse()
+		{
+			// Strip is always visible while the settings area is enabled; the
+			// settings column itself is hidden when collapsed so the console
+			// (splitter neighbor) reclaims the freed width. Whole-frame enable
+			// state stays orthogonal to collapse.
+			if (m_collapseStrip)
+				m_collapseStrip->setVisible(m_settingsEnabled);
+			ui->settings_frame->setVisible(m_settingsEnabled && !m_settingsCollapsed);
+			if (m_collapseToggleButton)
+				m_collapseToggleButton->setArrowType(
+					m_settingsCollapsed ? Qt::RightArrow : Qt::LeftArrow);
 		}
 
 		bool QAbstractLogWidget::saveVisibleMessages(const std::string& outputFile) const
@@ -148,6 +255,7 @@ namespace Log
 			if(Import::loadFromFile(list, reparents, inputFile))
 			{
 				clear();
+				onMessagesLoadStarted();
 				for (const auto& context : list)
 				{
 					onNewLogger(context.first);
@@ -160,6 +268,7 @@ namespace Log
 				{
 					onChangeParent(r.first, r.second);
 				}
+				onMessagesLoaded();
 				return true;
 			}
 			return false;
@@ -181,7 +290,10 @@ namespace Log
 			switch (widget)
 			{
 				case SubWidget::settingsFrame:
-					ui->settings_frame->setVisible(false);
+					// Hide the whole left area (strip + column); collapse state is
+					// preserved and re-applied on enable.
+					m_settingsEnabled = false;
+					applySettingsCollapse();
 					break;
 				case SubWidget::logLevelFilter:
 					ui->logLevel_frame->setVisible(false);
@@ -205,7 +317,9 @@ namespace Log
 			switch (widget)
 			{
 			case SubWidget::settingsFrame:
-				ui->settings_frame->setVisible(true);
+				// Restore the left area to its stored collapse state.
+				m_settingsEnabled = true;
+				applySettingsCollapse();
 				break;
 			case SubWidget::logLevelFilter:
 				ui->logLevel_frame->setVisible(true);

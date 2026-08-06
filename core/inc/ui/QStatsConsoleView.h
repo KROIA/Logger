@@ -33,6 +33,12 @@ namespace Log
             void getSaveVisibleMessages(std::unordered_map<LoggerID, std::vector<Message>>& list) const override;
             void clear() override;
 
+            // Public feed points for composed views (e.g. QCombinedConsoleView)
+            // that need to push file-loaded data into the stats view, which
+            // otherwise only receives live data from LogManager.
+            void ingestLoadedLogger(const LogObject::Info& info) { onNewLogger(info); }
+            void ingestLoadedMessage(const Message& message) { onLogMessage(message); }
+
         private:
             void onLevelCheckBoxChanged(size_t index, Level level, bool isChecked) override;
             void onContextCheckBoxChanged(const ContextData& context, bool isChecked) override;
