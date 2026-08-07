@@ -449,7 +449,12 @@ namespace Log
                 headerTint.setAlpha(70);
                 p.fillRect(QRect(cx, topMargin(), colW, columnHeaderHeight()), headerTint);
 
-                p.setPen(c);
+                // Use black text when background is too bright (perceived luminance > 0.5).
+                auto textColor = [](const QColor& bg) -> QColor {
+                    const double lum = 0.299 * bg.redF() + 0.587 * bg.greenF() + 0.114 * bg.blueF();
+                    return lum > 0.5 ? Qt::black : bg;
+                };
+                p.setPen(textColor(c));
                 const QString ellided = fmHdr.elidedText(name, Qt::ElideRight, colW - 8);
                 p.drawText(cx + 4, topMargin() + 14, ellided);
 
@@ -550,7 +555,9 @@ namespace Log
                         m_groupHits.push_back({ glyph, aid });
 
                         // Ancestor name, elided.
-                        p.setPen(aLane.color.toQColor());
+                        const QColor aCol = aLane.color.toQColor();
+                        const double aLum = 0.299 * aCol.redF() + 0.587 * aCol.greenF() + 0.114 * aCol.blueF();
+                        p.setPen(aLum > 0.5 ? Qt::black : aCol);
                         const int textX = glyph.right() + 4;
                         const int textW = bar.right() - textX - 2;
                         if (textW > 8)
