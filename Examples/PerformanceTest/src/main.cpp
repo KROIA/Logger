@@ -13,8 +13,11 @@
 int main(int argc, char* argv[])
 {
     Log::Profiler::start();
+    // High-DPI scaling and pixmaps are always on in Qt 6; the attributes are deprecated no-ops there.
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
     QGuiApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
     QGuiApplication::setAttribute(Qt::AA_UseHighDpiPixmaps);
+#endif
     QGuiApplication::setHighDpiScaleFactorRoundingPolicy(Qt::HighDpiScaleFactorRoundingPolicy::PassThrough);
 
 

@@ -104,6 +104,12 @@ namespace Log
         bool lessThan(const QModelIndex& left, const QModelIndex& right) const override;
 
     private:
+        // Qt 6.10 replaced invalidateFilter() with the beginFilterChange() /
+        // endFilterChange() pair; beginFilterChange() must run BEFORE the filter
+        // parameters are mutated. These two wrappers keep every setter identical
+        // across Qt 5 and Qt 6.
+        void beginFilterUpdate();
+        void endFilterUpdate();
 
         QLogMessageItemModel *m_sourceModel;
         bool m_levelActivated[static_cast<int>(Level::__count)];

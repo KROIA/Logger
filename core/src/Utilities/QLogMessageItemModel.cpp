@@ -231,10 +231,27 @@ namespace Log
         m_dateTimeFilter.active = false;
     }
 
+    void QLogMessageItemProxyModel::beginFilterUpdate()
+    {
+#if QT_VERSION >= QT_VERSION_CHECK(6, 10, 0)
+        beginFilterChange();
+#endif
+    }
+    void QLogMessageItemProxyModel::endFilterUpdate()
+    {
+#if QT_VERSION >= QT_VERSION_CHECK(6, 10, 0)
+        // Default is Direction::Both, matching what invalidateFilter() did.
+        endFilterChange();
+#else
+        invalidateFilter();
+#endif
+    }
+
     void QLogMessageItemProxyModel::setLevelVisibility(Level level, bool isVisible)
     {
+        beginFilterUpdate();
         m_levelActivated[static_cast<int>(level)] = isVisible;
-        invalidateFilter();
+        endFilterUpdate();
     }
     bool QLogMessageItemProxyModel::getLevelVisibility(Level level) const
     {
@@ -243,6 +260,7 @@ namespace Log
 
     void QLogMessageItemProxyModel::setContextVisibility(LoggerID loggerID, bool isVisible)
     {
+        beginFilterUpdate();
         auto it = m_contextVisibility.find(loggerID);
         if (it != m_contextVisibility.end())
         {
@@ -252,7 +270,7 @@ namespace Log
         {
             m_contextVisibility[loggerID] = isVisible;
         }
-        invalidateFilter();
+        endFilterUpdate();
     }
 
     bool QLogMessageItemProxyModel::getContextVisibility(LoggerID loggerID) const
@@ -268,6 +286,7 @@ namespace Log
 
     void QLogMessageItemProxyModel::setTextFilter(const QString& text, bool useRegex)
     {
+        beginFilterUpdate();
         // A leading '!' inverts the match (exclude rows containing the term).
         QString effective = text;
         m_searchNegate = effective.startsWith('!');
@@ -279,13 +298,14 @@ namespace Log
             m_searchRegex = QRegularExpression(effective, QRegularExpression::CaseInsensitiveOption);
         else
             m_searchRegex = QRegularExpression();
-        invalidateFilter();
+        endFilterUpdate();
     }
 
     void QLogMessageItemProxyModel::setDateTimeFilter(const DateTimeFilter& filter)
     {
+        beginFilterUpdate();
         m_dateTimeFilter = filter;
-        invalidateFilter();
+        endFilterUpdate();
     }
     const DateTimeFilter& QLogMessageItemProxyModel::getDateTimeFilter() const
     {
@@ -293,16 +313,18 @@ namespace Log
     }
     void QLogMessageItemProxyModel::setDateTimeFilter(DateTime min, DateTime max, DateTime::Range rangeType)
     {
+        beginFilterUpdate();
 		m_dateTimeFilter.min = min;
 		m_dateTimeFilter.max = max;
 		m_dateTimeFilter.rangeType = rangeType;
         m_dateTimeFilter.active = true;
-        invalidateFilter();
+        endFilterUpdate();
     }
     void QLogMessageItemProxyModel::clearDateTimeFilter()
     {
+        beginFilterUpdate();
         m_dateTimeFilter.active = false;
-        invalidateFilter();
+        endFilterUpdate();
     }
     const DateTime& QLogMessageItemProxyModel::getDateTimeFilterMin() const
     {

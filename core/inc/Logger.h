@@ -37,5 +37,6 @@
 
 // Utilities
 #include "Utilities/Resources.h"
+#include "Utilities/QtCompat.h"
 
 /// USER_SECTION_END

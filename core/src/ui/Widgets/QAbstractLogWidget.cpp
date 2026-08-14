@@ -5,6 +5,7 @@
 #include "Utilities/Resources.h"
 #include "Utilities/Export.h"
 #include "Utilities/Import.h"
+#include "Utilities/QtCompat.h"
 #include <QTreeWidget>
 #include <QMetaType>
 #include <QSplitter>
@@ -55,16 +56,16 @@ namespace Log
 				checkBox->setChecked(true);
 				checkBox->setText(Utilities::getLevelStr((Level)i).c_str());
 				checkBox->setIcon(Utilities::getIcon((Level)i));
-				QObject::connect(checkBox, &QCheckBox::stateChanged,
+				Utilities::connectCheckBoxStateChanged(checkBox,
 					this, &QAbstractLogWidget::onLevelCheckBoxStateChangedSlot);
 				m_levelCheckBoxes[i] = checkBox;
 				if (ui->logLevelContent_frame->layout())
 					ui->logLevelContent_frame->layout()->addWidget(checkBox);
 			}
-			QObject::connect(ui->allContext_checkBox, &QCheckBox::stateChanged, this, &QAbstractLogWidget::onAllContextCheckBoxStateChanged);
+			Utilities::connectCheckBoxStateChanged(ui->allContext_checkBox, this, &QAbstractLogWidget::onAllContextCheckBoxStateChanged);
 
 			ui->dateTimeFilterActivate_checkBox->setChecked(false);
-			connect(ui->dateTimeFilterActivate_checkBox, &QCheckBox::stateChanged,
+			Utilities::connectCheckBoxStateChanged(ui->dateTimeFilterActivate_checkBox,
 				this, &QAbstractLogWidget::onDateTimeFilterActivate_checkBox_stateChanged);
 			connect(ui->dateTimeFilterMin_dateTimeEdit, &DateTimeWidget::dateTimeChanged,
 				this, &QAbstractLogWidget::onDateTimeFilterMin_changed);
@@ -491,7 +492,7 @@ namespace Log
 			data.checkBox->setText(loggerInfo.name.c_str());
 			data.id = loggerInfo.id;
 			data.info = loggerInfo;
-			QObject::connect(data.checkBox, &QCheckBox::stateChanged,
+			Utilities::connectCheckBoxStateChanged(data.checkBox,
 				this, &QAbstractLogWidget::onCheckBoxStateChangedSlot);
 			m_contextData[loggerInfo.id] = data;
 			ui->context_scrollAreaWidgetContents->layout()->addWidget(data.checkBox);
@@ -550,7 +551,7 @@ namespace Log
 					this, &QAbstractLogWidget::onSearchLineEditChanged);
 				QObject::connect(m_searchLineEdit, &QLineEdit::returnPressed,
 					this, [this]() { findNext(true); });
-				QObject::connect(m_searchRegexCheckBox, &QCheckBox::stateChanged,
+				Utilities::connectCheckBoxStateChanged(m_searchRegexCheckBox,
 					this, &QAbstractLogWidget::onSearchRegexToggled);
 				QObject::connect(m_findPrevButton, &QPushButton::clicked,
 					this, [this]() { findNext(false); });
