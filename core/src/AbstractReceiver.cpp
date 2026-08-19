@@ -24,20 +24,23 @@ namespace Log
 			// derived AbstractReceiver is fully constructed (avoids pure-virtual dispatch).
 			// Handlers on the receiver side must tolerate duplicates for the small
 			// window between connect() and the snapshot.
-			AbstractReceiver* rcv = receiver;
+			// Route through the gated slots (not receiver directly) so the
+			// filter applies. QueuedConnection defers these past the synchronous
+			// setFilter(...) call, so the filter is installed when they run.
+			SignalReceiver* self = this;
 			std::vector<LogObject::Info> existing = LogManager::getLogObjectsInfo();
 			for (const LogObject::Info& info : existing)
 			{
 				LogObject::Info infoCopy = info;
-				QMetaObject::invokeMethod(this, [rcv, infoCopy]() {
-					rcv->onNewLogger(infoCopy);
+				QMetaObject::invokeMethod(this, [self, infoCopy]() {
+					self->onNewLogger(infoCopy);
 				}, Qt::QueuedConnection);
 				if (info.parentId != 0)
 				{
 					LoggerID cid = info.id;
 					LoggerID pid = info.parentId;
-					QMetaObject::invokeMethod(this, [rcv, cid, pid]() {
-						rcv->onChangeParent(cid, pid);
+					QMetaObject::invokeMethod(this, [self, cid, pid]() {
+						self->onChangeParent(cid, pid);
 					}, Qt::QueuedConnection);
 				}
 			}
@@ -48,9 +51,19 @@ namespace Log
 			m_levelFilter[(size_t)level] = enable;
 		}
 
-		void SignalReceiver::onNewLogger(LogObject::Info loggerInfo) { receiver->onNewLogger(loggerInfo); }
-		void SignalReceiver::onLoggerInfoChanged(LogObject::Info info) { receiver->onLoggerInfoChanged(info); }
-		void SignalReceiver::onLogMessage(Message message) 
+		void SignalReceiver::onNewLogger(LogObject::Info loggerInfo)
+		{
+			if (m_messageFilter && !m_messageFilter->filterByLoggerID(loggerInfo.id))
+				return;
+			receiver->onNewLogger(loggerInfo);
+		}
+		void SignalReceiver::onLoggerInfoChanged(LogObject::Info info)
+		{
+			if (m_messageFilter && !m_messageFilter->filterByLoggerID(info.id))
+				return;
+			receiver->onLoggerInfoChanged(info);
+		}
+		void SignalReceiver::onLogMessage(Message message)
 		{ 
 			Level level = message.getLevel();
 			if(level >= Level::__count)
@@ -64,7 +77,12 @@ namespace Log
 			}
 			receiver->onLogMessage(message); 
 		}
-		void SignalReceiver::onChangeParent(LoggerID childID, LoggerID newParentID) { receiver->onChangeParent(childID, newParentID); }
+		void SignalReceiver::onChangeParent(LoggerID childID, LoggerID newParentID)
+		{
+			if (m_messageFilter && !m_messageFilter->filterByLoggerID(childID))
+				return;
+			receiver->onChangeParent(childID, newParentID);
+		}
 	}
 
 

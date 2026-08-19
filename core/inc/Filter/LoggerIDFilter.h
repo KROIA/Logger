@@ -45,6 +45,7 @@ namespace Log
 		*         false if it should be filtered out
 		*/
 		bool filter(const Message& message) const override;
+		bool filterByLoggerID(LoggerID id) const override;
 
 	private:
 		Mode m_mode = Mode::Include;

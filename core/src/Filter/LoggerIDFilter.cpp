@@ -6,13 +6,15 @@ namespace Log
 {
 	LoggerIDFilter::LoggerIDFilter(const LoggerIDFilter& other)
 		: m_mode(other.m_mode)
+		, m_includeChildren(other.m_includeChildren)
 		, m_loggerIDs(other.m_loggerIDs)
 	{
 	}
 
 	bool LoggerIDFilter::operator==(const LoggerIDFilter& other) const
 	{
-		return m_mode == other.m_mode && 
+		return m_mode == other.m_mode &&
+			m_includeChildren == other.m_includeChildren &&
 			m_loggerIDs == other.m_loggerIDs;
 	}
 	bool LoggerIDFilter::operator!=(const LoggerIDFilter& other) const
@@ -25,12 +27,12 @@ namespace Log
 		if (this == &other)
 			return *this;
 		m_mode = other.m_mode;
+		m_includeChildren = other.m_includeChildren;
 		m_loggerIDs = other.m_loggerIDs;
 		return *this;
 	}
-	bool LoggerIDFilter::filter(const Message& message) const
+	bool LoggerIDFilter::filterByLoggerID(LoggerID msgLoggerID) const
 	{
-		LoggerID msgLoggerID = message.getLoggerID();
 		bool contains = containsLoggerID(msgLoggerID);
 		if(!contains && m_includeChildren)
 		{
@@ -47,6 +49,10 @@ namespace Log
 			return contains;
 		else // Exclude
 			return !contains;
+	}
+	bool LoggerIDFilter::filter(const Message& message) const
+	{
+		return filterByLoggerID(message.getLoggerID());
 	}
 
 }
