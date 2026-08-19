@@ -44,6 +44,11 @@
   * [Saving visible messages](#saving-visible-messages)
   * [Loading a log file](#loading-a-log-file)
   * [File format](#file-format)
+* [Changelog](#changelog)
+
+
+## Changelog
+See the [changelog](documentation/changelogs/CHANGELOG.md) for release history.
 
 
 ## About
