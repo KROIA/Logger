@@ -47,6 +47,7 @@ namespace Log
             void findNext(bool forward) override;
 
             void onNewLogger(LogObject::Info loggerInfo) override;
+            void onLoggerInfoChanged(LogObject::Info info) override;
             void onLogMessage(Message message) override;
             void onChangeParent(LoggerID childID, LoggerID newParentID) override;
 

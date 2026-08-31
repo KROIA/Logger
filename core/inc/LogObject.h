@@ -9,10 +9,19 @@
 
 namespace Log
 {
+	enum class ReceiverVisibilityPolicy : int { AutoVisible = 0, ManualAdd = 1, Invisible = 2, __count };
+	enum class ContextDisplayPolicy : int { OwnContext = 0, FlattenSuggested = 1, __count };
+
+	namespace Utilities
+	{
+		LOGGER_API const std::string& getReceiverVisibilityPolicyStr(ReceiverVisibilityPolicy policy);
+		LOGGER_API const std::string& getContextDisplayPolicyStr(ContextDisplayPolicy policy);
+	}
+
 	class LOGGER_API LogObject
 	{
 	public:
-		
+
 		struct Info
 		{
 			LoggerID id;
@@ -22,6 +31,8 @@ namespace Log
 			DateTime creationTime;
 			Color color;
 			bool enabled;
+			ReceiverVisibilityPolicy visibilityPolicy = ReceiverVisibilityPolicy::AutoVisible;
+			ContextDisplayPolicy contextDisplayPolicy = ContextDisplayPolicy::OwnContext;
 
 			Info()
 				: id(0)
@@ -36,13 +47,17 @@ namespace Log
 				const std::string& name,
 				const DateTime& creationTime,
 				const Color& color,
-				bool enabled)
+				bool enabled,
+				ReceiverVisibilityPolicy visibilityPolicy = ReceiverVisibilityPolicy::AutoVisible,
+				ContextDisplayPolicy contextDisplayPolicy = ContextDisplayPolicy::OwnContext)
 				: id(id)
 				, parentId(parentID)
 				, name(name)
 				, creationTime(creationTime)
 				, color(color)
 				, enabled(enabled)
+				, visibilityPolicy(visibilityPolicy)
+				, contextDisplayPolicy(contextDisplayPolicy)
 			{}
 			Info(const Info& other)
 				: id(other.id)
@@ -52,6 +67,8 @@ namespace Log
 				, creationTime(other.creationTime)
 				, color(other.color)
 				, enabled(other.enabled)
+				, visibilityPolicy(other.visibilityPolicy)
+				, contextDisplayPolicy(other.contextDisplayPolicy)
 			{}
 
 			std::string toString() const
@@ -62,6 +79,8 @@ namespace Log
 				str += "Creation Time: " + creationTime.toString(Log::DateTime::Format::dayMonthYear | Log::DateTime::Format::hourMinuteSecondMillisecond) + "\n";
 				str += "Color: " + color.getRGBStr() + "\n";
 				str += "Enabled: " + std::to_string(enabled) + "\n";
+				str += "Visibility Policy: " + Utilities::getReceiverVisibilityPolicyStr(visibilityPolicy) + "\n";
+				str += "Context Display Policy: " + Utilities::getContextDisplayPolicyStr(contextDisplayPolicy) + "\n";
 				return str;
 			}
 			QJsonValue toJson() const;
@@ -78,6 +97,10 @@ namespace Log
 
 		void setEnabled(bool enable);
 		bool isEnabled() const;
+		void setVisibilityPolicy(ReceiverVisibilityPolicy policy);
+		ReceiverVisibilityPolicy getVisibilityPolicy() const;
+		void setContextDisplayPolicy(ContextDisplayPolicy policy);
+		ContextDisplayPolicy getContextDisplayPolicy() const;
 		void setName(const std::string& name);
 		std::string getName() const;
 		void setColor(const Color& col);

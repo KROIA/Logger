@@ -54,6 +54,7 @@ namespace Log
                 LoggerID parentId = 0;
                 bool enabled = true;
                 bool collapsed = false;
+                ReceiverVisibilityPolicy visibilityPolicy = ReceiverVisibilityPolicy::AutoVisible;
             };
 
             QVerticalTimelineCanvas(QWidget* parent = nullptr);
@@ -110,6 +111,10 @@ namespace Log
             bool matchesFilter(const Entry& e) const;
             void updateWidthHint();
             bool isHiddenByAncestorCollapse(LoggerID id) const;
+            // Walks parentId, skipping Invisible lanes, to find the nearest
+            // materialized (non-Invisible) ancestor still present in m_lanes.
+            // Returns 0 if none exists (the lane becomes a root).
+            LoggerID effectiveParentOf(LoggerID id) const;
 
             struct DrawnBubble
             {

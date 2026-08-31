@@ -70,6 +70,8 @@ namespace Log
                     this, [this](const QString& text) {
                         setSearchTextProgrammatic(QStringLiteral("!") + text, false);
                     });
+            connect(m_treeItem, &UIWidgets::QContextLoggerTreeWidget::requestShowLogger,
+                    this, [this](Log::LoggerID id) { setContextEnabled(id, true); });
             connect(m_tableWidget, &UIWidgets::QConsoleWidget::selectionChangedMessage,
                     this, [this](const Log::Message& msg, bool has) { updateDetailsFor(msg, has); });
             connect(m_treeItem, &UIWidgets::QContextLoggerTreeWidget::selectionChangedMessage,
@@ -236,6 +238,7 @@ namespace Log
             LOGGER_RECEIVER_PROFILING_FUNCTION(LOGGER_COLOR_STAGE_1);
             QAbstractLogWidget::onLoggerInfoChanged(info);
             m_tableWidget->onNewLogger(info);
+            m_treeItem->onLoggerInfoChanged(info);
         }
         void QCombinedConsoleView::onLogMessage(Message message)
         {

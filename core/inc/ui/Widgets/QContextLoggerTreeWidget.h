@@ -65,6 +65,20 @@ namespace Log
 
 			void setParent(LoggerID childID, LoggerID parentID);
 
+			// Called when a known logger's Info changes at runtime (policy,
+			// display preference, color, name, parent, ...). Refreshes
+			// m_knownInfos (and the materialized TreeData's cached Info, if
+			// any) then reconciles this logger's tree placement (materialize /
+			// demote / re-point / redirect) accordingly.
+			void onLoggerInfoChanged(const LogObject::Info& info);
+
+			// When true (default), a logger's contextDisplayPolicy ==
+			// FlattenSuggested is honored (its messages fold into the nearest
+			// materialized ancestor instead of getting their own node). When
+			// false, every known logger is (re)materialized with its own
+			// context. Reconciles every known logger on a real change.
+			void setRespectFlattenSuggestions(bool respect);
+
 			void getSaveVisibleMessages(std::unordered_map<LoggerID, std::vector<Message>>& list) const;
 
 			// True while the view is anchored to the newest message (auto-scroll
@@ -110,7 +124,21 @@ namespace Log
 
 					TreeData* createChild(const LogObject::Info& info);
 					//void changeParent(LoggerID childID, TreeData* newParent);
+					// newParent == nullptr promotes this to a top-level item.
 					void setParent(TreeData* newParent);
+
+					// Refreshes cached Info/colors (name, color, creation time) —
+					// Info can change at runtime via onLoggerInfoChanged, and prior
+					// to this TreeData cached it once at construction and never
+					// refreshed it.
+					void updateInfo(const LogObject::Info& info);
+					// Re-parents (into destination) every message this TreeData is
+					// currently holding whose original logger id is
+					// sourceLoggerID. Used both to pull back previously-redirected
+					// messages when a logger newly materializes, and to push this
+					// node's own (or forwarded) messages onward when it
+					// demotes/re-redirects.
+					void migrateMessagesFor(LoggerID sourceLoggerID, TreeData* destination);
 
 					void getLoggerIDsRecursive(std::vector<LoggerID> &list) const;
 					void getChildLoggerIDsRecursive(std::vector<LoggerID> &list) const;
@@ -185,16 +213,43 @@ namespace Log
 
 			std::unordered_map<LoggerID, TreeData*> m_msgItems;
 
+			// Every Info ever seen (via addContext/onLoggerInfoChanged), including
+			// loggers that never materialize a TreeData (Invisible, or honored
+			// FlattenSuggested), so ancestor walks work without depending on
+			// LogManager — this widget is deliberately decoupled from it.
+			std::unordered_map<LoggerID, LogObject::Info> m_knownInfos;
+			// Flattened-logger-id -> materialized-ancestor-id it forwards its
+			// messages into (no TreeData of its own).
+			std::unordered_map<LoggerID, LoggerID> m_redirectTarget;
+			bool m_respectFlattenSuggestions = true;
+
+			// Walks the parentId chain (via m_knownInfos) starting at
+			// startParentId until it finds an id present in m_msgItems (i.e. it
+			// has a materialized TreeData), or returns 0. Capped to tolerate a
+			// cycle defensively.
+			LoggerID resolveTreeParent(LoggerID startParentId) const;
+			// Called whenever a known logger's policy/display-preference/parent
+			// changes at runtime; materializes/demotes/re-points/redirects it
+			// (and whatever depended on its old placement) as needed.
+			void reconcileLoggerPlacement(LoggerID id);
+
 		public:
 			int getMatchCount() const;
 			void findNext(bool forward);
 			void setContextMenuEnabled(bool enabled) { m_contextMenuEnabled = enabled; }
 			bool isContextMenuEnabled() const { return m_contextMenuEnabled; }
 			void showRowContextMenu(QTreeWidgetItem* item, const QPoint& globalPos);
+
+			// Loggers with ReceiverVisibilityPolicy::ManualAdd that are
+			// currently materialized but hidden (context visibility off).
+			std::vector<LoggerID> getManuallyHiddenLoggerIds() const;
 		signals:
 			void requestSoloContext(Log::LoggerID id);
 			void requestHideContext(Log::LoggerID id);
 			void requestHideMessagesLike(const QString& text);
+			// Emitted when the user picks a hidden logger from the "Show hidden
+			// logger" context-menu submenu.
+			void requestShowLogger(Log::LoggerID id);
 			void selectionChangedMessage(const Log::Message& msg, bool hasSelection);
 		private:
 			bool m_contextMenuEnabled = true;

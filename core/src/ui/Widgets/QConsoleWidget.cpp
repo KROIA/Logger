@@ -312,7 +312,20 @@ namespace Log
 
         void QConsoleWidget::onNewLogger(const LogObject::Info& info)
         {
-            m_model->setLoggerInfo(info);
+            const ReceiverVisibilityPolicy previousPolicy = m_model->setLoggerInfo(info);
+            if (info.visibilityPolicy == ReceiverVisibilityPolicy::Invisible)
+            {
+                // Always force-hidden, regardless of the user's manual toggle.
+                setContextVisibility(info.id, false);
+            }
+            else if (previousPolicy != info.visibilityPolicy)
+            {
+                // A detected policy transition (e.g. ManualAdd <-> AutoVisible,
+                // or coming back from Invisible) resets the visibility to the
+                // new policy's default; otherwise leave the user's existing
+                // manual toggle alone.
+                setContextVisibility(info.id, info.visibilityPolicy != ReceiverVisibilityPolicy::ManualAdd);
+            }
         }
         void QConsoleWidget::clear()
         {

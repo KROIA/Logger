@@ -287,9 +287,10 @@ namespace Log
 				{
 					if (!m_contextMenuEnabled)
 						return;
+					// item may be null (empty space) — showRowContextMenu still
+					// needs to open so the "Show hidden logger" submenu is
+					// reachable when nothing else is visible to right-click.
 					QTreeWidgetItem* item = m_treeWidget->itemAt(pos);
-					if (!item)
-						return;
 					showRowContextMenu(item, m_treeWidget->viewport()->mapToGlobal(pos));
 				});
 		}
@@ -340,33 +341,66 @@ namespace Log
 			if (m_msgItems.find(newContext.id) != m_msgItems.end())
 				return;
 
-			LoggerID parentID = newContext.parentId;
+			m_knownInfos[newContext.id] = newContext;
 
-			if (parentID > 0)
+			// Invisible: never materialized, never redirected — its direct
+			// messages are simply dropped in onNewMessage.
+			if (newContext.visibilityPolicy == ReceiverVisibilityPolicy::Invisible)
+				return;
+
+			// FlattenSuggested (honored): fold into the nearest materialized
+			// ancestor instead of getting its own node. If no materialized
+			// ancestor exists yet (e.g. a root logger), it's only a suggestion —
+			// fall through and materialize normally so no message is ever lost.
+			if (newContext.contextDisplayPolicy == ContextDisplayPolicy::FlattenSuggested &&
+				m_respectFlattenSuggestions)
 			{
-				const auto& parentIt = m_msgItems.find(parentID);
-				if (parentIt == m_msgItems.end())
+				const LoggerID target = resolveTreeParent(newContext.parentId);
+				if (target != 0)
 				{
-					TreeData* treeData = new TreeData(this, newContext);
-					m_msgItems[newContext.id] = treeData;
+					m_redirectTarget[newContext.id] = target;
 					return;
 				}
-
-				TreeData* parentTreeData = parentIt->second;
-				m_msgItems[newContext.id] = parentTreeData->createChild(newContext);
-				return;
 			}
-			TreeData *treeData = new TreeData(this, newContext);
+
+			// Materialize normally, parented via resolveTreeParent (which — for
+			// an all-AutoVisible/OwnContext hierarchy — resolves to exactly the
+			// immediate parent, same as before this ancestor-walk existed).
+			const LoggerID parentID = resolveTreeParent(newContext.parentId);
+			TreeData* treeData = nullptr;
+			if (parentID != 0)
+			{
+				TreeData* parentTreeData = m_msgItems.find(parentID)->second;
+				treeData = parentTreeData->createChild(newContext);
+			}
+			else
+			{
+				treeData = new TreeData(this, newContext);
+			}
 			m_msgItems[newContext.id] = treeData;
+
+			if (newContext.visibilityPolicy == ReceiverVisibilityPolicy::ManualAdd)
+				treeData->setContextVisibility(false);
 		}
 		void QContextLoggerTreeWidget::onNewMessage(const Message& m)
 		{
 			const auto &it = m_msgItems.find(m.getLoggerID());
-			if (it == m_msgItems.end())
+			if (it != m_msgItems.end())
+			{
+				it->second->onNewMessage(m);
+				m_messageCountDirty = true;
 				return;
-			TreeData* treeData = it->second;
-			treeData->onNewMessage(m);
-			m_messageCountDirty = true;
+			}
+			const auto& redirectIt = m_redirectTarget.find(m.getLoggerID());
+			if (redirectIt != m_redirectTarget.end())
+			{
+				const auto& targetIt = m_msgItems.find(redirectIt->second);
+				if (targetIt != m_msgItems.end())
+				{
+					targetIt->second->onNewMessage(m);
+					m_messageCountDirty = true;
+				}
+			}
 		}
 		void QContextLoggerTreeWidget::onNewMessages(const std::vector<Message>& messages)
 		{
@@ -513,21 +547,246 @@ namespace Log
 		}
 		void QContextLoggerTreeWidget::setParent(LoggerID childID, LoggerID parentID)
 		{
-			TreeData* child = nullptr;
-			TreeData* parent = nullptr;
-			
-			const auto &childIt = m_msgItems.find(childID);
-			if (childIt != m_msgItems.end())
-				child = childIt->second;
+			// LogManager's reparent path emits onChangeParent, not
+			// onLoggerInfoChanged, so this widget has to track the parent
+			// change itself before reconciling.
+			const auto& knownIt = m_knownInfos.find(childID);
+			if (knownIt != m_knownInfos.end())
+				knownIt->second.parentId = parentID;
 
-			const auto &parentIt = m_msgItems.find(parentID);
-			if (parentIt != m_msgItems.end())
-				parent = parentIt->second;
-			
-			if (child && parent)
+			reconcileLoggerPlacement(childID);
+			m_messageCountDirty = true;
+		}
+		void QContextLoggerTreeWidget::onLoggerInfoChanged(const LogObject::Info& info)
+		{
+			m_knownInfos[info.id] = info;
+
+			const auto& it = m_msgItems.find(info.id);
+			if (it != m_msgItems.end())
+				it->second->updateInfo(info);
+
+			reconcileLoggerPlacement(info.id);
+			m_messageCountDirty = true;
+		}
+		void QContextLoggerTreeWidget::setRespectFlattenSuggestions(bool respect)
+		{
+			if (m_respectFlattenSuggestions == respect)
+				return;
+			m_respectFlattenSuggestions = respect;
+			for (const auto& kv : m_knownInfos)
+				reconcileLoggerPlacement(kv.first);
+			m_messageCountDirty = true;
+		}
+		LoggerID QContextLoggerTreeWidget::resolveTreeParent(LoggerID startParentId) const
+		{
+			LoggerID current = startParentId;
+			int guard = 0;
+			while (current != 0 && guard++ < 4096)
 			{
-				child->setParent(parent);
-				m_messageCountDirty = true;
+				if (m_msgItems.find(current) != m_msgItems.end())
+					return current;
+				const auto& it = m_knownInfos.find(current);
+				if (it == m_knownInfos.end())
+					return 0;
+				current = it->second.parentId;
+			}
+			return 0;
+		}
+		void QContextLoggerTreeWidget::reconcileLoggerPlacement(LoggerID id)
+		{
+			const auto infoIt = m_knownInfos.find(id);
+			if (infoIt == m_knownInfos.end())
+				return;
+			const LogObject::Info& info = infoIt->second;
+
+			auto findTreeData = [this](LoggerID lid) -> TreeData*
+			{
+				if (lid == 0)
+					return nullptr;
+				const auto it = m_msgItems.find(lid);
+				return (it != m_msgItems.end()) ? it->second : nullptr;
+			};
+
+			const bool invisible = (info.visibilityPolicy == ReceiverVisibilityPolicy::Invisible);
+			const bool flattenSuggested = (info.contextDisplayPolicy == ContextDisplayPolicy::FlattenSuggested) &&
+				m_respectFlattenSuggestions;
+			// Only relevant (and only computed) when it can actually suppress
+			// materialization — flatten never suppresses materialization if no
+			// ancestor resolves.
+			const LoggerID flattenTarget = (!invisible && flattenSuggested) ? resolveTreeParent(info.parentId) : 0;
+			const bool shouldMaterialize = !invisible && !(flattenSuggested && flattenTarget != 0);
+
+			const auto curIt = m_msgItems.find(id);
+			TreeData* currentTreeData = (curIt != m_msgItems.end()) ? curIt->second : nullptr;
+			const bool isMaterialized = (currentTreeData != nullptr);
+
+			const auto redirIt = m_redirectTarget.find(id);
+			const bool wasRedirected = (redirIt != m_redirectTarget.end());
+			const LoggerID oldRedirectTarget = wasRedirected ? redirIt->second : 0;
+
+			if (isMaterialized && shouldMaterialize)
+			{
+				// materialized -> materialized: only re-point the tree parent if
+				// a further-up ancestor's materialization changed; never touch an
+				// already-user-toggled contextVisibility.
+				const LoggerID newParentTarget = resolveTreeParent(info.parentId);
+				TreeData* curParentTD = currentTreeData->getParent();
+				const LoggerID curParentId = curParentTD ? curParentTD->loggerID : 0;
+				if (newParentTarget != curParentId)
+					currentTreeData->setParent(findTreeData(newParentTarget));
+				return;
+			}
+
+			if (isMaterialized && !shouldMaterialize)
+			{
+				// materialized -> unmaterialized (demote: policy flipped to
+				// Invisible, or flatten now applies).
+				const LoggerID newTarget = resolveTreeParent(info.parentId);
+				TreeData* newTargetTD = findTreeData(newTarget);
+
+				// Re-home every direct child onto the new resolved target (or
+				// promote to top-level, if none).
+				std::vector<TreeData*> childrenCopy = currentTreeData->children;
+				for (TreeData* childTD : childrenCopy)
+					childTD->setParent(newTargetTD);
+
+				// Re-home (or drop, if no target) every redirect pointing at this id.
+				std::vector<LoggerID> redirectsToId;
+				for (const auto& kv : m_redirectTarget)
+					if (kv.second == id)
+						redirectsToId.push_back(kv.first);
+				for (LoggerID redirectedId : redirectsToId)
+				{
+					if (newTargetTD)
+					{
+						currentTreeData->migrateMessagesFor(redirectedId, newTargetTD);
+						m_redirectTarget[redirectedId] = newTarget;
+					}
+					else
+					{
+						m_redirectTarget.erase(redirectedId);
+					}
+				}
+
+				if (!invisible && flattenSuggested && newTargetTD)
+				{
+					// Demoting to flatten: migrate this node's own messages to
+					// the new target and register a redirect.
+					currentTreeData->migrateMessagesFor(id, newTargetTD);
+					m_redirectTarget[id] = newTarget;
+				}
+				// Demoting to Invisible: its own messages are simply dropped
+				// (not migrated) below, along with the TreeData.
+
+				delete currentTreeData;
+				return;
+			}
+
+			if (!isMaterialized && shouldMaterialize)
+			{
+				// unmaterialized -> materialized: create the TreeData.
+				const LoggerID parentTarget = resolveTreeParent(info.parentId);
+				TreeData* parentTD = findTreeData(parentTarget);
+				TreeData* newTreeData = parentTD ? parentTD->createChild(info) : new TreeData(this, info);
+				m_msgItems[id] = newTreeData;
+
+				if (wasRedirected)
+				{
+					// Pull its already-forwarded messages back.
+					TreeData* oldTargetTD = findTreeData(oldRedirectTarget);
+					if (oldTargetTD)
+						oldTargetTD->migrateMessagesFor(id, newTreeData);
+					m_redirectTarget.erase(id);
+				}
+
+				// Other already-known loggers may have previously resolved
+				// *past* id (because it wasn't materialized yet) straight to
+				// parentTarget — the same ancestor id itself just resolved
+				// to. Now that id sits in m_msgItems, anything whose own
+				// resolution walk would now stop at id instead needs to be
+				// re-pointed at it. This only ever affects nodes currently
+				// parented at exactly parentTarget (one level): a node's
+				// placement depends only on its nearest materialized
+				// ancestor, so if that ancestor isn't parentTarget, id's
+				// appearance elsewhere can't change it — and if a node's
+				// chain does pass through id and used to resolve past it to
+				// parentTarget, that node's current tree-parent is
+				// necessarily parentTarget itself, never something deeper
+				// (the same one-level property the demote branch above
+				// already relies on).
+				std::vector<TreeData*> candidates;
+				if (parentTD)
+				{
+					for (TreeData* child : parentTD->children)
+						if (child != newTreeData)
+							candidates.push_back(child);
+				}
+				else
+				{
+					for (const auto& kv : m_msgItems)
+						if (kv.second != newTreeData && kv.second->getParent() == nullptr)
+							candidates.push_back(kv.second);
+				}
+				for (TreeData* candidate : candidates)
+				{
+					const auto candInfoIt = m_knownInfos.find(candidate->loggerID);
+					if (candInfoIt == m_knownInfos.end())
+						continue;
+					if (resolveTreeParent(candInfoIt->second.parentId) == id)
+						candidate->setParent(newTreeData);
+				}
+
+				// Same idea for loggers currently flatten-redirected straight
+				// past id to parentTarget.
+				std::vector<LoggerID> redirectsToParentTarget;
+				for (const auto& kv : m_redirectTarget)
+					if (kv.second == parentTarget)
+						redirectsToParentTarget.push_back(kv.first);
+				for (LoggerID redirectedId : redirectsToParentTarget)
+				{
+					const auto redirInfoIt = m_knownInfos.find(redirectedId);
+					if (redirInfoIt == m_knownInfos.end())
+						continue;
+					if (resolveTreeParent(redirInfoIt->second.parentId) != id)
+						continue;
+					if (parentTD)
+						parentTD->migrateMessagesFor(redirectedId, newTreeData);
+					m_redirectTarget[redirectedId] = id;
+				}
+
+				// Force-hide only here if ManualAdd — never re-hide something
+				// already materialized and revealed.
+				if (info.visibilityPolicy == ReceiverVisibilityPolicy::ManualAdd)
+					newTreeData->setContextVisibility(false);
+				return;
+			}
+
+			// unmaterialized -> unmaterialized.
+			if (invisible)
+			{
+				// Flips from flatten-redirected to Invisible: just drop the
+				// redirect entry — already-forwarded messages stay where they
+				// are, consistent with how enabled-toggling never retroactively
+				// erases history.
+				if (wasRedirected)
+					m_redirectTarget.erase(id);
+				return;
+			}
+			// Still flatten-suggested-and-honored with a resolved target.
+			if (wasRedirected)
+			{
+				if (oldRedirectTarget != flattenTarget)
+				{
+					TreeData* oldTargetTD = findTreeData(oldRedirectTarget);
+					TreeData* newTargetTD = findTreeData(flattenTarget);
+					if (oldTargetTD && newTargetTD)
+						oldTargetTD->migrateMessagesFor(id, newTargetTD);
+					m_redirectTarget[id] = flattenTarget;
+				}
+			}
+			else if (flattenTarget != 0)
+			{
+				m_redirectTarget[id] = flattenTarget;
 			}
 		}
 		void QContextLoggerTreeWidget::getSaveVisibleMessages(std::unordered_map<LoggerID, std::vector<Message>>& list) const
@@ -757,57 +1016,75 @@ namespace Log
 		}
 
 
-		// Function to move a QTreeWidgetItem to a new parent
+		// Function to move a QTreeWidgetItem to a new parent. newParent == nullptr
+		// promotes the item to a top-level item of its own QTreeWidget instead.
 		static void changeParent(QTreeWidgetItem* item, QTreeWidgetItem* newParent) {
-			if (item == nullptr || newParent == nullptr) return;
+			if (item == nullptr) return;
 
-			// Get the current parent
+			// Get the current parent, and the owning tree widget (captured before
+			// detaching — an item briefly untracked by any parent can still
+			// resolve it via treeWidget()).
 			QTreeWidgetItem* currentParent = item->parent();
+			QTreeWidget* treeWidget = item->treeWidget();
 
 			if (currentParent) {
 				// If the item has a parent, remove it from that parent
 				currentParent->takeChild(currentParent->indexOfChild(item));
 			}
-			else {
+			else if (treeWidget) {
 				// If the item is a top-level item, remove it from the QTreeWidget directly
-				QTreeWidget* treeWidget = item->treeWidget();
-				if (treeWidget) {
-					treeWidget->takeTopLevelItem(treeWidget->indexOfTopLevelItem(item));
-				}
+				treeWidget->takeTopLevelItem(treeWidget->indexOfTopLevelItem(item));
 			}
 
-			// Add the item to the new parent
-			newParent->addChild(item);
+			if (newParent) {
+				// Add the item to the new parent
+				newParent->addChild(item);
+			}
+			else if (treeWidget) {
+				// No new parent: (re)promote to a top-level item.
+				treeWidget->addTopLevelItem(item);
+			}
 		}
 		void QContextLoggerTreeWidget::TreeData::setParent(TreeData* newParent)
 		{
-			auto old_parent = childRoot->parent();
-			if (old_parent != NULL) 
-			{ 
-				auto ix = old_parent->indexOfChild(childRoot);
-				auto item_without_parent = old_parent->takeChild(ix); 
-				newParent->childRoot->addChild(item_without_parent); 
-			}
-			else
-			{
-				//newParent->childRoot->addChild(childRoot);
-				
-			}
-
-
-
 			if (parent)
 			{
 				const auto& it = std::find(parent->children.begin(), parent->children.end(), this);
 				if (it != parent->children.end())
 					parent->children.erase(it);
 			}
-			changeParent(childRoot, newParent->childRoot);
+			// newParent == nullptr promotes this to a top-level item.
+			changeParent(childRoot, newParent ? newParent->childRoot : nullptr);
 			parent = newParent;
 			if (parent)
 			{
 				parent->children.push_back(this);
-				//parent->childRoot->addChild(childRoot);
+			}
+		}
+		void QContextLoggerTreeWidget::TreeData::updateInfo(const LogObject::Info& info)
+		{
+			m_info = info;
+			// Recomputes m_contextColor/m_messageBackgroundColor and refreshes
+			// the displayed name/timestamp/backgrounds from the new Info.
+			setupChildRoot();
+			setupMessageRoot();
+		}
+		void QContextLoggerTreeWidget::TreeData::migrateMessagesFor(LoggerID sourceLoggerID, TreeData* destination)
+		{
+			if (!destination || destination == this)
+				return;
+			for (size_t i = 0; i < msgItems.size(); )
+			{
+				if (msgItems[i].msg.getLoggerID() == sourceLoggerID)
+				{
+					changeParent(msgItems[i].item, destination->thisMessagesRoot);
+					destination->msgItems.push_back(msgItems[i]);
+					msgItems.erase(msgItems.begin() + i);
+				}
+				else
+				{
+					++i;
+				}
 			}
 		}
 		/*void QContextLoggerTreeWidget::TreeData::changeParent(LoggerID childID, TreeData* newParent)
@@ -991,46 +1268,89 @@ namespace Log
 			m_treeWidget->setCurrentItem(target);
 			m_treeWidget->scrollToItem(target, QAbstractItemView::PositionAtCenter);
 		}
+		std::vector<LoggerID> QContextLoggerTreeWidget::getManuallyHiddenLoggerIds() const
+		{
+			std::vector<LoggerID> result;
+			for (const auto& kv : m_msgItems)
+			{
+				TreeData* treeData = kv.second;
+				if (treeData->m_info.visibilityPolicy == ReceiverVisibilityPolicy::ManualAdd &&
+					!treeData->getContextVisibility())
+					result.push_back(kv.first);
+			}
+			return result;
+		}
 		void QContextLoggerTreeWidget::showRowContextMenu(QTreeWidgetItem* item, const QPoint& globalPos)
 		{
-			if (!item)
-				return;
+			// item may be null (empty space) — the menu still needs to open so
+			// the "Show hidden logger" submenu is reachable when nothing else
+			// is visible to right-click on.
+
 			// Find the MessageData / logger ID for this item.
 			LoggerID id = 0;
 			QString msgText;
-			for (const auto& kv : m_msgItems)
+			if (item)
 			{
-				for (const auto& md : kv.second->msgItems)
+				for (const auto& kv : m_msgItems)
 				{
-					if (md.item == item)
+					for (const auto& md : kv.second->msgItems)
 					{
-						id = kv.first;
-						msgText = QString::fromStdString(md.msg.getText());
-						break;
+						if (md.item == item)
+						{
+							id = kv.first;
+							msgText = QString::fromStdString(md.msg.getText());
+							break;
+						}
 					}
+					if (id != 0) break;
 				}
-				if (id != 0) break;
+				if (msgText.isEmpty())
+					msgText = item->data((int)HeaderPos::message, Qt::DisplayRole).toString();
 			}
-			if (msgText.isEmpty())
-				msgText = item->data((int)HeaderPos::message, Qt::DisplayRole).toString();
 
 			QMenu menu;
-			QAction* copyText = menu.addAction("Copy message text");
-			menu.addSeparator();
+			QAction* copyText = item ? menu.addAction("Copy message text") : nullptr;
+			if (item)
+				menu.addSeparator();
 			QAction* soloCtx = id != 0 ? menu.addAction("Solo this context") : nullptr;
 			QAction* hideCtx = id != 0 ? menu.addAction("Hide this context") : nullptr;
-			menu.addSeparator();
-			QAction* hideLike = menu.addAction("Hide messages like this");
+			QAction* hideLike = item ? menu.addAction("Hide messages like this") : nullptr;
+
+			const std::vector<LoggerID> hiddenIds = getManuallyHiddenLoggerIds();
+			std::unordered_map<QAction*, LoggerID> showActions;
+			if (!hiddenIds.empty())
+			{
+				menu.addSeparator();
+				QMenu* showHiddenMenu = menu.addMenu("Show hidden logger");
+				for (LoggerID hiddenId : hiddenIds)
+				{
+					const auto& it = m_msgItems.find(hiddenId);
+					const QString label = (it != m_msgItems.end())
+						? QString::fromStdString(it->second->m_info.name)
+						: QString::number(hiddenId);
+					QAction* act = showHiddenMenu->addAction(label);
+					showActions[act] = hiddenId;
+				}
+			}
+
+			if (menu.isEmpty())
+				return;
 			QAction* chosen = menu.exec(globalPos);
 			if (!chosen) return;
-			if (chosen == copyText)
+			if (copyText && chosen == copyText)
 				QApplication::clipboard()->setText(msgText);
 			else if (soloCtx && chosen == soloCtx)
 				emit requestSoloContext(id);
 			else if (hideCtx && chosen == hideCtx)
 				emit requestHideContext(id);
-			else if (chosen == hideLike)
+			else if (hideLike && chosen == hideLike)
 				emit requestHideMessagesLike(msgText);
+			else
+			{
+				const auto& showIt = showActions.find(chosen);
+				if (showIt != showActions.end())
+					emit requestShowLogger(showIt->second);
+			}
 		}
 	}
 }

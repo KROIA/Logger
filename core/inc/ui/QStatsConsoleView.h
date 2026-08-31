@@ -69,6 +69,7 @@ namespace Log
                 std::string name;
                 Color color;
                 bool enabled = true;
+                ReceiverVisibilityPolicy visibilityPolicy = ReceiverVisibilityPolicy::AutoVisible;
                 size_t total = 0;
                 size_t perLevel[Level::__count] = {};
                 int row = -1;

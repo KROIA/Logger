@@ -52,13 +52,16 @@ namespace Log
 
         // Pre-populate the context cache from a known LogObject::Info,
         // so file-loaded loggers (which are not in the LogManager singleton)
-        // still render their name/color correctly.
-        void setLoggerInfo(const LogObject::Info& info);
+        // still render their name/color correctly. Returns the previously
+        // cached visibility policy (AutoVisible if this logger is new), so
+        // callers can detect a policy transition.
+        ReceiverVisibilityPolicy setLoggerInfo(const LogObject::Info& info);
     private:
         struct CachedLoggerData
         {
             QString name;
             QColor backgroundColor;
+            ReceiverVisibilityPolicy policy = ReceiverVisibilityPolicy::AutoVisible;
         };
 
         const CachedLoggerData& getCachedLoggerData(LoggerID loggerID) const;

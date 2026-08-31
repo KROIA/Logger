@@ -177,9 +177,13 @@ Public methods available on every `LogObject`:
 | `void setName(const std::string&)` · `std::string getName() const`  | Rename the logger; visible in all views |
 | `void setColor(const Color&)` · `Color getColor() const`            | Per-logger color used in every view |
 | `void setEnabled(bool)` · `bool isEnabled() const`                  | Toggle whether this logger emits |
+| `void setVisibilityPolicy(ReceiverVisibilityPolicy)` · `ReceiverVisibilityPolicy getVisibilityPolicy() const` | Whether receivers show this logger by default (`AutoVisible` / `ManualAdd` / `Invisible`) |
+| `void setContextDisplayPolicy(ContextDisplayPolicy)` · `ContextDisplayPolicy getContextDisplayPolicy() const` | Suggests whether hierarchical views give this logger its own context row (`OwnContext` / `FlattenSuggested`) |
 | `LoggerID getID() const` · `LoggerID getParentID() const`           | Identity queries |
 
-Changing a logger's `name`, `color`, or `enabled` at runtime is broadcast to every receiver so views update in place.
+Changing a logger's `name`, `color`, `enabled`, `visibilityPolicy`, or `contextDisplayPolicy` at runtime is broadcast to every receiver so views update in place.
+
+`ReceiverVisibilityPolicy` controls whether a receiver shows a logger the moment it appears: `AutoVisible` (the default) is today's behavior; `ManualAdd` means every receiver still tracks the logger but keeps it hidden until revealed — e.g. via the tree/table view's right-click context menu or the sidebar checkbox; `Invisible` means no receiver ever shows it at all. `ContextDisplayPolicy` controls whether hierarchical views (like the tree) give a logger its own row: `OwnContext` (the default) is today's behavior, while `FlattenSuggested` asks such views to fold the logger's messages into its nearest visible ancestor's context instead of giving it its own node — this is a suggestion, not a hard rule, and a view can opt out via `setRespectFlattenSuggestions(false)` to always show every logger as its own context. Both policies only affect what receivers *display*: `FilePlotter` and any raw JSON export always record the full, real hierarchy regardless of these settings.
 
 #### Available colors
 The `Log::Colors` namespace exposes a set of predefined `Color` constants suitable for both terminal and Qt output:
@@ -444,7 +448,7 @@ Log::FilePlotter plotter("outputFile.log");
 Log::FilePlotter plotterHiRes("hires.log",
     Log::DateTime::Format::hourMinuteSecondMillisecond | Log::DateTime::Format::yearMonthDay);
 ```
-Intermediate directories are created if they don't exist. Every message and every logger-info change is flushed to disk as it arrives; the file is a well-formed JSON array at all times.
+Intermediate directories are created if they don't exist. Every message and every logger-info change is flushed to disk as it arrives; the file is a well-formed JSON array at all times. This includes each logger's `visibilityPolicy`/`contextDisplayPolicy` — those only affect what the Qt views *display*, so `FilePlotter` always records the full, real hierarchy regardless of them.
 
 #### Custom receiver implementation
 Subclass `AbstractReceiver` and override the callbacks you care about:
@@ -464,7 +468,7 @@ protected:
                         Log::LoggerID newParentID) override      { /* ... */ }
 };
 ```
-You don't need to connect signals manually — the base class handles the subscription and delivers every message on the receiver's thread via queued connections.
+You don't need to connect signals manually — the base class handles the subscription and delivers every message on the receiver's thread via queued connections. `Info::visibilityPolicy` and `Info::contextDisplayPolicy` are just data at this level — the built-in views interpret them for display, but a custom receiver is free to ignore or reinterpret them.
 
 ---
 

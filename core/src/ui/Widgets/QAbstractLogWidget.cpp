@@ -482,13 +482,17 @@ namespace Log
 			if (m_contextData.find(loggerInfo.id) != m_contextData.end())
 				return;
 
+			// Invisible loggers never get a sidebar checkbox at all.
+			if (loggerInfo.visibilityPolicy == ReceiverVisibilityPolicy::Invisible)
+				return;
+
 			ContextData data;
 			data.checkBox = new QCheckBox(this);
 			QPalette p = data.checkBox->palette();
 			data.checkBox->setAutoFillBackground(true);
 			p.setColor(QPalette::Button, loggerInfo.color.toQColor());
 			data.checkBox->setPalette(p);
-			data.checkBox->setChecked(true);
+			data.checkBox->setChecked(loggerInfo.visibilityPolicy != ReceiverVisibilityPolicy::ManualAdd);
 			data.checkBox->setText(loggerInfo.name.c_str());
 			data.id = loggerInfo.id;
 			data.info = loggerInfo;

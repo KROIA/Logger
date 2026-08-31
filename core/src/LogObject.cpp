@@ -5,6 +5,35 @@
 
 namespace Log
 {
+	namespace Utilities
+	{
+		const std::string& getReceiverVisibilityPolicyStr(ReceiverVisibilityPolicy policy)
+		{
+			switch (policy)
+			{
+			case ReceiverVisibilityPolicy::AutoVisible: { const static std::string str = "AutoVisible"; return str; }
+			case ReceiverVisibilityPolicy::ManualAdd: { const static std::string str = "ManualAdd"; return str; }
+			case ReceiverVisibilityPolicy::Invisible: { const static std::string str = "Invisible"; return str; }
+			default: break;
+			}
+			static std::string str;
+			str = "Unknown visibility policy: " + std::to_string(static_cast<int>(policy));
+			return str;
+		}
+		const std::string& getContextDisplayPolicyStr(ContextDisplayPolicy policy)
+		{
+			switch (policy)
+			{
+			case ContextDisplayPolicy::OwnContext: { const static std::string str = "OwnContext"; return str; }
+			case ContextDisplayPolicy::FlattenSuggested: { const static std::string str = "FlattenSuggested"; return str; }
+			default: break;
+			}
+			static std::string str;
+			str = "Unknown context display policy: " + std::to_string(static_cast<int>(policy));
+			return str;
+		}
+	}
+
 	QJsonValue LogObject::Info::toJson() const
 	{
 		QJsonObject obj;
@@ -14,6 +43,8 @@ namespace Log
 		obj["creationTime"] = static_cast<double>(creationTime.toQDateTime().toMSecsSinceEpoch());
 		obj["color"] = color.getRGBStr().c_str();
 		obj["enabled"] = enabled;
+		obj["visibilityPolicy"] = static_cast<int>(visibilityPolicy);
+		obj["contextDisplayPolicy"] = static_cast<int>(contextDisplayPolicy);
 		return obj;
 	}
 	bool LogObject::Info::fromJson(const QJsonValue& value)
@@ -45,6 +76,23 @@ namespace Log
 			return false;
 		color.fromRGBStr(obj["color"].toString().toStdString());
 		enabled = obj["enabled"].toBool();
+
+		visibilityPolicy = ReceiverVisibilityPolicy::AutoVisible;
+		if (obj.contains("visibilityPolicy"))
+		{
+			const int rawVisibilityPolicy = obj["visibilityPolicy"].toInt(static_cast<int>(ReceiverVisibilityPolicy::AutoVisible));
+			if (rawVisibilityPolicy >= 0 && rawVisibilityPolicy < static_cast<int>(ReceiverVisibilityPolicy::__count))
+				visibilityPolicy = static_cast<ReceiverVisibilityPolicy>(rawVisibilityPolicy);
+		}
+
+		contextDisplayPolicy = ContextDisplayPolicy::OwnContext;
+		if (obj.contains("contextDisplayPolicy"))
+		{
+			const int rawContextDisplayPolicy = obj["contextDisplayPolicy"].toInt(static_cast<int>(ContextDisplayPolicy::OwnContext));
+			if (rawContextDisplayPolicy >= 0 && rawContextDisplayPolicy < static_cast<int>(ContextDisplayPolicy::__count))
+				contextDisplayPolicy = static_cast<ContextDisplayPolicy>(rawContextDisplayPolicy);
+		}
+
 		return true;
 	}
 
@@ -80,6 +128,28 @@ namespace Log
 	bool LogObject::isEnabled() const
 	{
 		return LogManager::getLogObjectInfo(m_id).enabled;
+	}
+
+	void LogObject::setVisibilityPolicy(ReceiverVisibilityPolicy policy)
+	{
+		Info info = LogManager::getLogObjectInfo(m_id);
+		info.visibilityPolicy = policy;
+		LogManager::setLogObjectInfo(info);
+	}
+	ReceiverVisibilityPolicy LogObject::getVisibilityPolicy() const
+	{
+		return LogManager::getLogObjectInfo(m_id).visibilityPolicy;
+	}
+
+	void LogObject::setContextDisplayPolicy(ContextDisplayPolicy policy)
+	{
+		Info info = LogManager::getLogObjectInfo(m_id);
+		info.contextDisplayPolicy = policy;
+		LogManager::setLogObjectInfo(info);
+	}
+	ContextDisplayPolicy LogObject::getContextDisplayPolicy() const
+	{
+		return LogManager::getLogObjectInfo(m_id).contextDisplayPolicy;
 	}
 
 	void LogObject::setName(const std::string& name)

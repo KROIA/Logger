@@ -181,11 +181,29 @@ namespace Log
             return false;
         }
 
+        LoggerID QVerticalTimelineCanvas::effectiveParentOf(LoggerID id) const
+        {
+            auto it = m_lanes.find(id);
+            if (it == m_lanes.end()) return 0;
+            LoggerID cur = it->second.parentId;
+            // Guard against pathological cycles.
+            for (int i = 0; i < 4096 && cur != 0; ++i)
+            {
+                auto pIt = m_lanes.find(cur);
+                if (pIt == m_lanes.end()) return 0;
+                if (pIt->second.visibilityPolicy != ReceiverVisibilityPolicy::Invisible)
+                    return cur;
+                cur = pIt->second.parentId;
+            }
+            return 0;
+        }
+
         void QVerticalTimelineCanvas::updateWidthHint()
         {
             int nVisible = 0;
             for (const auto& kv : m_lanes)
-                if (kv.second.enabled && !isHiddenByAncestorCollapse(kv.first))
+                if (kv.second.visibilityPolicy != ReceiverVisibilityPolicy::Invisible &&
+                    kv.second.enabled && !isHiddenByAncestorCollapse(kv.first))
                     ++nVisible;
             const int desired = timeStripWidth() + std::max(1, nVisible) * minColumnWidth() + 8;
             if (minimumWidth() != desired)
@@ -198,6 +216,7 @@ namespace Log
             lane.color = info.color;
             lane.parentId = info.parentId;
             lane.enabled = info.enabled;
+            lane.visibilityPolicy = info.visibilityPolicy;
             updateWidthHint();
             scheduleUpdate();
         }
@@ -310,12 +329,19 @@ namespace Log
 
             // Build children map from all known lanes (parents may exist even
             // when disabled — we still need them for tree structure).
+            // Invisible lanes never become their own column: they're skipped
+            // entirely here (their direct messages then fall through the DFS's
+            // existing "not found" early-return below), and effectiveParentOf()
+            // walks past any Invisible ancestor so descendants reparent onto
+            // the nearest visible one.
             std::unordered_map<LoggerID, std::vector<LoggerID>> children;
             std::vector<LoggerID> roots;
             for (const auto& kv : m_lanes)
             {
-                const LoggerID pid = kv.second.parentId;
-                if (pid != 0 && m_lanes.find(pid) != m_lanes.end())
+                if (kv.second.visibilityPolicy == ReceiverVisibilityPolicy::Invisible)
+                    continue;
+                const LoggerID pid = effectiveParentOf(kv.first);
+                if (pid != 0)
                     children[pid].push_back(kv.first);
                 else
                     roots.push_back(kv.first);

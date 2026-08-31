@@ -95,7 +95,10 @@ namespace Log
 		void NativeConsoleView::onLogMessage(Message message)
 		{
 			LOGGER_RECEIVER_PROFILING_FUNCTION(LOGGER_COLOR_STAGE_1);
-			printToConsole(LogManager::getLogObjectInfo(message.getLoggerID()), message);
+			const LogObject::Info context = LogManager::getLogObjectInfo(message.getLoggerID());
+			if (context.visibilityPolicy == ReceiverVisibilityPolicy::Invisible)
+				return;
+			printToConsole(context, message);
 		}
 		void NativeConsoleView::onChangeParent(LoggerID childID, LoggerID newParentID)
 		{

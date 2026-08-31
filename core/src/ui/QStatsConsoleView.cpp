@@ -203,7 +203,11 @@ namespace Log
             c.name = loggerInfo.name;
             c.color = loggerInfo.color;
             c.enabled = loggerInfo.enabled;
-            if (c.row < 0)
+            c.visibilityPolicy = loggerInfo.visibilityPolicy;
+            // Invisible loggers are still tracked (so the "unknown context"
+            // fallback in onLogMessage doesn't keep synthesizing a fresh stub)
+            // but never get a table row.
+            if (c.row < 0 && c.visibilityPolicy != ReceiverVisibilityPolicy::Invisible)
             {
                 c.row = m_contextTable->rowCount();
                 m_contextTable->insertRow(c.row);
@@ -219,6 +223,7 @@ namespace Log
             it->second.name = info.name;
             it->second.color = info.color;
             it->second.enabled = info.enabled;
+            it->second.visibilityPolicy = info.visibilityPolicy;
             rebuildContextRow(info.id);
         }
 
@@ -229,10 +234,6 @@ namespace Log
 
             Level lv = message.getLevel();
             LoggerID id = message.getLoggerID();
-
-            ++m_total;
-            if (lv < Level::__count)
-                ++m_perLevel[lv];
 
             auto it = m_ctx.find(id);
             if (it == m_ctx.end())
@@ -245,6 +246,17 @@ namespace Log
                 onNewLogger(stub);
                 it = m_ctx.find(id);
             }
+
+            // Invisible loggers are tracked in m_ctx (so the fallback above
+            // doesn't keep re-synthesizing a stub) but excluded from every
+            // stat: totals, per-level bars, per-context counts, and rate.
+            if (it != m_ctx.end() && it->second.visibilityPolicy == ReceiverVisibilityPolicy::Invisible)
+                return;
+
+            ++m_total;
+            if (lv < Level::__count)
+                ++m_perLevel[lv];
+
             if (it != m_ctx.end())
             {
                 ++it->second.total;

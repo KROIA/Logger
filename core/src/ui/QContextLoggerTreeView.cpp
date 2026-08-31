@@ -27,6 +27,8 @@ namespace Log
 				this, [this](const QString& text) {
 					setSearchTextProgrammatic(QStringLiteral("!") + text, false);
 				});
+			connect(m_treeItem, &UIWidgets::QContextLoggerTreeWidget::requestShowLogger,
+				this, [this](Log::LoggerID id) { setContextEnabled(id, true); });
 			connect(m_treeItem, &UIWidgets::QContextLoggerTreeWidget::selectionChangedMessage,
 				this, [this](const Log::Message& msg, bool has) { updateDetailsFor(msg, has); });
 
@@ -126,6 +128,12 @@ namespace Log
 			LOGGER_RECEIVER_PROFILING_FUNCTION(LOGGER_COLOR_STAGE_1);
 			QAbstractLogWidget::onNewLogger(loggerInfo);
 			m_treeItem->addContext(loggerInfo);
+		}
+		void QTreeConsoleView::onLoggerInfoChanged(LogObject::Info info)
+		{
+			LOGGER_RECEIVER_PROFILING_FUNCTION(LOGGER_COLOR_STAGE_1);
+			QAbstractLogWidget::onLoggerInfoChanged(info);
+			m_treeItem->onLoggerInfoChanged(info);
 		}
 		void QTreeConsoleView::onLogMessage(Message message)
 		{

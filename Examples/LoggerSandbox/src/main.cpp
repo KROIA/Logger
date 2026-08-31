@@ -94,6 +94,38 @@ int main(int argc, char* argv[])
 	//view->attachLogger(logger2);
 	//view->attachLogger(logger3);
 
+    // --- ReceiverVisibilityPolicy / ContextDisplayPolicy sandbox ---
+    // A ManualAdd child: every receiver still tracks it, but keeps it hidden
+    // until revealed (tree/table context menu "Show hidden logger", or the
+    // sidebar checkbox).
+    Log::LogObject manualAddLogger(logger1.getID(), "ManualAddChild");
+    manualAddLogger.setColor(Log::Colors::lightBlue);
+    manualAddLogger.setVisibilityPolicy(Log::ReceiverVisibilityPolicy::ManualAdd);
+
+    // An Invisible grandchild nested under it: no receiver ever shows it.
+    Log::LogObject invisibleLogger(manualAddLogger.getID(), "InvisibleGrandchild");
+    invisibleLogger.setColor(Log::Colors::red);
+    invisibleLogger.setVisibilityPolicy(Log::ReceiverVisibilityPolicy::Invisible);
+
+    // ...with its own AutoVisible child, to exercise reparenting past an
+    // invisible ancestor: this logger's row should attach to the nearest
+    // visible ancestor (manualAddLogger), not vanish along with invisibleLogger.
+    Log::LogObject visibleUnderInvisible(invisibleLogger.getID(), "VisibleUnderInvisible");
+    visibleUnderInvisible.setColor(Log::Colors::yellow);
+
+    // A FlattenSuggested logger: hierarchical views may fold its messages
+    // into its nearest visible ancestor's context instead of giving it its
+    // own row.
+    Log::LogObject flattenLogger(logger3.getID(), "FlattenSuggestedLogger");
+    flattenLogger.setColor(Log::Colors::magenta);
+    flattenLogger.setContextDisplayPolicy(Log::ContextDisplayPolicy::FlattenSuggested);
+
+    manualAddLogger.logInfo("Message from ManualAdd logger (hidden by default)");
+    invisibleLogger.logInfo("Message from Invisible logger (never shown by any receiver)");
+    visibleUnderInvisible.logInfo("Message from a visible child of an Invisible logger");
+    flattenLogger.logInfo("Message from FlattenSuggested logger (folded into its parent)");
+    flattenLogger.logWarning("Second FlattenSuggested message, still folded");
+
     QTimer singleShotTimer;
     singleShotTimer.setSingleShot(true);
     QObject::connect(&singleShotTimer, &QTimer::timeout, [&]()
@@ -126,8 +158,21 @@ int main(int argc, char* argv[])
         m_workerThread->start();
     });
     singleShotTimer.start(100);
-    
-	
+
+    // Flip a policy at runtime, after messages already exist under it, to
+    // exercise the reconciliation/migration path (not just creation-time
+    // handling): the flattened logger regains its own tree context and its
+    // already-emitted messages migrate back out of its parent's context.
+    QTimer flattenFlipTimer;
+    flattenFlipTimer.setSingleShot(true);
+    QObject::connect(&flattenFlipTimer, &QTimer::timeout, [&]()
+    {
+        flattenLogger.setContextDisplayPolicy(Log::ContextDisplayPolicy::OwnContext);
+        flattenLogger.logInfo("Materialized under its own context (policy flipped at runtime)");
+    });
+    flattenFlipTimer.start(3000);
+
+
 	app.exec();
     Log::Profiler::stop("Loggersandbox.prof");
 	getchar();

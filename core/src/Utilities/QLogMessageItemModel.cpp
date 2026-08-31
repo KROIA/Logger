@@ -196,13 +196,20 @@ namespace Log
     {
         m_cachedLoggerData.clear();
     }
-    void QLogMessageItemModel::setLoggerInfo(const LogObject::Info& info)
+    ReceiverVisibilityPolicy QLogMessageItemModel::setLoggerInfo(const LogObject::Info& info)
     {
         static const float colorFactor = 0.5f;
+        ReceiverVisibilityPolicy previousPolicy = ReceiverVisibilityPolicy::AutoVisible;
+        const auto existingIt = m_cachedLoggerData.find(info.id);
+        if (existingIt != m_cachedLoggerData.end())
+            previousPolicy = existingIt->second.policy;
+
         CachedLoggerData data;
         data.name = QString::fromStdString(info.name);
         data.backgroundColor = (info.color * colorFactor).toQColor();
+        data.policy = info.visibilityPolicy;
         m_cachedLoggerData[info.id] = std::move(data);
+        return previousPolicy;
     }
     const QLogMessageItemModel::CachedLoggerData& QLogMessageItemModel::getCachedLoggerData(LoggerID loggerID) const
     {
@@ -216,6 +223,7 @@ namespace Log
         CachedLoggerData data;
         data.name = QString::fromStdString(info.name);
         data.backgroundColor = (info.color * colorFactor).toQColor();
+        data.policy = info.visibilityPolicy;
 
         const auto inserted = m_cachedLoggerData.emplace(loggerID, std::move(data));
         return inserted.first->second;
