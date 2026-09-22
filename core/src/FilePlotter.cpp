@@ -6,6 +6,20 @@
 #include <QJsonDocument>
 #include "Utilities/Export.h"
 
+namespace
+{
+	// Without this, Qt falls back to the locale codec (CP1252 on a German Windows box)
+	// and every non-ASCII character is irreversibly lost on disk.
+	void setUtf8(QTextStream& out)
+	{
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+		out.setCodec("UTF-8");
+#else
+		out.setEncoding(QStringConverter::Utf8);
+#endif
+	}
+}
+
 namespace Log
 {
 	FilePlotter::FilePlotter(const std::string& filePath, DateTime::Format format)
@@ -26,6 +40,7 @@ namespace Log
 		{
 			// Write the file header
 			QTextStream out(m_file);
+			setUtf8(out);
 			out << "[\n";
 			out << QJsonDocument(Export::getFileHeader()).toJson();
 			out << "]\n";
@@ -65,6 +80,7 @@ namespace Log
 			return;
 		
 		QTextStream out(m_file);
+		setUtf8(out);
 
 		// Remove the QJsonArray closing bracket to add the new object
 		out.seek(m_file->size() - 5);
