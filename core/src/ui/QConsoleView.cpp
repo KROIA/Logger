@@ -74,6 +74,14 @@ namespace Log
 		{
 			return m_consoleWidget->getDateTimeFormat();
 		}
+		void QConsoleView::setRefreshInterval(int intervalMs)
+		{
+			m_consoleWidget->setRefreshInterval(intervalMs);
+		}
+		int QConsoleView::getRefreshInterval() const
+		{
+			return m_consoleWidget->getRefreshInterval();
+		}
 		void QConsoleView::getSaveVisibleMessages(std::unordered_map<LoggerID, std::vector<Message>>& list) const
 		{
 			m_consoleWidget->getSaveVisibleMessages(list);

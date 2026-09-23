@@ -10,6 +10,7 @@
 #include <QTabWidget>
 #include <QTreeWidget>
 #include <QMutex>
+#include <QTimer>
 #include <atomic>
 
 namespace Log
@@ -48,6 +49,12 @@ namespace Log
             void getSaveVisibleMessages(std::unordered_map<LoggerID, std::vector<Message>>& list) const override;
             void clear() override;
 
+            // Upper bound on how often queued messages reach the sub-views.
+            // Applied to this view's tree queue and forwarded to the embedded
+            // table and stats views. Default 100 ms.
+            void setRefreshInterval(int intervalMs);
+            int getRefreshInterval() const;
+
             // Access the embedded vertical-timeline sub-view so callers can
             // drive its Present/Past mode (e.g. a manual View-menu toggle).
             QVerticalTimelineView* verticalTimelineView() const { return m_verticalTimelineView; }
@@ -56,8 +63,11 @@ namespace Log
             void messageQueued(QPrivateSignal*);
         private slots:
             void onMessageQueued(QPrivateSignal*);
+            void onFlushTimeout();
 
         private:
+            void flushQueue();
+
             void onLevelCheckBoxChanged(size_t index, Level level, bool isChecked) override;
             void onContextCheckBoxChanged(const ContextData& context, bool isChecked) override;
             void onDateTimeFilterChanged(const DateTimeFilter& filter) override;
@@ -82,6 +92,8 @@ namespace Log
             mutable QMutex m_mutex;
             std::vector<Message> m_messageQueue;
             std::atomic<bool> m_flushScheduled{ false };
+            // Cooldown between flushes; see QConsoleWidget for the rationale.
+            QTimer m_flushTimer;
             // True while a file load is populating this view. Live data reaches
             // the timeline/stats sub-views directly from LogManager, so during a
             // load we forward loaded loggers/messages to them too — but only

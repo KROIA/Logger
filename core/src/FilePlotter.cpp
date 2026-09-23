@@ -39,17 +39,20 @@ namespace Log
 		else
 		{
 			// Write the file header
-			QTextStream out(m_file);
-			setUtf8(out);
-			out << "[\n";
-			out << QJsonDocument(Export::getFileHeader()).toJson();
-			out << "]\n";
+			m_stream.setDevice(m_file);
+			setUtf8(m_stream);
+			m_stream << "[\n";
+			m_stream << QJsonDocument(Export::getFileHeader()).toJson();
+			m_stream << "]\n";
+			m_stream.flush();
 		}
 	}
 	FilePlotter::~FilePlotter()
 	{
 		if (m_file)
 		{
+			m_stream.flush();
+			m_stream.setDevice(nullptr);
 			m_file->close();
 			delete m_file;
 		}
@@ -82,9 +85,11 @@ namespace Log
 	{
 		if(!m_file)
 			return;
-		
-		QTextStream out(m_file);
-		setUtf8(out);
+
+		QTextStream& out = m_stream;
+		// The stream buffers writes, so the device size is only trustworthy
+		// after a flush — and the seek below is computed from it.
+		out.flush();
 
 		// Remove the QJsonArray closing bracket to add the new object
 		out.seek(m_file->size() - 5);
@@ -111,6 +116,7 @@ namespace Log
 
 		// Add the closing bracket back
 		out << "]\n";
+		out.flush();
 	}
 	void FilePlotter::createDirectoryIfNotExists(const QString& filePath)
 	{

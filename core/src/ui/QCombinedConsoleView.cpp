@@ -3,6 +3,7 @@
 #ifdef QT_WIDGETS_LIB
 #include "ui_QAbstractLogWidget.h"
 #include <QVBoxLayout>
+#include <algorithm>
 
 namespace Log
 {
@@ -51,6 +52,10 @@ namespace Log
             connect(this, &QCombinedConsoleView::messageQueued,
                     this, &QCombinedConsoleView::onMessageQueued,
                     Qt::QueuedConnection);
+
+            m_flushTimer.setSingleShot(true);
+            m_flushTimer.setInterval(100);
+            connect(&m_flushTimer, &QTimer::timeout, this, &QCombinedConsoleView::onFlushTimeout);
 
             connect(m_tableWidget, &UIWidgets::QConsoleWidget::filterChanged,
                     this, &QCombinedConsoleView::refreshMatchCount);
@@ -136,6 +141,9 @@ namespace Log
         void QCombinedConsoleView::getSaveVisibleMessages(
             std::unordered_map<LoggerID, std::vector<Message>>& list) const
         {
+            // Bypass the coalescing gate: a save must see every message that
+            // has already been queued, not just the flushed ones.
+            const_cast<QCombinedConsoleView*>(this)->flushQueue();
             QMutexLocker locker(&m_mutex);
             // Save from a row-based tab (timeline/stats don't hold raw messages).
             switch (getCurrentTab())
@@ -149,9 +157,22 @@ namespace Log
                 break;
             }
         }
+        void QCombinedConsoleView::setRefreshInterval(int intervalMs)
+        {
+            const int interval = std::max(1, intervalMs);
+            m_flushTimer.setInterval(interval);
+            if (m_tableWidget) m_tableWidget->setRefreshInterval(interval);
+            if (m_statsView) m_statsView->setRefreshInterval(interval);
+        }
+        int QCombinedConsoleView::getRefreshInterval() const
+        {
+            return m_flushTimer.interval();
+        }
+
         void QCombinedConsoleView::clear()
         {
             LOGGER_RECEIVER_PROFILING_FUNCTION(LOGGER_COLOR_STAGE_1);
+            m_flushTimer.stop();
             {
                 QMutexLocker locker(&m_mutex);
                 m_messageQueue.clear();
@@ -283,22 +304,37 @@ namespace Log
         void QCombinedConsoleView::onMessageQueued(QPrivateSignal*)
         {
             LOGGER_RECEIVER_PROFILING_FUNCTION(LOGGER_COLOR_STAGE_1);
+            m_flushScheduled.store(false);
+            // A flush already ran inside the current interval — the pending
+            // timeout will pick up everything that accumulated since.
+            if (m_flushTimer.isActive())
+                return;
+            flushQueue();
+            m_flushTimer.start();
+        }
+        void QCombinedConsoleView::onFlushTimeout()
+        {
+            LOGGER_RECEIVER_PROFILING_FUNCTION(LOGGER_COLOR_STAGE_1);
+            {
+                QMutexLocker locker(&m_mutex);
+                if (m_messageQueue.empty())
+                    return; // idle — the next message flushes immediately
+            }
+            flushQueue();
+            m_flushTimer.start();
+        }
+        void QCombinedConsoleView::flushQueue()
+        {
+            LOGGER_RECEIVER_PROFILING_FUNCTION(LOGGER_COLOR_STAGE_1);
             std::vector<Message> cpy;
             {
                 QMutexLocker locker(&m_mutex);
                 cpy = std::move(m_messageQueue);
                 m_messageQueue.clear();
             }
-            m_flushScheduled.store(false);
+            if (cpy.empty())
+                return;
             m_treeItem->onNewMessages(cpy);
-
-            bool needsReschedule = false;
-            {
-                QMutexLocker locker(&m_mutex);
-                needsReschedule = !m_messageQueue.empty();
-            }
-            if (needsReschedule && !m_flushScheduled.exchange(true))
-                emit messageQueued(nullptr);
         }
     }
 }

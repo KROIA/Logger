@@ -7,6 +7,7 @@
 #include <QTreeWidget>
 #include <QTreeView>
 #include <QMutex>
+#include <QTimer>
 #include <atomic>
 
 namespace Log 
@@ -30,14 +31,22 @@ namespace Log
 
             void getSaveVisibleMessages(std::unordered_map<LoggerID, std::vector<Message>>& list) const override;
 			void clear() override;
+
+            // Upper bound on how often queued messages are pushed into the
+            // tree. The first message after an idle period is applied at once;
+            // anything arriving within the interval is coalesced. Default 100 ms.
+            void setRefreshInterval(int intervalMs);
+            int getRefreshInterval() const;
         signals:
                 void messageQueued(QPrivateSignal*);
         private slots:
 
             void onMessageQueued(QPrivateSignal*);
+            void onFlushTimeout();
 
         private:
-    
+
+            void flushQueue();
 
             void onLevelCheckBoxChanged(size_t index, Level level, bool isChecked) override;
             void onContextCheckBoxChanged(const ContextData& context, bool isChecked) override;
@@ -60,6 +69,8 @@ namespace Log
             
             std::vector<Message> m_messageQueue;
             std::atomic<bool> m_flushScheduled{ false };
+            // Cooldown between flushes; see QConsoleWidget for the rationale.
+            QTimer m_flushTimer;
         };
         
     }

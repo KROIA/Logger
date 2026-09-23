@@ -85,17 +85,17 @@ namespace Log
 		void NativeConsoleView::onNewLogger(LogObject::Info loggerInfo)
 		{
 			LOGGER_RECEIVER_PROFILING_FUNCTION(LOGGER_COLOR_STAGE_1);
-			LOGGER_UNUSED(loggerInfo);
+			m_contextCache[loggerInfo.id] = loggerInfo;
 		}
 		void NativeConsoleView::onLoggerInfoChanged(LogObject::Info info)
 		{
 			LOGGER_RECEIVER_PROFILING_FUNCTION(LOGGER_COLOR_STAGE_1);
-			LOGGER_UNUSED(info);
+			m_contextCache[info.id] = info;
 		}
 		void NativeConsoleView::onLogMessage(Message message)
 		{
 			LOGGER_RECEIVER_PROFILING_FUNCTION(LOGGER_COLOR_STAGE_1);
-			const LogObject::Info context = LogManager::getLogObjectInfo(message.getLoggerID());
+			const LogObject::Info& context = getContext(message.getLoggerID());
 			if (context.visibilityPolicy == ReceiverVisibilityPolicy::Invisible)
 				return;
 			printToConsole(context, message);
@@ -103,8 +103,20 @@ namespace Log
 		void NativeConsoleView::onChangeParent(LoggerID childID, LoggerID newParentID)
 		{
 			LOGGER_RECEIVER_PROFILING_FUNCTION(LOGGER_COLOR_STAGE_1);
-			LOGGER_UNUSED(childID);
-			LOGGER_UNUSED(newParentID);
+			const auto it = m_contextCache.find(childID);
+			if (it != m_contextCache.end())
+				it->second.parentId = newParentID;
+		}
+
+		const LogObject::Info& NativeConsoleView::getContext(LoggerID id)
+		{
+			const auto it = m_contextCache.find(id);
+			if (it != m_contextCache.end())
+				return it->second;
+			// Not seen through the lifecycle slots (e.g. the logger existed
+			// before this view did and the snapshot has not been delivered
+			// yet). Pay the locked lookup once, then keep it.
+			return m_contextCache.emplace(id, LogManager::getLogObjectInfo(id)).first->second;
 		}
 
 

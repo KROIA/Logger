@@ -26,6 +26,12 @@ namespace Log
             DateTime::Format getDateTimeFormat() const override;
             void setFeatureEnabled(Feature f, bool enabled) override;
 
+            // Upper bound on how often queued messages are pushed into the
+            // table. The first message after an idle period is applied at once;
+            // anything arriving within the interval is coalesced. Default 100 ms.
+            void setRefreshInterval(int intervalMs);
+            int getRefreshInterval() const;
+
             void getSaveVisibleMessages(std::unordered_map<LoggerID, std::vector<Message>>& list) const override;
 			void clear() override;
 

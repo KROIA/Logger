@@ -16,6 +16,7 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QKeyEvent>
+#include <algorithm>
 #include <functional>
 
 
@@ -215,6 +216,14 @@ namespace Log
 
             connect(this, &QConsoleWidget::messageQueued, this, &QConsoleWidget::onMessageQueued, Qt::QueuedConnection);
 
+            // Coalescing gate. Without it the queue flushes once per event-loop
+            // turn, which under a live producer is once per message — the model
+            // insert, the proxy re-filter and the scroll then run thousands of
+            // times for updates nobody can see.
+            m_flushTimer.setSingleShot(true);
+            m_flushTimer.setInterval(100);
+            connect(&m_flushTimer, &QTimer::timeout, this, &QConsoleWidget::onFlushTimeout);
+
             // In-cell text selection: single click on a cell opens a persistent
             // read-only line editor over it, so users can drag-select individual
             // text. The editor persists across model updates (new messages don't
@@ -327,6 +336,15 @@ namespace Log
                 setContextVisibility(info.id, info.visibilityPolicy != ReceiverVisibilityPolicy::ManualAdd);
             }
         }
+        void QConsoleWidget::setRefreshInterval(int intervalMs)
+        {
+            m_flushTimer.setInterval(std::max(1, intervalMs));
+        }
+        int QConsoleWidget::getRefreshInterval() const
+        {
+            return m_flushTimer.interval();
+        }
+
         void QConsoleWidget::clear()
         {
             {
@@ -334,6 +352,7 @@ namespace Log
                 m_messageQueue.clear();
                 m_flushScheduled.store(false);
             }
+            m_flushTimer.stop();
             m_model->clear();
             m_model->clearLoggerCache();
         }
@@ -342,7 +361,9 @@ namespace Log
             if (QApplication::instance() && QApplication::instance()->thread() != QThread::currentThread())
             {  }
             else
-                onMessageQueued(nullptr);
+                // Bypass the coalescing gate: a save must see every message
+                // that has already been queued, not just the flushed ones.
+                flushQueue();
 
             int count = m_model->rowCount();
             list.reserve(count);
@@ -563,12 +584,38 @@ namespace Log
         void QConsoleWidget::onMessageQueued(QPrivateSignal*)
         {
             LOGGER_RECEIVER_PROFILING_FUNCTION(LOGGER_COLOR_STAGE_4);
+            m_flushScheduled.store(false);
+            // A flush already ran inside the current interval — the pending
+            // timeout will pick up everything that accumulated since.
+            if (m_flushTimer.isActive())
+                return;
+            flushQueue();
+            m_flushTimer.start();
+        }
+
+        void QConsoleWidget::onFlushTimeout()
+        {
+            LOGGER_RECEIVER_PROFILING_FUNCTION(LOGGER_COLOR_STAGE_4);
+            {
+                QMutexLocker locker(&m_mutex);
+                if (m_messageQueue.empty())
+                    return; // idle — the next message flushes immediately
+            }
+            flushQueue();
+            m_flushTimer.start();
+        }
+
+        void QConsoleWidget::flushQueue()
+        {
+            LOGGER_RECEIVER_PROFILING_FUNCTION(LOGGER_COLOR_STAGE_4);
             std::vector<Message> cpy;
             {
                 QMutexLocker locker(&m_mutex);
                 cpy = std::move(m_messageQueue);
                 m_messageQueue.clear();
             }
+            if (cpy.empty())
+                return;
             // Suppress sticky updates for the entire insert-and-scroll sequence.
             // Growing the row range can trigger valueChanged (Qt clamping /
             // geometry updates) which would otherwise be mistaken for a user
@@ -579,15 +626,6 @@ namespace Log
                 scrollToBottom();
             m_programmaticScroll = false;
             emit filterChanged();
-
-            m_flushScheduled.store(false);
-            bool needsReschedule = false;
-            {
-                QMutexLocker locker(&m_mutex);
-                needsReschedule = !m_messageQueue.empty();
-            }
-            if (needsReschedule && !m_flushScheduled.exchange(true))
-                emit messageQueued(nullptr);
         }
     }
 }

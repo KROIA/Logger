@@ -4,6 +4,7 @@
 #include "AbstractReceiver.h"
 #include <QFile>
 #include <QJsonObject>
+#include <QTextStream>
 
 namespace Log
 {
@@ -24,6 +25,11 @@ namespace Log
 
 		std::string m_filePath;
 		QFile *m_file;
+		// One stream for the lifetime of the file instead of constructing and
+		// destructing one (plus re-applying the UTF-8 codec) on every single
+		// message. Still flushed per write, so a crash loses nothing that the
+		// previous implementation would have kept.
+		QTextStream m_stream;
 		DateTime::Format m_dateTimeFormat;
 	};
 }

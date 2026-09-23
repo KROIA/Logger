@@ -1047,6 +1047,15 @@ namespace Log
 		}
 		void QContextLoggerTreeWidget::TreeData::setParent(TreeData* newParent)
 		{
+			// Refuse to become a child of our own descendant. Qt does not
+			// survive a QTreeWidgetItem cycle (ISS-006). LogManager rejects
+			// cyclic reparenting for live loggers, but messages loaded from a
+			// file are replayed straight into the views and bypass it.
+			for (TreeData* ancestor = newParent; ancestor; ancestor = ancestor->parent)
+			{
+				if (ancestor == this)
+					return;
+			}
 			if (parent)
 			{
 				const auto& it = std::find(parent->children.begin(), parent->children.end(), this);

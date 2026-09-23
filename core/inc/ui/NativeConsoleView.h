@@ -4,6 +4,7 @@
 #include "Utilities/DateTime.h"
 #include "LogMessage.h"
 #include <QObject>
+#include <unordered_map>
 
 namespace Log
 {
@@ -39,7 +40,14 @@ namespace Log
 
 			void printToConsole(const LogObject::Info &context, const Message& msg);
 
+			// Context lookup for the message being printed. Kept locally so a
+			// message does not cost a locked LogManager query plus a full
+			// LogObject::Info copy (string included) every time. Fed by the
+			// logger lifecycle slots; a miss falls back to LogManager once.
+			const LogObject::Info& getContext(LoggerID id);
+
 			DateTime::Format m_dateTimeFormat;
+			std::unordered_map<LoggerID, LogObject::Info> m_contextCache;
 		};
 	}
 }

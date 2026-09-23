@@ -77,7 +77,11 @@ namespace Log
 		{
 			const std::lock_guard<std::mutex> lock(m.m_mutex);
 			const auto& it = m.m_logObjects.find(childID);
-			if (it != m.m_logObjects.end())
+			// A cyclic parent chain is not survivable downstream: the tree view
+			// would reparent a QTreeWidgetItem under its own descendant, and
+			// every ancestor walk here would run forever (ISS-006). Keep the
+			// previous parent and emit nothing rather than corrupt the tree.
+			if (it != m.m_logObjects.end() && !m.wouldCreateParentCycle(childID, newParentID))
 			{
 				it->second.parentId = newParentID;
 				emitSignal = true;
@@ -87,6 +91,28 @@ namespace Log
 		{
 			emit m.onChangeParent(childID, newParentID);
 		}
+	}
+
+	bool LogManager::wouldCreateParentCycle(LoggerID childID, LoggerID newParentID) const
+	{
+		if (newParentID == 0)
+			return false;
+		// Walk up from the prospective parent. Hitting the child means the
+		// child would become its own ancestor.
+		LoggerID current = newParentID;
+		for (size_t step = 0; step <= m_logObjects.size(); ++step)
+		{
+			if (current == childID)
+				return true;
+			if (current == 0)
+				return false;
+			const auto& it = m_logObjects.find(current);
+			if (it == m_logObjects.end())
+				return false;
+			current = it->second.parentId;
+		}
+		// A chain longer than the number of known loggers is already cyclic.
+		return true;
 	}
 
 	void LogManager::setLogObjectInfo(LogObject::Info info)
@@ -114,7 +140,9 @@ namespace Log
 		LogManager& m = instance();
 		std::lock_guard<std::mutex> lock(m.m_mutex);
 		auto it = m.m_logObjects.find(childID);
-		while (it != m.m_logObjects.end())
+		// Bounded by the number of loggers: a longer walk means the parent
+		// chain is cyclic, and an unbounded loop would hang here (ISS-006).
+		for (size_t step = 0; it != m.m_logObjects.end() && step <= m.m_logObjects.size(); ++step)
 		{
 			if (it->second.parentId == parentID)
 				return true;

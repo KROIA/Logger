@@ -33,6 +33,13 @@ namespace Log
             void onNewLogger(const LogObject::Info& info);
             void clear();
 
+            // Upper bound on how often queued messages are pushed into the
+            // model. The first message after an idle period is applied at once;
+            // anything arriving within the interval is coalesced into a single
+            // update. Default 100 ms.
+            void setRefreshInterval(int intervalMs);
+            int getRefreshInterval() const;
+
             // Number of rows that currently match the text filter (0 when no
             // filter is active).
             int getMatchCount() const;
@@ -69,6 +76,7 @@ namespace Log
         private slots:
 
             void onMessageQueued(QPrivateSignal*);
+            void onFlushTimeout();
 
             void onAutoScrollTimerTimeout();
             void onScrollValueChanged(int value);
@@ -100,10 +108,15 @@ namespace Log
             bool m_userScrollAction = false;
 
             void scrollToBottomGuarded();
-            
+            // Moves everything currently queued into the model in one insert.
+            void flushQueue();
+
             mutable QMutex m_mutex;
             std::vector<Message> m_messageQueue;
             std::atomic<bool> m_flushScheduled{ false };
+            // Cooldown between flushes. While it runs, arriving messages only
+            // grow the queue; the timeout applies them as one batch.
+            QTimer m_flushTimer;
         };
     }
 }

@@ -45,6 +45,10 @@ namespace Log
 
 
 	private:
+		// True when making newParentID the parent of childID would close a
+		// loop in the logger tree. Caller must already hold m_mutex.
+		bool wouldCreateParentCycle(LoggerID childID, LoggerID newParentID) const;
+
 		static bool processEventsIfNoEventLoopRunning(
 			QEventLoop::ProcessEventsFlags flags =
 				QEventLoop::ExcludeUserInputEvents | 

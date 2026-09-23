@@ -4,6 +4,7 @@
 #include "ui_QAbstractLogWidget.h"
 #include <QTreeWidget>
 #include <QMetaType>
+#include <algorithm>
 
 
 namespace Log
@@ -33,6 +34,11 @@ namespace Log
 				this, [this](const Log::Message& msg, bool has) { updateDetailsFor(msg, has); });
 
 			connect(this, &QTreeConsoleView::messageQueued, this, &QTreeConsoleView::onMessageQueued, Qt::QueuedConnection);
+
+			m_flushTimer.setSingleShot(true);
+			m_flushTimer.setInterval(100);
+			connect(&m_flushTimer, &QTimer::timeout, this, &QTreeConsoleView::onFlushTimeout);
+
 			postConstructorInit();
 		}
 		QTreeConsoleView::~QTreeConsoleView()
@@ -78,12 +84,24 @@ namespace Log
 		}
 		void QTreeConsoleView::getSaveVisibleMessages(std::unordered_map<LoggerID, std::vector<Message>>& list) const
 		{
+			// Bypass the coalescing gate: a save must see every message that
+			// has already been queued, not just the flushed ones.
+			const_cast<QTreeConsoleView*>(this)->flushQueue();
 			QMutexLocker locker(&m_mutex);
 			m_treeItem->getSaveVisibleMessages(list);
+		}
+		void QTreeConsoleView::setRefreshInterval(int intervalMs)
+		{
+			m_flushTimer.setInterval(std::max(1, intervalMs));
+		}
+		int QTreeConsoleView::getRefreshInterval() const
+		{
+			return m_flushTimer.interval();
 		}
 		void QTreeConsoleView::clear()
 		{
 			LOGGER_RECEIVER_PROFILING_FUNCTION(LOGGER_COLOR_STAGE_1);
+			m_flushTimer.stop();
 			QMutexLocker locker(&m_mutex);
 			m_messageQueue.clear();
 			m_flushScheduled.store(false);
@@ -154,22 +172,37 @@ namespace Log
 		void QTreeConsoleView::onMessageQueued(QPrivateSignal*)
 		{
 			LOGGER_RECEIVER_PROFILING_FUNCTION(LOGGER_COLOR_STAGE_1);
+			m_flushScheduled.store(false);
+			// A flush already ran inside the current interval — the pending
+			// timeout will pick up everything that accumulated since.
+			if (m_flushTimer.isActive())
+				return;
+			flushQueue();
+			m_flushTimer.start();
+		}
+		void QTreeConsoleView::onFlushTimeout()
+		{
+			LOGGER_RECEIVER_PROFILING_FUNCTION(LOGGER_COLOR_STAGE_1);
+			{
+				QMutexLocker locker(&m_mutex);
+				if (m_messageQueue.empty())
+					return; // idle — the next message flushes immediately
+			}
+			flushQueue();
+			m_flushTimer.start();
+		}
+		void QTreeConsoleView::flushQueue()
+		{
+			LOGGER_RECEIVER_PROFILING_FUNCTION(LOGGER_COLOR_STAGE_1);
 			std::vector<Message> cpy;
 			{
 				QMutexLocker locker(&m_mutex);
 				cpy = std::move(m_messageQueue);
 				m_messageQueue.clear();
 			}
-			m_flushScheduled.store(false);
+			if (cpy.empty())
+				return;
 			m_treeItem->onNewMessages(cpy);
-
-			bool needsReschedule = false;
-			{
-				QMutexLocker locker(&m_mutex);
-				needsReschedule = !m_messageQueue.empty();
-			}
-			if (needsReschedule && !m_flushScheduled.exchange(true))
-				emit messageQueued(nullptr);
 		}
 	}
 }
