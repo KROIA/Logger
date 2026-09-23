@@ -1,35 +1,7 @@
 #include "ui/NativeConsoleView.h"
 #include "LogManager.h"
 #include <iostream>
-#include <string>
-#include <QtGlobal>
 #include <windows.h>
-
-namespace
-{
-	// Atomic-line mode cannot use SetConsoleTextAttribute: that colours by changing state
-	// *between* writes, which is exactly what forces the line to be split. ANSI escapes
-	// travel inside the string instead, so colour survives a single write.
-	// Off when stdout is not a console (redirected to a file/pipe) or when the console
-	// refuses virtual terminal processing - escapes would then land in the log as garbage.
-	bool ansiColorAvailable()
-	{
-		HANDLE h = GetStdHandle(STD_OUTPUT_HANDLE);
-		DWORD mode = 0;
-		if (h == INVALID_HANDLE_VALUE || !GetConsoleMode(h, &mode))
-			return false; // redirected, not a console
-		if (mode & ENABLE_VIRTUAL_TERMINAL_PROCESSING)
-			return true;
-		return SetConsoleMode(h, mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING) != 0;
-	}
-
-	std::string ansiFg(const Log::Color& c)
-	{
-		return "\033[38;2;" + std::to_string((int)c.getRed()) + ";" +
-			std::to_string((int)c.getGreen()) + ";" +
-			std::to_string((int)c.getBlue()) + "m";
-	}
-}
 
 namespace Log
 {
@@ -38,16 +10,12 @@ namespace Log
 		NativeConsoleView::NativeConsoleView()
 			: AbstractReceiver()
 			, m_dateTimeFormat(DateTime::Format::yearMonthDay | DateTime::Format::hourMinuteSecondMillisecond)
-			, m_atomicLines(qEnvironmentVariableIsSet("LOGGER_CONSOLE_ATOMIC_LINES"))
-			, m_atomicLineColors(ansiColorAvailable())
 		{
 
 		}
 		NativeConsoleView::NativeConsoleView(const NativeConsoleView& other)
 			: AbstractReceiver()
 			, m_dateTimeFormat(other.m_dateTimeFormat)
-			, m_atomicLines(other.m_atomicLines)
-			, m_atomicLineColors(other.m_atomicLineColors)
 		{
 
 		}
@@ -86,23 +54,6 @@ namespace Log
 		DateTime::Format NativeConsoleView::getDateTimeFormat() const
 		{
 			return m_dateTimeFormat;
-		}
-
-		void NativeConsoleView::setAtomicLines(bool enable)
-		{
-			m_atomicLines = enable;
-		}
-		bool NativeConsoleView::getAtomicLines() const
-		{
-			return m_atomicLines;
-		}
-		void NativeConsoleView::setAtomicLineColors(bool enable)
-		{
-			m_atomicLineColors = enable;
-		}
-		bool NativeConsoleView::getAtomicLineColors() const
-		{
-			return m_atomicLineColors;
 		}
 
 		void NativeConsoleView::hide()
@@ -164,21 +115,6 @@ namespace Log
 
 			std::string type = Utilities::getLevelStr(msg.getLevel());
 			type = type + ":" + std::string(10 - type.size(), ' ');
-
-			if (m_atomicLines)
-			{
-				// One write, so a foreign writer on the same stdout can only interleave
-				// between lines, never inside one. Colour is carried by ANSI escapes
-				// inside the string (dropped when stdout is not a VT console).
-				std::string line = msg.getDateTime().toString(m_dateTimeFormat) + "  ";
-				if (m_atomicLineColors)
-					line += ansiFg(context.color) + context.name + ": " +
-							ansiFg(msg.getColor()) + type + msg.getText() + "\033[0m\n";
-				else
-					line += context.name + ": " + type + msg.getText() + "\n";
-				cout << line;
-				return;
-			}
 
 			HANDLE h = GetStdHandle(STD_OUTPUT_HANDLE);
 			WORD wOldColorAttrs;
