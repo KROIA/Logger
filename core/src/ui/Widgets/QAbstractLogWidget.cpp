@@ -476,6 +476,7 @@ namespace Log
 
 		void QAbstractLogWidget::onNewLogger(LogObject::Info loggerInfo)
 		{
+			LOGGER_RECEIVER_PROFILING_FUNCTION(LOGGER_COLOR_STAGE_2);
 			// A logger can be delivered twice for pre-existing loggers: once by the
 			// view's constructor replay (postConstructorInit) and once by the
 			// SignalReceiver replay. Guard against duplicate rows/checkboxes.
@@ -503,16 +504,19 @@ namespace Log
 		}
 		void QAbstractLogWidget::onLoggerInfoChanged(LogObject::Info info)
 		{
+			LOGGER_RECEIVER_PROFILING_FUNCTION(LOGGER_COLOR_STAGE_2);
 			auto it = m_contextData.find(info.id);
 			if (it != m_contextData.end())
 				it->second.info = info;
 		}
 		void QAbstractLogWidget::onLogMessage(Message message)
 		{
+			LOGGER_RECEIVER_PROFILING_FUNCTION(LOGGER_COLOR_STAGE_2);
 			LOGGER_UNUSED(message);
 		}
 		void QAbstractLogWidget::onChangeParent(LoggerID childID, LoggerID newParentID)
 		{
+			LOGGER_RECEIVER_PROFILING_FUNCTION(LOGGER_COLOR_STAGE_2);
 			auto it = m_contextData.find(childID);
 			if (it != m_contextData.end())
 				it->second.info.parentId = newParentID;

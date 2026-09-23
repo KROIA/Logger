@@ -53,18 +53,21 @@ namespace Log
 
 		void SignalReceiver::onNewLogger(LogObject::Info loggerInfo)
 		{
+			LOGGER_RECEIVER_PROFILING_FUNCTION(LOGGER_COLOR_STAGE_1);
 			if (m_messageFilter && !m_messageFilter->filterByLoggerID(loggerInfo.id))
 				return;
 			receiver->onNewLogger(loggerInfo);
 		}
 		void SignalReceiver::onLoggerInfoChanged(LogObject::Info info)
 		{
+			LOGGER_RECEIVER_PROFILING_FUNCTION(LOGGER_COLOR_STAGE_1);
 			if (m_messageFilter && !m_messageFilter->filterByLoggerID(info.id))
 				return;
 			receiver->onLoggerInfoChanged(info);
 		}
 		void SignalReceiver::onLogMessage(Message message)
-		{ 
+		{
+			LOGGER_RECEIVER_PROFILING_FUNCTION(LOGGER_COLOR_STAGE_1);
 			Level level = message.getLevel();
 			if(level >= Level::__count)
 				return;
@@ -79,6 +82,7 @@ namespace Log
 		}
 		void SignalReceiver::onChangeParent(LoggerID childID, LoggerID newParentID)
 		{
+			LOGGER_RECEIVER_PROFILING_FUNCTION(LOGGER_COLOR_STAGE_1);
 			if (m_messageFilter && !m_messageFilter->filterByLoggerID(childID))
 				return;
 			receiver->onChangeParent(childID, newParentID);

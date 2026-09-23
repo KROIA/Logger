@@ -216,6 +216,7 @@ namespace Log
         }
         void QStatsConsoleView::onLoggerInfoChanged(LogObject::Info info)
         {
+            LOGGER_RECEIVER_PROFILING_FUNCTION(LOGGER_COLOR_STAGE_1);
             QAbstractLogWidget::onLoggerInfoChanged(info);
             auto it = m_ctx.find(info.id);
             if (it == m_ctx.end())

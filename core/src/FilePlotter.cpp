@@ -56,18 +56,22 @@ namespace Log
 	}
 	void FilePlotter::onNewLogger(LogObject::Info loggerInfo)
 	{
+		LOGGER_RECEIVER_PROFILING_FUNCTION(LOGGER_COLOR_STAGE_1);
 		insertJson(loggerInfo.toJson());
 	}
 	void FilePlotter::onLoggerInfoChanged(LogObject::Info info)
 	{
+		LOGGER_RECEIVER_PROFILING_FUNCTION(LOGGER_COLOR_STAGE_1);
 		insertJson(info.toJson());
 	}
 	void FilePlotter::onLogMessage(Message message)
 	{
+		LOGGER_RECEIVER_PROFILING_FUNCTION(LOGGER_COLOR_STAGE_1);
 		insertJson(message.toJson());
 	}
 	void FilePlotter::onChangeParent(LoggerID childID, LoggerID newParentID)
 	{
+		LOGGER_RECEIVER_PROFILING_FUNCTION(LOGGER_COLOR_STAGE_1);
 		QJsonObject obj;
 		obj["childID"] = (int)childID;
 		obj["newParentID"] = (int)newParentID;
