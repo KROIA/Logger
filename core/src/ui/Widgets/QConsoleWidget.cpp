@@ -491,6 +491,14 @@ namespace Log
             QTableView::keyPressEvent(event);
         }
 
+        void QConsoleWidget::changeEvent(QEvent* event)
+        {
+            QTableView::changeEvent(event);
+            if (event->type() == QEvent::PaletteChange ||
+                event->type() == QEvent::ApplicationPaletteChange)
+                m_model->refreshThemeColors();
+        }
+
         void QConsoleWidget::contextMenuEvent(QContextMenuEvent* event)
         {
             if (!m_contextMenuEnabled)

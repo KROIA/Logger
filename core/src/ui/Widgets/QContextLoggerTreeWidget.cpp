@@ -446,6 +446,20 @@ namespace Log
 			return QWidget::eventFilter(obj, ev);
 		}
 
+		void QContextLoggerTreeWidget::changeEvent(QEvent* event)
+		{
+			QWidget::changeEvent(event);
+			if (event->type() != QEvent::PaletteChange &&
+				event->type() != QEvent::ApplicationPaletteChange)
+				return;
+			for (auto& it : m_msgItems)
+			{
+				// Children are reached through their parent's recursion.
+				if (it.second->getParent() == nullptr)
+					it.second->refreshThemeColorsRecursive();
+			}
+		}
+
 		void QContextLoggerTreeWidget::scrollToBottomGuarded()
 		{
 			m_programmaticScroll = true;
@@ -941,7 +955,7 @@ namespace Log
 		{
 			const LogObject::Info& info = m_info;
 			m_contextColor = info.color.toQColor();
-			m_messageBackgroundColor = (info.color * 0.5f).toQColor();
+			m_messageBackgroundColor = Color::loggerBackgroundColor(info.color).toQColor();
 			childRoot->setData((int)HeaderPos::contextName, Qt::DisplayRole, info.name.c_str());
 			childRoot->setData((int)HeaderPos::timestamp, Qt::DisplayRole, info.creationTime.toString(root->m_timeFormat).c_str());
 			childRoot->setBackground((int)HeaderPos::contextName, m_contextColor);
@@ -1077,6 +1091,21 @@ namespace Log
 			// the displayed name/timestamp/backgrounds from the new Info.
 			setupChildRoot();
 			setupMessageRoot();
+		}
+		void QContextLoggerTreeWidget::TreeData::refreshThemeColorsRecursive()
+		{
+			// Same path as updateInfo, just without a new Info to adopt.
+			setupChildRoot();
+			setupMessageRoot();
+			for (auto& msgItem : msgItems)
+			{
+				msgItem.item->setForeground((int)HeaderPos::message, msgItem.msg.getColor().toQColor());
+				msgItem.item->setBackground((int)HeaderPos::contextName, m_messageBackgroundColor);
+				msgItem.item->setBackground((int)HeaderPos::timestamp, m_messageBackgroundColor);
+				msgItem.item->setBackground((int)HeaderPos::message, m_messageBackgroundColor);
+			}
+			for (TreeData* child : children)
+				child->refreshThemeColorsRecursive();
 		}
 		void QContextLoggerTreeWidget::TreeData::migrateMessagesFor(LoggerID sourceLoggerID, TreeData* destination)
 		{

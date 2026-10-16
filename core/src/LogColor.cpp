@@ -2,6 +2,13 @@
 #include "LogLevel.h"
 #include "LogMessage.h"
 
+#ifdef QT_WIDGETS_LIB
+#include <QApplication>
+#include <QPalette>
+#include <QThread>
+#include <QWidget>
+#endif
+
 namespace Log
 {
 
@@ -32,6 +39,7 @@ The different color codes are
 
 	bool Color::s_isDarkMode = false;
 	float Color::s_darkModeFactor = 0.7f;
+	ThemeMode Color::s_themeMode = ThemeMode::Auto;
 
 
 	Color::Color(const Color& other)
@@ -265,6 +273,57 @@ The different color codes are
 	float Color::getDarkModeFactor()
 	{
 		return s_darkModeFactor;
+	}
+
+	void Color::setThemeMode(ThemeMode mode)
+	{
+		const bool wasDark = isDarkTheme();
+		s_themeMode = mode;
+		if (isDarkTheme() == wasDark)
+			return;
+#ifdef QT_WIDGETS_LIB
+		// Reuse the palette-change path the views already handle for an
+		// OS-level theme switch instead of adding a second notification
+		// mechanism. This is the very event Qt broadcasts when the app palette
+		// changes, so re-sending it is a no-op for any widget but ours.
+		QCoreApplication* app = QApplication::instance();
+		if (!app || app->thread() != QThread::currentThread())
+			return;
+		const QWidgetList widgets = QApplication::allWidgets();
+		for (QWidget* w : widgets)
+		{
+			QEvent event(QEvent::ApplicationPaletteChange);
+			QApplication::sendEvent(w, &event);
+		}
+#endif
+	}
+	ThemeMode Color::getThemeMode()
+	{
+		return s_themeMode;
+	}
+	bool Color::isDarkTheme()
+	{
+		switch (s_themeMode)
+		{
+			case ThemeMode::Light: return false;
+			case ThemeMode::Dark:  return true;
+			default: break;
+		}
+#ifdef QT_WIDGETS_LIB
+		// Same test the stats and timeline views have always used. Needs no
+		// widget, but does need a QApplication instance to have a palette.
+		if (QApplication::instance())
+			return QApplication::palette().color(QPalette::Base).lightness() <= 128;
+#endif
+		// No Qt palette to ask: keep the library's historic dark rendering.
+		return true;
+	}
+
+	Color Color::loggerBackgroundColor(const Color& loggerColor)
+	{
+		if (isDarkTheme())
+			return loggerColor * 0.5f;
+		return lerp(loggerColor, Colors::white, 0.85f);
 	}
 
 

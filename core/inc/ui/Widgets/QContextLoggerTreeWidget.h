@@ -102,6 +102,9 @@ namespace Log
 
 		protected:
 			bool eventFilter(QObject* obj, QEvent* ev) override;
+			// Picks up an OS/app theme switch (and Color::setThemeMode, which
+			// re-sends the same event) so cached row colors are recomputed.
+			void changeEvent(QEvent* event) override;
 
 		private slots:
 			void onUpdateTimer();
@@ -132,6 +135,10 @@ namespace Log
 					// to this TreeData cached it once at construction and never
 					// refreshed it.
 					void updateInfo(const LogObject::Info& info);
+					// Re-derives the theme-dependent colors (row background,
+					// per-level message foreground) and re-applies them to the
+					// already-created items, recursively.
+					void refreshThemeColorsRecursive();
 					// Re-parents (into destination) every message this TreeData is
 					// currently holding whose original logger id is
 					// sourceLoggerID. Used both to pull back previously-redirected

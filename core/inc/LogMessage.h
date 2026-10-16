@@ -58,6 +58,8 @@ namespace Log
 		QJsonValue toJson() const;
 		bool fromJson(const QJsonValue& value);
 
+		// Returns the built-in set matching the resolved theme, unless a
+		// consumer supplied its own via setLevelColors() — that always wins.
 		static const Color& getLevelColor(Level l);
 		static const LevelColors& getLevelColors();
 		static void setLevelColors(const LevelColors& colors);
@@ -82,7 +84,10 @@ namespace Log
 	private:
 		void normalizeMessage();
 
-		static LevelColors s_levelColors; 
+		static LevelColors s_levelColors;
+		static LevelColors s_levelColorsLight;
+		// Set by setLevelColors(); pins s_levelColors against theme switches.
+		static bool s_levelColorsOverridden;
 
 		
 	};

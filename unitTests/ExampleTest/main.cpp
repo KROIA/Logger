@@ -17,6 +17,7 @@ TEST_INSTANTIATE(TST_receiverFilter);
 TEST_INSTANTIATE(TST_filePlotterEncoding);
 TEST_INSTANTIATE(TST_receiverRegressions);
 TEST_INSTANTIATE(TST_receiverLoadBenchmark);
+TEST_INSTANTIATE(TST_themeColors);
 
 int main(int argc, char* argv[])
 {

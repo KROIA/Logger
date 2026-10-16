@@ -92,6 +92,9 @@ namespace Log
             void currentChanged(const QModelIndex& current, const QModelIndex& previous) override;
             void contextMenuEvent(QContextMenuEvent* event) override;
             void keyPressEvent(QKeyEvent* event) override;
+            // Picks up an OS/app theme switch (and Color::setThemeMode, which
+            // re-sends the same event) so cached row colors are recomputed.
+            void changeEvent(QEvent* event) override;
         private:
             QPersistentModelIndex m_persistentEditorIndex;
             QString m_lastSearchText;

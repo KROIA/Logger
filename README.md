@@ -225,13 +225,29 @@ qApp->setStyleSheet(Log::Resources::getDarkStylesheet());
 Log::Color::setDarkMode(true);       // biases default color mappings for dark
 Log::Color::setDarkModeFactor(0.8f); // optional: intensity of the bias
 ```
-Every widget-based view detects the active palette at paint time and picks appropriate contrasts:
+
+The surface the views render onto — light or dark — is a separate, queryable setting:
+
+``` C++
+Log::Color::setThemeMode(Log::ThemeMode::Light); // Auto (default) | Light | Dark
+Log::ThemeMode mode = Log::Color::getThemeMode();
+bool dark = Log::Color::isDarkTheme();           // resolved result of Auto
+```
+
+`Auto` resolves from the application palette: `QApplication::palette().color(QPalette::Base).lightness() > 128` means light. It needs no widget, so it can be configured at startup. `Light` and `Dark` override the palette in either direction. Without Qt widgets, `Auto` falls back to dark.
+
+This drives two things:
+
+* **Message row background.** `Log::Color::loggerBackgroundColor(loggerColor)` is the single helper the console table and the context tree both use. Dark: `loggerColor * 0.5` (unchanged from previous versions). Light: blended 85% towards white, so a grey logger becomes a near-white row tint and loggers stay distinguishable.
+* **Default level colors.** The built-in dark set (`info` white, `warning` yellow) is replaced by a light set (`info` black, `warning` `(180,120,0)`, the rest darkened) when the resolved theme is light. A `Log::Message::setLevelColors(...)` supplied by your application always wins over both built-in sets and is never clobbered by a theme switch.
+
+The remaining views detect the active palette at paint time and pick appropriate contrasts:
 
 * Stats bars use a light track in light mode, dark in dark mode.
 * The vertical timeline's bubble fill uses HSL lightness `220/255` in light mode, `60/255` in dark mode; border / header text darken in light mode so near-white level colors stay readable.
 * Grid lines and axis lines use `QPalette::Mid`, so they adapt automatically.
 
-Nothing needs to be reconfigured after a theme change — the next paint picks it up.
+Nothing needs to be reconfigured after a theme change. The console and tree views cache their row colors, but both repaint on `QEvent::PaletteChange` / `ApplicationPaletteChange` — so an OS-level theme switch while the application runs, and `setThemeMode()` itself, refresh an already-populated console.
 
 #### LogManager
 `Log::LogManager` is the singleton hub that connects loggers to receivers. In normal use you don't touch it — instantiating a `LogObject` or an `AbstractReceiver` registers with it automatically. It is exposed for cases like introspection:

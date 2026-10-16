@@ -196,9 +196,19 @@ namespace Log
     {
         m_cachedLoggerData.clear();
     }
+    void QLogMessageItemModel::refreshThemeColors()
+    {
+        // Recompute in place rather than clearing: file-loaded loggers are not
+        // in the LogManager, so a dropped entry could not be rebuilt.
+        for (auto& it : m_cachedLoggerData)
+            it.second.backgroundColor = Color::loggerBackgroundColor(it.second.sourceColor).toQColor();
+
+        if (logs.empty())
+            return;
+        emit dataChanged(index(0, 0), index((int)logs.size() - 1, (int)Column::__count - 1));
+    }
     ReceiverVisibilityPolicy QLogMessageItemModel::setLoggerInfo(const LogObject::Info& info)
     {
-        static const float colorFactor = 0.5f;
         ReceiverVisibilityPolicy previousPolicy = ReceiverVisibilityPolicy::AutoVisible;
         const auto existingIt = m_cachedLoggerData.find(info.id);
         if (existingIt != m_cachedLoggerData.end())
@@ -206,7 +216,8 @@ namespace Log
 
         CachedLoggerData data;
         data.name = QString::fromStdString(info.name);
-        data.backgroundColor = (info.color * colorFactor).toQColor();
+        data.sourceColor = info.color;
+        data.backgroundColor = Color::loggerBackgroundColor(info.color).toQColor();
         data.policy = info.visibilityPolicy;
         m_cachedLoggerData[info.id] = std::move(data);
         return previousPolicy;
@@ -217,12 +228,12 @@ namespace Log
         if (cachedIt != m_cachedLoggerData.end())
             return cachedIt->second;
 
-        static const float colorFactor = 0.5f;
         const LogObject::Info info = LogManager::getLogObjectInfo(loggerID);
 
         CachedLoggerData data;
         data.name = QString::fromStdString(info.name);
-        data.backgroundColor = (info.color * colorFactor).toQColor();
+        data.sourceColor = info.color;
+        data.backgroundColor = Color::loggerBackgroundColor(info.color).toQColor();
         data.policy = info.visibilityPolicy;
 
         const auto inserted = m_cachedLoggerData.emplace(loggerID, std::move(data));

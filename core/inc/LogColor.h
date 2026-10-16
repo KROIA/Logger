@@ -8,6 +8,16 @@
 
 namespace Log
 {
+	// How the library decides whether it renders onto a light or a dark
+	// surface. Auto resolves from QApplication::palette() (Base lightness
+	// > 128 -> light), the same test the stats and timeline views use.
+	enum class ThemeMode
+	{
+		Auto,
+		Light,
+		Dark
+	};
+
 	class LOGGER_API Color
 	{
 	public:
@@ -72,6 +82,18 @@ namespace Log
 		static void setDarkModeFactor(float factor);
 		static float getDarkModeFactor();
 
+		// Light/dark surface the views render onto. Unrelated to setDarkMode(),
+		// which only biases toQColor() by reducing HSV value.
+		static void setThemeMode(ThemeMode mode);
+		static ThemeMode getThemeMode();
+		// Resolved result of Auto: QApplication::palette() Base lightness > 128
+		// means light. Without Qt widgets, Auto falls back to dark.
+		static bool isDarkTheme();
+
+		// Row background tint for a logger, readable under the active theme.
+		// Dark: loggerColor * 0.5. Light: blended towards white.
+		static Color loggerBackgroundColor(const Color& loggerColor);
+
 		static Color lerp(const Color& c1, const Color& c2, float x);
 
 
@@ -83,6 +105,7 @@ namespace Log
 
 		static bool s_isDarkMode;
 		static float s_darkModeFactor;
+		static ThemeMode s_themeMode;
 	};
 
 	namespace Colors

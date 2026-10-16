@@ -6,4 +6,5 @@
 #include "tests/TST_filePlotterEncoding.h"
 #include "tests/TST_receiverRegressions.h"
 #include "tests/TST_receiverLoadBenchmark.h"
+#include "tests/TST_themeColors.h"
 //#include "test_nasted.h"

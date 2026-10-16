@@ -15,6 +15,18 @@ namespace Log
 		Colors::green		// custom
 	};
 
+	// Same hues, darkened enough to stay readable on a light row background.
+	LevelColors Message::s_levelColorsLight{
+		Color(0, 110, 110),		// trace,
+		Color(160, 0, 160),		// debug,
+		Colors::black,			// info,
+		Color(180, 120, 0),		// warning,
+		Color(200, 0, 0),		// error,
+		Color(0, 130, 0)		// custom
+	};
+
+	bool Message::s_levelColorsOverridden = false;
+
 	Message::Message()
 		: m_message("")
 		, m_level(Level::info)
@@ -265,24 +277,28 @@ namespace Log
 
 	const Color& Message::getLevelColor(Level l)
 	{
+		const LevelColors& colors = getLevelColors();
 		switch (l)
 		{
-			case Level::trace:    return s_levelColors.trace;
-			case Level::debug:    return s_levelColors.debug;
-			case Level::info:     return s_levelColors.info;
-			case Level::warning:  return s_levelColors.warning;
-			case Level::error:    return s_levelColors.error;
-			case Level::custom:   return s_levelColors.custom;
+			case Level::trace:    return colors.trace;
+			case Level::debug:    return colors.debug;
+			case Level::info:     return colors.info;
+			case Level::warning:  return colors.warning;
+			case Level::error:    return colors.error;
+			case Level::custom:   return colors.custom;
 		}
 		return Colors::white;
 	}
 	const LevelColors& Message::getLevelColors()
 	{
+		if (!s_levelColorsOverridden && !Color::isDarkTheme())
+			return s_levelColorsLight;
 		return s_levelColors;
 	}
 	void Message::setLevelColors(const LevelColors& colors)
 	{
 		s_levelColors = colors;
+		s_levelColorsOverridden = true;
 	}
 
 	void Message::sort(std::vector<Message>& messages, SortType type)

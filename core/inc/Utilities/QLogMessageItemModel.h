@@ -49,6 +49,9 @@ namespace Log
 
         void clear();
         void clearLoggerCache();
+        // Recompute every cached background color against the current theme
+        // and repaint. Call after a palette or ThemeMode change.
+        void refreshThemeColors();
 
         // Pre-populate the context cache from a known LogObject::Info,
         // so file-loaded loggers (which are not in the LogManager singleton)
@@ -60,6 +63,9 @@ namespace Log
         struct CachedLoggerData
         {
             QString name;
+            // The logger's own color, kept so backgroundColor can be
+            // recomputed on a theme change without the Info it came from.
+            Color sourceColor;
             QColor backgroundColor;
             ReceiverVisibilityPolicy policy = ReceiverVisibilityPolicy::AutoVisible;
         };
