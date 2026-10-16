@@ -18,6 +18,7 @@ TEST_INSTANTIATE(TST_filePlotterEncoding);
 TEST_INSTANTIATE(TST_receiverRegressions);
 TEST_INSTANTIATE(TST_receiverLoadBenchmark);
 TEST_INSTANTIATE(TST_themeColors);
+TEST_INSTANTIATE(TST_cellEditorMultiline);
 
 int main(int argc, char* argv[])
 {

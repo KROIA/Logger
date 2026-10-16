@@ -1,11 +1,11 @@
 #include "ui/Widgets/QContextLoggerTreeWidget.h"
+#include "ReadOnlyCellEditorDelegate.h"
 #include "LogManager.h"
 #include <algorithm>
 
 #ifdef QT_WIDGETS_LIB
 #include <QApplication>
 #include <QClipboard>
-#include <QLineEdit>
 #include <QStyledItemDelegate>
 #include <QMenu>
 #include <QAction>
@@ -13,127 +13,6 @@
 #include <QKeyEvent>
 #include <functional>
 
-namespace {
-    // Read-only in-place editor: click to enter text-selection mode; a
-    // double-click (view or editor) copies the row's message text. Escape
-    // (pressed while the editor has focus) invokes the owner's deselect
-    // handler.
-    class ReadOnlyLineEditDelegate : public QStyledItemDelegate
-    {
-    public:
-        ReadOnlyLineEditDelegate(int messageColumn, std::function<void()> onEscape, QObject* parent)
-            : QStyledItemDelegate(parent), m_messageColumn(messageColumn), m_onEscape(std::move(onEscape)) {}
-
-        QWidget* createEditor(QWidget* parent, const QStyleOptionViewItem& option, const QModelIndex& index) const override
-        {
-            QLineEdit* editor = new QLineEdit(parent);
-            editor->setReadOnly(true);
-            editor->setFrame(false);
-            editor->setFont(option.font);
-            editor->setAutoFillBackground(true);
-            editor->setContextMenuPolicy(Qt::NoContextMenu);
-            editor->setTextMargins(0, 0, 0, 0);
-            editor->setContentsMargins(0, 0, 0, 0);
-            editor->setAlignment(option.displayAlignment != 0 ? option.displayAlignment : (Qt::AlignLeft | Qt::AlignVCenter));
-
-            QPalette pal = editor->palette();
-            const QVariant bg = index.data(Qt::BackgroundRole);
-            if (bg.isValid() && bg.canConvert<QBrush>())
-            {
-                const QColor bgc = bg.value<QBrush>().color();
-                if (bgc.isValid())
-                {
-                    pal.setColor(QPalette::Base, bgc);
-                    pal.setColor(QPalette::Window, bgc);
-                }
-            }
-            const QVariant fg = index.data(Qt::ForegroundRole);
-            if (fg.isValid() && fg.canConvert<QBrush>())
-            {
-                const QColor fgc = fg.value<QBrush>().color();
-                if (fgc.isValid() && fgc.alpha() > 0)
-                    pal.setColor(QPalette::Text, fgc);
-            }
-            // Keep selection highlight visible even when the editor loses focus
-            // (Qt would otherwise switch to the Inactive palette group, which on
-            // most themes renders the selection as invisible or nearly so).
-            pal.setColor(QPalette::Inactive, QPalette::Highlight,
-                pal.color(QPalette::Active, QPalette::Highlight));
-            pal.setColor(QPalette::Inactive, QPalette::HighlightedText,
-                pal.color(QPalette::Active, QPalette::HighlightedText));
-            editor->setPalette(pal);
-
-            editor->setText(index.data(Qt::DisplayRole).toString());
-            editor->setProperty("__persistentIndex", QVariant::fromValue(QPersistentModelIndex(index)));
-            editor->installEventFilter(const_cast<ReadOnlyLineEditDelegate*>(this));
-            return editor;
-        }
-        void setModelData(QWidget*, QAbstractItemModel*, const QModelIndex&) const override {}
-        // Override to preserve the QLineEdit's text selection and cursor across
-        // model refreshes. Qt calls setEditorData on the persistent editor whenever
-        // the view thinks the underlying data may have changed (e.g. when siblings
-        // are inserted); the default implementation calls setText() which resets
-        // selection — that's what was clearing the user's selection on new messages.
-        void setEditorData(QWidget* editor, const QModelIndex& index) const override
-        {
-            QLineEdit* le = qobject_cast<QLineEdit*>(editor);
-            if (!le)
-            {
-                QStyledItemDelegate::setEditorData(editor, index);
-                return;
-            }
-            const QString newText = index.data(Qt::DisplayRole).toString();
-            if (le->text() == newText)
-                return;
-            const int selStart = le->selectionStart();
-            const int selLen = le->selectedText().length();
-            const int cursor = le->cursorPosition();
-            const bool wasBlocked = le->blockSignals(true);
-            le->setText(newText);
-            if (selStart >= 0 && selLen > 0)
-                le->setSelection(selStart, selLen);
-            else
-                le->setCursorPosition(qMin(cursor, newText.length()));
-            le->blockSignals(wasBlocked);
-        }
-
-        bool eventFilter(QObject* obj, QEvent* ev) override
-        {
-            if (ev->type() == QEvent::KeyPress)
-            {
-                QKeyEvent* ke = static_cast<QKeyEvent*>(ev);
-                if (ke->key() == Qt::Key_Escape && m_onEscape)
-                {
-                    // Consume before QStyledItemDelegate's default Escape
-                    // handling, which would close the editor widget but leave
-                    // the owner's selection bookkeeping (and follow-pause) set.
-                    m_onEscape();
-                    return true;
-                }
-            }
-            if (ev->type() == QEvent::MouseButtonDblClick)
-            {
-                QLineEdit* editor = qobject_cast<QLineEdit*>(obj);
-                if (editor)
-                {
-                    QPersistentModelIndex idx = editor->property("__persistentIndex").value<QPersistentModelIndex>();
-                    if (idx.isValid())
-                    {
-                        const QString text = idx.model()->index(idx.row(), m_messageColumn, idx.parent())
-                            .data(Qt::DisplayRole).toString();
-                        if (!text.isEmpty())
-                            QApplication::clipboard()->setText(text);
-                        return true;
-                    }
-                }
-            }
-            return QStyledItemDelegate::eventFilter(obj, ev);
-        }
-    private:
-        int m_messageColumn;
-        std::function<void()> m_onEscape;
-    };
-}
 
 namespace Log
 {
@@ -169,7 +48,7 @@ namespace Log
 			// on whichever cell the user clicks, so drag-select works and survives
 			// new messages arriving. Row selection is disabled — the user selects
 			// text, not rows.
-			m_treeWidget->setItemDelegate(new ReadOnlyLineEditDelegate(
+			m_treeWidget->setItemDelegate(new Internal::ReadOnlyCellEditorDelegate(
 				(int)HeaderPos::message,
 				[this]() { clearTextSelection(); },
 				m_treeWidget));

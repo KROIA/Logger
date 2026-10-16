@@ -7,4 +7,5 @@
 #include "tests/TST_receiverRegressions.h"
 #include "tests/TST_receiverLoadBenchmark.h"
 #include "tests/TST_themeColors.h"
+#include "tests/TST_cellEditorMultiline.h"
 //#include "test_nasted.h"
