@@ -16,13 +16,17 @@ namespace Log
 	};
 
 	// Same hues, darkened enough to stay readable on a light row background.
+	// The console codes stay those of the dark palette: a console has 16 fixed colors
+	// and no theme, so without them every level would print in the default white (15).
+	// info keeps white (0x0F) rather than its RGB black (0x00) - black on the console's
+	// dark background would be invisible.
 	LevelColors Message::s_levelColorsLight{
-		Color(0, 110, 110),		// trace,
-		Color(160, 0, 160),		// debug,
-		Colors::black,			// info,
-		Color(180, 120, 0),		// warning,
-		Color(200, 0, 0),		// error,
-		Color(0, 130, 0)		// custom
+		Color(0, 110, 110, 0x03),	// trace,
+		Color(160, 0, 160, 0x05),	// debug,
+		Color(0, 0, 0, 0x0F),		// info,
+		Color(180, 120, 0, 0x0E),	// warning,
+		Color(200, 0, 0, 0x04),		// error,
+		Color(0, 130, 0, 0x02)		// custom
 	};
 
 	bool Message::s_levelColorsOverridden = false;
